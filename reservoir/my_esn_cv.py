@@ -1,7 +1,8 @@
-from .esn import *
+import ..Reservoir.reservoir.esn 
 from .scr import *
 from .detail.robustgpmodel import *
 from .detail.esn_bo import *
+
 import numpy as np
 import GPy
 import GPyOpt
@@ -9,7 +10,6 @@ import copy
 import json
 import pyDOE
 from collections import OrderedDict
-import multiprocessing
 
 
 __all__ = ['EchoStateNetworkCV']
@@ -109,6 +109,7 @@ class EchoStateNetworkCV:
         self.exp_weights = exp_weights
         self.obs_index = obs_index
         self.target_index = target_index
+
 
 
         # Normalize bounds domains and remember transformation
@@ -214,9 +215,6 @@ class EchoStateNetworkCV:
         if 'connectivity' in arguments:
             arguments['connectivity'] = 10. ** arguments['connectivity']  # Log scale correction
 
-        if 'llambda' in arguments:
-            arguments['llambda'] = 10. ** arguments['llambda']  # Log scale correction
-
         if 'n_nodes' in arguments:
             arguments['n_nodes'] = int(np.round(arguments['n_nodes']))  # Discretize
 
@@ -304,16 +302,16 @@ class EchoStateNetworkCV:
                                                      num_cores=self.n_jobs)
 
         # Set search space and constraints
-        space = GPyOpt.core.task.space.Design_space(self.scaled_bounds, constraints = None)
+        space = GPyOpt.core.task.space.Design_space(self.scaled_bounds, constraints=None)
 
         # Select model and acquisition
         acquisition_type = self.acquisition_type
-        model = RobustGPModel(normalize_Y = True, log_space = self.log_space)
+        model = RobustGPModel(normalize_Y=True, log_space=self.log_space)
 
         # Set acquisition
         acquisition_optimizer = GPyOpt.optimization.AcquisitionOptimizer(space, optimizer='lbfgs')
         SelectedAcquisition = GPyOpt.acquisitions.select_acquisition(acquisition_type)
-        acquisition = SelectedAcquisition(model = model, space = space, optimizer = acquisition_optimizer)
+        acquisition = SelectedAcquisition(model=model, space=space, optimizer=acquisition_optimizer)
 
         # Add Local Penalization
         # lp_acquisition = GPyOpt.acquisitions.LP.AcquisitionLP(model, space, acquisition_optimizer, acquisition,
@@ -333,12 +331,6 @@ class EchoStateNetworkCV:
         # Show progress bar
         if self.verbose:
             print("Starting optimization...", '\n')
-
-        ###
-        print("Hayden edit: space: " + str(space))
-        print("Hayden edit: fixed_parameters: " + str(self.fixed_parameters))
-        print("Hayden edit: free_parameters: " + str(self.free_parameters))
-        ###
 
         # Build optimizer
         self.optimizer = EchoStateBO(model=model, space=space, objective=objective,
@@ -404,12 +396,11 @@ class EchoStateNetworkCV:
         """
         # Get arguments
         arguments = self.construct_arguments(parameters)
-        #print("args" + str(arguments))
 
         # Build network
-        esn = self.model(**arguments, exponential = self.exp_weights, 
-                obs_idx = self.obs_index, resp_idx = self.target_index, plot = False)
-
+        esn = self.model(**arguments)
+        if self.exp_weights == True:
+            esn.generate_reservoir( exp_weights = True, obs_idx = self.obs_index, targ_idx = self.target_index)
         # Train
         esn.train(x=train_x, y=train_y, burn_in=self.esn_burn_in)
 
@@ -417,56 +408,6 @@ class EchoStateNetworkCV:
         score = esn.test(x=validate_x, y=validate_y, scoring_method=self.scoring_method,
                          steps_ahead=self.steps_ahead, alpha=self.alpha)
         return score
-
-    ### Hayden Edit
-    def define_tr_val(self, start_index):
-        """
-        Get indices
-        start_index = np.random.randint(viable_start, viable_stop)
-        train_stop_index = start_index + train_length
-        validate_stop_index = train_stop_index + validate_length
-
-        # Get samples
-        train_y = training_y[start_index: train_stop_index]
-        validate_y = training_y[train_stop_index: validate_stop_index]
-
-        if not training_x is None:
-            train_x = training_x[start_index: train_stop_index]
-            validate_x = training_x[train_stop_index: validate_stop_index]
-        else:
-            train_x = None
-            validate_x = None
-        """
-        ####
-        #print("Hayden edit: parameters: " + str(parameters))
-        #print("Hayden edit: fixed parameters: " + str(self.fixed_parameters))
-        #print("Hayden edit: free parameters: " + str(self.free_parameters))
-        ####
-
-        # Get indices
-        #start_index = np.random.randint(self.viable_start, self.viable_stop)
-        train_stop_index = start_index + self.train_length
-        validate_stop_index = train_stop_index + self.validate_length
-
-        # Get samples
-        train_y = self.y[start_index: train_stop_index]
-        validate_y = self.y[train_stop_index: validate_stop_index]
-
-        if not self.x is None:
-            train_x = self.x[start_index: train_stop_index]
-            validate_x = self.x[train_stop_index: validate_stop_index]
-        else:
-            train_x = None
-            validate_x = None
-        #return(train_x, train_y, validate_x, validate_y)
-        # Loop through series and score result
-        scores_ = []
-        for n in range(self.n_series):
-            score_ = self.objective_function(self.parameters, train_y[:, n].reshape(-1, 1),
-                                                   validate_y[:, n].reshape(-1, 1), train_x, validate_x)
-            scores_.append(score_)
-        return(scores_)
-    ###
 
     def objective_sampler(self, parameters):
         """Splits training set into train and validate sets, and computes multiple samples of the objective function.
@@ -486,42 +427,52 @@ class EchoStateNetworkCV:
 
         """
         # Get data
-        self.parameters = parameters
         training_y = self.y
         training_x = self.x
 
         # Get number of series
-        self.n_series = training_y.shape[1]
+        n_series = training_y.shape[1]
 
         # Set viable sample range
         viable_start = self.esn_burn_in
         viable_stop = training_y.shape[0] - self.subsequence_length
 
         # Get sample lengths
-        self.validate_length = np.round(self.subsequence_length * self.validate_fraction).astype(int)
-        self.train_length = self.subsequence_length - self.validate_length
+        validate_length = np.round(self.subsequence_length * self.validate_fraction).astype(int)
+        train_length = self.subsequence_length - validate_length
 
         # Score storage
-        self.scores = np.zeros((self.cv_samples, self.n_series), dtype=np.float32)
+        scores = np.zeros((self.cv_samples, n_series), dtype=np.float32)
 
-        ###
         # Get samples
-        Pool = multiprocessing.Pool(self.cv_samples)
-        start_indices = np.random.randint(viable_start, viable_stop, size = self.cv_samples)
-        results = list(zip(*Pool.map(self.define_tr_val, start_indices)))
-        results = np.array(results)
-        ###
+        for i in range(self.cv_samples):  # TODO: Can be parallelized
 
-        self.scores = results.reshape(scores.shape)
-            
+            # Get indices
+            start_index = np.random.randint(viable_start, viable_stop)
+            train_stop_index = start_index + train_length
+            validate_stop_index = train_stop_index + validate_length
+
+            # Get samples
+            train_y = training_y[start_index: train_stop_index]
+            validate_y = training_y[train_stop_index: validate_stop_index]
+
+            if not training_x is None:
+                train_x = training_x[start_index: train_stop_index]
+                validate_x = training_x[train_stop_index: validate_stop_index]
+            else:
+                train_x = None
+                validate_x = None
+
+            # Loop through series and score result
+            for n in range(n_series):
+                scores[i, n] = self.objective_function(parameters, train_y[:, n].reshape(-1, 1),
+                                                       validate_y[:, n].reshape(-1, 1), train_x, validate_x)
+
         # Pass back as a column vector (as required by GPyOpt)
-        mean_score = self.scores.mean()
-        #mean_score = mean_score/n_series
-
+        mean_score = scores.mean()
 
         # Inform user
         if self.verbose:
-            print(parameters)
             print('Score:', mean_score)
             # pars = self.construct_arguments(parameters)
 

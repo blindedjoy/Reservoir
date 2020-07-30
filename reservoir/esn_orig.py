@@ -3,9 +3,6 @@ import scipy.stats
 import scipy.linalg
 import copy
 import json
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 __all__ = ['EchoStateNetwork']
 
@@ -53,9 +50,7 @@ class EchoStateNetwork:
 
     def __init__(self,
                  n_nodes=1000, input_scaling=0.5, feedback_scaling=0.5, spectral_radius=0.8, leaking_rate=1.0,
-                 connectivity = np.exp(-.23),#0.1,
-                 regularization=1e-8, feedback=False, random_seed=123,
-                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, plot = False):
+                 connectivity=0.1, regularization=1e-8, feedback=True, random_seed=123):
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
@@ -66,81 +61,9 @@ class EchoStateNetwork:
         self.regularization = regularization
         self.feedback = feedback
         self.seed = random_seed
-        self.obs_idx = obs_idx
-        self.resp_idx = resp_idx
-        self.exponential = exponential
-        self.exp_weights = None
-        self.llambda = llambda
-        self.plot = plot
         self.generate_reservoir()
 
-
-    def exp_w(self, verbose = False):
-        """
-        Args:
-            llambda: is llambda in an exponential function.
-            distance: is a distance matrix. 
-        
-        This function calculates weights via attention ie the
-        distance matrix which measures the distance from the 
-        observer sequences to the target sequences.
-        """
-        #print("assigning expo weights")
-        exp_np = np.exp( - self.llambda * self.distance_np) #*llambda
-        exp_np = exp_np.sum(axis = 0).reshape( -1 )
-        
-        #normalize the max weight to 1.
-        exp_np = (exp_np) / np.max(exp_np)
-        exp_np = exp_np.reshape(-1,)
-        #print("exp_np sahep : " + str(exp_np.shape))
-
-        white_Noise = np.random.normal(size = exp_np.shape[0])/100
-        exp_np += white_Noise
-        return(exp_np)
-       
-    def build_distance_matrix(self, verbose = False):
-        """	
-        args:
-            resp is the response index (a list of integers associated with the target train/test time series 
-                (for example individual frequencies)
-            obs is the same for the observation time-series.
-        Description:
-        	DistsToTarg stands for distance numpy array
-        """
-        for i, resp_seq in enumerate(self.resp_idx):
-            DistsToTarg = abs(resp_seq - np.array(self.obs_idx)).reshape(1, -1)
-            if i == 0:
-                distance_np = DistsToTarg
-            else:
-            	distance_np = np.concatenate([distance_np, DistsToTarg], axis = 0)
-        #if verbose == True:
-        #    display(pd.DataFrame(distance_np))
-        self.distance_np = distance_np
-        if verbose == True:
-            print("distance_matrix completed " + str(self.distance_np.shape))
-            display(self.distance_np)
-
-    def get_exp_weights(self):
-        """
-        #TODO: description
-        change the automatic var assignments
-        """
-        self.build_distance_matrix()
-        self.exp_weights = self.exp_w()
-        n_temp = len(self.exp_weights)
-        sign = np.random.choice([-1, 1], n_temp)
-        #print("exp weights shape", exp_weights.shape)
-        self.exp_weights *= sign
-        #print("max_weight: " + str(np.max(exp_weights)))
-        if self.plot == True:
-            pd_ = pd.DataFrame({"obs_idx": self.obs_idx, "weight": self.exp_weights})
-            fig, ax = plt.subplots(1,1, figsize = (6, 4))
-            sns.scatterplot(x = "obs_idx", y = "weight", data = pd_, ax = ax)
-            ax.set_title("Exponential Attention Weights")
-            plt.show()
-
-    
-    def generate_reservoir(self, exp_weights = False, obs_idx = None, targ_idx = None):
+    def generate_reservoir(self):
         """Generates random reservoir from parameters set at initialization."""
         # Initialize new random state
         random_state = np.random.RandomState(self.seed)
@@ -148,30 +71,12 @@ class EchoStateNetwork:
         # Set weights and sparsity randomly
         max_tries = 1000  # Will usually finish on the first iteration
         for i in range(max_tries):
-
-            n = self.n_nodes
-            accept = random_state.uniform(size = (n, n)) < self.connectivity
-
-
-            self.weights = random_state.uniform( -1., 1., size = (n, n))
+            self.weights = random_state.uniform(-1., 1., size=(self.n_nodes, self.n_nodes))
+            accept = random_state.uniform(size=(self.n_nodes, self.n_nodes)) < self.connectivity
             self.weights *= accept
 
-            """
-            ####
-            #if self.exponential == True:
-                
-                #here we use spectral_density in a new way. We use it to bend the exponential distrubution.
-                
-                #self.llambda = self.spectral_radius
-                #self.get_exp_weights()
-                #print("self.weights.shape: " + str(self.weights.shape))
-                #print("self.exp_weights.shape: "   + str(self.exp_weights.shape))
-                #self.weights = np.abs(np.random.choice(self.exp_weights, size = (n, n))) * self.weights
-            ####
-            """
-            
-            max_eigenvalue = np.abs( np.linalg.eigvals( self.weights)).max()
-            #print("max_eigen: " + str(max_eigenvalue))
+            # Set spectral density
+            max_eigenvalue = np.abs(np.linalg.eigvals(self.weights)).max()
             if max_eigenvalue > 0:
                 break
             elif i == max_tries - 1:
@@ -185,7 +90,6 @@ class EchoStateNetwork:
 
         # Set out to none to indicate untrained ESN
         self.out_weights = None
-
 
     def draw_reservoir(self):
         """Vizualizes reservoir.
@@ -330,44 +234,14 @@ class EchoStateNetwork:
         if not x is None:
             inputs = np.hstack((inputs, x[start_index:]))  # Add data inputs
 
-        if self.exponential == True:
-            self.get_exp_weights()
-            
-
         # Set and scale input weights (for memory length and non-linearity)
-        ###
-        #if self.exponential == True:
-        #    str1 = "orig input shape "
-        #    str2 = "exp_w shape: "
-        #    shape1 = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-        #    shape1 = str(shape1.shape)
-        #    shape2 = str(self.exp_weights.shape) 
-
-            #print(str1 + shape1)
-            #print(str2 + shape2)
-        #self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-    
-        if inputs.shape[1] > 1:
-            if self.exponential == True:
-                
-                self.in_weights = self.input_scaling * self.exp_weights 
-                ### What about this line?
-                self.in_weights = np.hstack((self.in_weights, 0.01))
-                ###
-            else:
-                self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-            #self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-         
-        ###
+        self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
 
         # Add feedback if requested, optionally with feedback scaling
         if self.feedback:
             inputs = np.hstack((inputs, y[:-1]))  # Add teacher forced signal (equivalent to y(t-1) as input)
             feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
             self.in_weights = np.hstack((self.in_weights, feedback_weights))
-        
-        #print("inputs shape: " + str(inputs[0].T.shape))
-        #print("input weights shape: " + str(self.in_weights.shape))
 
         # Train iteratively
         for t in range(inputs.shape[0]):
@@ -430,9 +304,6 @@ class EchoStateNetwork:
         # Return error
         return self.error(y_predicted, y, scoring_method, alpha=alpha)
 
-    def print_version(self):
-        print("previous y")
-
     def predict(self, n_steps, x=None, y_start=None):
         """Predicts n values in advance.
 
@@ -463,7 +334,8 @@ class EchoStateNetwork:
 
         # Initialize input
         inputs = np.ones((n_steps, 1), dtype=np.float32)  # Add bias term
-
+        
+        print("inputs_shape: " + str(inputs.shape))
         # Choose correct input
         if x is None and not self.feedback:
             raise ValueError("Error: cannot run without feedback and without x. Enable feedback or supply x")
@@ -471,10 +343,7 @@ class EchoStateNetwork:
             inputs = np.hstack((inputs, x))  # Add data inputs
 
         # Set parameters
-        if self.out_weights.shape[1] > 1:
-          y_predicted = np.zeros([n_steps, self.out_weights.shape[1]], dtype=np.float32)
-        else:
-          y_predicted = np.zeros(n_steps, dtype=np.float32)
+        y_predicted = np.zeros(n_steps, dtype=np.float32)
 
         # Get last states
         previous_y = self.y_last
@@ -486,7 +355,6 @@ class EchoStateNetwork:
 
         # Predict iteratively
         for t in range(n_steps):
-            
             # Get correct input based on feedback setting
             current_input = inputs[t] if not self.feedback else np.hstack((inputs[t], previous_y))
 
@@ -496,22 +364,14 @@ class EchoStateNetwork:
 
             # Prediction. Order of concatenation is [1, inputs, y(n-1), state]
             complete_row = np.hstack((current_input, current_state))
-
-            if self.out_weights.shape[1] > 1:
-              y_predicted[t,:] = complete_row @ self.out_weights
-              previous_y = y_predicted[t,:]
-            else:
-              y_predicted[t] = complete_row @ self.out_weights
-              previous_y = y_predicted[t]
-
-            
-            
+            y_predicted[t] = complete_row @ self.out_weights
+            previous_y = y_predicted[t]
 
         # Denormalize predictions
         y_predicted = self.denormalize(outputs=y_predicted)
 
         # Return predictions
-        return y_predicted.reshape(-1, self.out_weights.shape[1])
+        return y_predicted.reshape(-1, 1)
 
     def predict_stepwise(self, y, x=None, steps_ahead=1, y_start=None):
         """Predicts a specified number of steps into the future for every time point in y-values array.
