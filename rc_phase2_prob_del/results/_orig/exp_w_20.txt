@@ -1,0 +1,1 @@
+{"llambda": 1e-12, "leaking_rate": 1.0, "spectral_radius": 0.5873646414279938, "regularization": 0.5815950764982728, "connectivity": 0.001, "n_nodes": 100, "random_seed": 123}
