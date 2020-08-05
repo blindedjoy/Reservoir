@@ -28,7 +28,7 @@ then
 		for size in "small" "medium" "publish"
 		do
 			ifdir "${curr_directory}/${size}/"
-				for split in ".5" ".9"
+				for split in "0.5" "0.9"
 				do
 					ifdir "${curr_directory}/${size}/split_${split}"
 					for target_size in "0.5" "1.0"

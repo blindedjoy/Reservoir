@@ -1,1 +1,0 @@
-{"spectral_radius": 0.8549493944644928, "regularization": 0.6307807315114229, "leaking_rate": 0.05, "connectivity": 3.880106582311859, "n_nodes": 1500, "random_seed": 123}

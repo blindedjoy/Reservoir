@@ -1,1 +1,0 @@
-{"spectral_radius": 0.99, "regularization": 10.0, "random_seed": 123}

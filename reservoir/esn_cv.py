@@ -502,7 +502,7 @@ class EchoStateNetworkCV:
         self.train_length = self.subsequence_length - self.validate_length
 
         # Score storage
-        self.scores = np.zeros((self.cv_samples, self.n_series), dtype=np.float32)
+        scores = np.zeros((self.cv_samples, self.n_series), dtype=np.float32)
 
         ###
         # Get samples
@@ -521,7 +521,7 @@ class EchoStateNetworkCV:
 
         # Inform user
         if self.verbose:
-            print(parameters)
+            #print(parameters)
             print('Score:', mean_score)
             # pars = self.construct_arguments(parameters)
 

@@ -1,1 +1,0 @@
-{"llambda": 0.4988103566174375, "n_nodes": 1466, "spectral_radius": 0.9436655497550964, "regularization": 0.0056344203894093964, "connectivity": 0.5888436553555889, "random_seed": 123}

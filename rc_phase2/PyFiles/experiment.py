@@ -6,6 +6,18 @@ def pp(variable, label):
 	custom print function
 	"""
 	print(label +": " + str(variable))
+def Shape(lst):
+	npObj, label = lst; print(label + " shape: " +  str(npObj.shape))
+
+def is_numeric(x):
+	booll = (type(x) == float) or (type(x) == int)
+	return(booll)
+
+#seems useless, but we will see.
+def class_copy(class_spec):
+	CopyOfClass = type('esn_cv_copy', class_spec.__bases__, dict(class_spec.__dict__))
+	return class_spec
+
 
 class EchoStateExperiment:
 	"""
@@ -20,11 +32,19 @@ class EchoStateExperiment:
 	def __init__(self, 
 				 size, 
 				 file_path = "spectogram_data/", 
-				 target_frequency = 2000,
-				 out_path = None):
+				 target_frequency = None,
+				 out_path = None,
+				 obs_hz = None,
+				 target_hz = None,
+				 verbose = True):
 		# Parameters
+		assert target_frequency != None, "you must enter a target frequency"
+		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
 		assert size in ["small", "medium", "publish"], "Please choose a size from ['small', 'medium', 'publish']"
-		#self.dataset = datase
+		assert type(verbose) == bool, "verbose must be a boolean"
+		self.esn_cv_spec = class_copy(EchoStateNetworkCV)
+		self.esn_spec    = class_copy(EchoStateNetwork)
+		self.verbose = verbose
 		self.size = size
 		self.file_path = file_path + self.size + "/"
 		self.target_frequency = target_frequency
@@ -32,6 +52,10 @@ class EchoStateExperiment:
 		self.horiz_display()
 		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
 		self.out_path = out_path
+		if obs_hz != None and target_hz != None:
+			assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
+			assert is_numeric(target_hz), "you must enter a numeric target frequency range"
+			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 
 	
 
@@ -63,19 +87,19 @@ class EchoStateExperiment:
 		obs_spread, target_spread = obs_hz / 2, target_hz / 2
 		
 		# get the obs, response range endpoints
-		respLb, respUb = [Freq2idx(midpoint - target_spread), 
+		respLb, respUb = [self.Freq2idx(midpoint - target_spread), 
 
-						  Freq2idx(midpoint + target_spread)]
-		obs_high_Ub, obs_high_lb =  respUb + Freq2idx(obs_spread) + 1, respUb + 1
-		obs_low_lb, obs_low_Ub = respLb - Freq2idx(obs_spread) - 1, respLb - 1
+						  self.Freq2idx(midpoint + target_spread)]
+		obs_high_Ub, obs_high_lb =  respUb + self.Freq2idx(obs_spread) + 1, respUb + 1
+		obs_low_lb, obs_low_Ub = respLb - self.Freq2idx(obs_spread) - 1, respLb - 1
 	  
 		# Listify:
 		resp_idx_Lst = endpoints2list(respLb, respUb)
 		obs_idx_Lst1, obs_idx_Lst2 =  endpoints2list(obs_low_lb, obs_low_Ub), endpoints2list(obs_high_lb, obs_high_Ub)
 
 		# collect frequencies:
-		resp_Freq_Lst = [experiment.f[i] for i in resp_idx_Lst]
-		obs_Freq_Lst1, obs_Freq_Lst2 = [experiment.f[i] for i in obs_idx_Lst1], [experiment.f[i] for i in obs_idx_Lst2]
+		resp_Freq_Lst = [self.f[i] for i in resp_idx_Lst]
+		obs_Freq_Lst1, obs_Freq_Lst2 = [self.f[i] for i in obs_idx_Lst1], [self.f[i] for i in obs_idx_Lst2]
 		
 		#INVERSION
 		resp_idx_Lst = [height - i for i in resp_idx_Lst]
@@ -109,8 +133,8 @@ class EchoStateExperiment:
 
 
 
-	def load_data(self, verbose = True):
-		assert type(verbose) == bool, "verbose must be a boolean"
+	def load_data(self):
+		
 
 		spect_files  = { "publish" : "_new", "small" : "_512" , "original" : "", "medium" : "_1024"}
 
@@ -138,7 +162,7 @@ class EchoStateExperiment:
 		self.freq_axis_len = self.A.shape[0]
 		self.time_axis_len = self.A.shape[1]
 		str2print = ""
-		if verbose == True:
+		if self.verbose == True:
 			for file_name_ in files2import:
 				str2print += "successfully loaded: " + file_name_ + ".mat, "
 			print("maximum frequency: " + str(self.max_freq))
@@ -225,7 +249,7 @@ class EchoStateExperiment:
 
 	
 	#TODO: horizontal display
-	def horiz_display(self, plot = True):
+	def horiz_display(self, plot = False):
 		assert type(plot) == bool, "plot must be a bool"
 		A_pd = pd.DataFrame(self.A_orig)
 		A_pd.columns = self.freq_idx
@@ -424,8 +448,7 @@ class EchoStateExperiment:
 	def myMSE(prediction,target):
 		return np.sqrt(np.mean((prediction.flatten() - target.flatten() )**2))
 
-	def Shape(lst):
-		npObj, label = lst; print(label + " shape: " +  str(npObj.shape))
+	
 
 	# validation version
 	def get_observers(self, 
@@ -434,7 +457,7 @@ class EchoStateExperiment:
 					  method  = "random", 
 					  num_observers = 20,
 					  observer_range = None,
-					  plot_split = True,
+					  plot_split = False,
 					  response_range = None,
 					  split = 0.2
 					  ): 
@@ -463,6 +486,8 @@ class EchoStateExperiment:
 		col_idx = list(range(n_cols))
 
 		self.split = split
+		self.method = method
+		self.aspect = aspect
 		
 		#remove the response column which we are trying to use for inpainting
 		if method == "random":
@@ -531,10 +556,9 @@ class EchoStateExperiment:
 		# PARTITION THE DATA
 		observers = dataset[ : , obs_idx]
 
-		observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len  , : ]
+		observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
 
-		response_tr, response_te = response[ :train_len, : ], response[ train_len , : ]
-
+		response_tr, response_te = response[ :train_len, : ], response[ train_len: , : ]
 		
 		### Visualize the train test split and the observers
 		if plot_split == True:
@@ -555,7 +579,7 @@ class EchoStateExperiment:
 
 			legend_elements = [Patch(facecolor='cyan', edgecolor='blue', label='Train'),
 						   	   Patch(facecolor='red', edgecolor='red', label='Test'),
-						       Patch(facecolor='yellow', edgecolor='orange', label='Observers')]
+							   Patch(facecolor='yellow', edgecolor='orange', label='Observers')]
 			
 			
 			# Create the figure
@@ -605,20 +629,6 @@ class EchoStateExperiment:
 			
 			##################################### END plots
 			
-			# print dimensions ect.
-			print_lst =  [(observers_tr, "X target"), (observers_te, "X test")]
-			print_lst += [(response_tr, "response train"), (response_te, "response test")]
-				
-			for i in print_lst:
-				Shape(i)
-			
-			print("observer_range: " + str(observer_range))
-			if response_idx == None:
-				print("target index: " + str(missing))
-			else:
-				print("response range: " + str(response_range))
-
-			
 		self.dat = {"obs_tr"  : observers_tr, 
 				"obs_te"  : observers_te,
 				"resp_tr" : response_tr,
@@ -627,112 +637,287 @@ class EchoStateExperiment:
 				"resp_idx" : response_idx}
 		self.Train, self.Test = self.dat["obs_tr"], self.dat["obs_te"]
 		self.xTr, self.xTe = self.dat["resp_tr"], self.dat["resp_te"]
-		print("total observers: " + str(len(self.dat["obs_idx"])))
-		print("total targets: " + str(len(self.dat["resp_idx"])))
 
+		# print statements:
+		if self.verbose == True:
+			print_lst =  [(observers_tr, "X target"), (observers_te, "X test")]
+			print_lst += [(response_tr, "response train"), (response_te, "response test")]
+				
+			for i in print_lst:
+				Shape(i)
+			print("total observers: " + str(len(self.dat["obs_idx"])))
+			print("total targets: " + str(len(self.dat["resp_idx"])))
 		
-		self.outfile = "experiment_results/" + str(int(self.target_frequency / 1000)) + "k/" + self.size + "/split_" + str(split)  +"/" + "target_" + str(self.target_kHz) +"kh"
+			if method != "freq":
+				print("observer_range: " + str(observer_range))
+				if response_idx == None:
+					print("target index: " + str(missing))
+				else:
+					print("response range: " + str(response_range))
+		
+
+		#assert self.xTr.shape[1] == self.xTe.shape[1], "something is broken, xTr and xTe should have the same column dimension"
+		
+		
+		self.outfile = "experiment_results/" + str(int(self.target_frequency / 1000)) + "k/" + self.size
+		self.outfile += "/split_" + str(split)  +"/" + "target_" + str(self.target_kHz) + "kh/"
+
+		self.outfile += str(self.obs_kHz) + "kh"
+
+
+	def getData2Save(self): 
+		'''
+		Save the data
+		current issue: how do we initialize this function properly?
+		'''
+		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
+		json2be = {}
+		
+		
+		
+		# 1) Here stored are the inputs to 
+		json2be["experiment_inputs"] = {
+			 "size" : self.size, 
+			 "target_frequency" : int(self.target_frequency),
+			 "obs_hz" : float(self.obs_kHz / 1000),
+			 "target_hz" : float(self.target_kHz / 1000),
+			 "verbose" : self.verbose,
+			 }
+		json2be["get_observer_inputs"] = {
+				"method" : self.method,
+				"split" : self.split,
+				"aspect" : float(self.aspect)
+			}
+								 #"target_freq_" : target_freq_, 
+								 #"num_observer_timeseries" : len(dat["obs_idx"]),
+								 #"num_target_timeseries" : len(dat["resp_idx"]),
+								 #"split_cutoff" : dat["resp_tr"].shape[0]}
+		
+
+		# TODO: REWRITE THE BELOW, dat no longer makes sense as a way to save data.
+
+		#1) jsonify dat
+		new_dat = self.dat.copy().copy()
+		for key, item in new_dat.items():
+			if type(item) != list:
+				new_dat[key] = item.tolist()
+				if type(new_dat[key][0]) == int:
+					new_dat[key] = [int(item) for item in new_dat[key]]
+
+				if type(new_dat[key][0]) == float:
+					new_dat[key] = [float(item) for item in new_dat[key]]
+		
+		#json2be["dat"] = new_dat
+		
+		# 2) saving the optimized hyper-parameters, nrmse
+
+		if self.exp == True:
+			try:
+				self.best_arguments
+			except NameError:
+				err_msg + "#TODO Err message"
+
+			json2be["exp_prediction"] = self.prediction.tolist()
+			json2be["nrmse"] = nrmse(json2be["exp_prediction"], self.xTe, columnwise = False)
+		else:
+			try:
+				self.best_arguments
+			except NameError:
+				err_msg + "#TODO Err message"
+
+			json2be["unif_prediction"] = self.prediction.tolist()
+			json2be["nrmse"] = nrmse(json2be["unif_prediction"], self.xTe, columnwise = False)
+			
+
+
+		return(json2be)
+		#Vestigal:
+		"""
+		try:
+			if exp == True:
+				self.exp_best_arguments
+			else:
+				self.unif_best_arguments
+		
+		except NameError:
+			 err_msg + "RC not yet trained"
+		else:
+			json2be["best_arguments"] = self.best_arguments
+		"""
 	
+	def RC_CV(self, cv_args, exp): #TODO: change exp to 
+		"""
+		example bounds:
+		bounds = {
+	        'llambda' : (-12, 1), 
+	        'connectivity': 0.5888436553555889, #(-3, 0)
+	        'n_nodes': (100, 1500),
+	        'spectral_radius': (0.05, 0.99),
+	        'regularization': (-12, 1),
+
+	        all are log scale except  spectral radius and n_nodes
+    	}
+    	example cv args:
+
+    	cv_args = {
+    		bounds : bounds,
+	        initial_samples : 100,
+	        subsequence_length : 250, #150 for 500
+	        eps : 1e-5,
+	        cv_samples : 8, 
+	        max_iterations : 1000, 
+	        scoring_method : 'tanh',
+	        exp_weights : False,
+    	}
+		#esn_cv_spec equivalent: EchoStateNetworkCV
+		"""
+		assert type(exp) == bool, "save_json: exp must be a bool"
+		if exp == True:
+			self.exp = True
+			exp_w_ = {'exp_weights' : True}
+		else:
+			self.exp = False
+			exp_w_ = {'exp_weights' : False}
+
+		predetermined_args = {
+			'obs_index' : self.resp_obs_idx_dict['obs_idx'],
+	        'target_index' : self.resp_obs_idx_dict["resp_idx"]
+		}
+		
+		input_dict = { **cv_args, 
+					   **predetermined_args,
+					   **exp_w_}
+
+		# subclass assignment: EchoStateNetworkCV
+		self.esn_cv = self.esn_cv_spec(**input_dict)
+
+		if exp == True:
+			print("exp rc cv set, ready to train")
+		else:
+			print("uniform rc cv set, ready to train")
+		
+
+		self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr)
+
+		#resp_idx = dat["resp_idx"]
+		#obs_idx = dat['obs_idx']
+		#plot = True
+
+		self.esn = self.esn_spec(**self.best_arguments,
+									 obs_idx = predetermined_args['obs_index'],
+									 resp_idx = predetermined_args['target_index'])
+
+		self.esn.train(x = self.Train, y = self.xTr)
+
+		def my_predict(test, n_steps = None):
+		    if not n_steps:
+		        n_steps = test.shape[0]
+		    return self.esn.predict(n_steps, x = test[:n_steps,:])
+
+		self.prediction = my_predict(self.Test)
+		"""
+		esn_obs = EchoStateNetwork(**exp_best_args, exponential = True, 
+                           resp_idx = dat["resp_idx"], obs_idx = dat['obs_idx'], plot = True)
+		#esn_obs.llambda = 0.01
+		esn_obs.train(x = Train, y = xTr)
+		"""
+
+		self.save_json()
+		print("exp rc cv data saved @ : " + self.outfile)
+
+
+
+
+	def Unif_RC_CV(self, cv_args):
+		"""
+		for example bounds see the above function. 
+		#TODO consider combining these functions.
+		"""
+
+		predetermined_args = {
+			'exp_weights' : False,
+			'obs_index' : self.resp_obs_idx_dict['obs_idx'],
+	        'target_index' : self.resp_obs_idx_dict["resp_idx"]
+		}
+
+		input_dict = { **cv_args, **predetermined_args}
+
+		# subclass assignment: EchoStateNetworkCV
+		self.unif_esn_cv = self.esn_cv_spec(**input_dict)
+		print("uniform rc cv set, ready to train")
+
+		self.unif_best_arguments = self.unif_esn_cv.optimize(x = self.Train, y = self.xTr) 
+
+		self.save_json(exp = False)
+		print("uniform rc cv data saved")
+
+	def save_json(self):
+		
+		save_spec_ = self.getData2Save()
+		new_file = self.outfile
+
+		if self.exp == True:
+			model_ = "_exp"
+		else:
+			model_ = "_unif"
+
+		new_file += model_ + ".txt"
+
+
+
+		with open(new_file, "w") as outfile:
+			data = json.dump(save_spec_, outfile)
+
 
 	""" #TODO Fix these data saving functions to work with the new file system. Some thoughts:
 	# this should be easy. get_new_filename can be eliminated, self.outfile serves the same purpose.
 	# The hard part will be to look at how to save the data. Perhaps save the entire experiment object? Thoughts.
 
 	def count_files(path, current):
-	    count = 0
-	    for path in pathlib.Path(path).iterdir():
-	        if path.is_file():
-	            count += 1
-	    if current:
-	        count = count - 1
-	    return("_" + str(count))
+		count = 0
+		for path in pathlib.Path(path).iterdir():
+			if path.is_file():
+				count += 1
+		if current:
+			count = count - 1
+		return("_" + str(count))
 
 
 	def get_new_filename(exp, 
-	                     obs = len(dat["obs_idx"]), 
-	                     target_freq = "2k",
-	                     ctr = key_freq_idxs[2000],
-	                     spread = target_freq_["spread"],
-	                     current = False
-	                    ):
-	    '''
-	    ideally this function will serve two purposes: it will return a new filename and return 
-	    a dict of data so that we can recreate the experiment. 
-	    This should include 
-	        1) The obs and resp indices, the "best_arguments" (the optimized hyper-parameters),
-	        and the prediction.
-	    '''
-	    if exp:
-	        prefix = 'exp_w'
-	    else: 
-	        prefix = 'non_exp_w'
-	    obs, ctr, spread  = str(obs), str(ctr), str(spread)
-	    
-	    new_dir = "results/" + size + "/" + target_freq + "/"
-	    count = count_files(new_dir, current = current)
-	    new_filename =  prefix  + count + ".txt"
-	    return(new_dir +  new_filename )
+						 obs = len(dat["obs_idx"]), 
+						 target_freq = "2k",
+						 ctr = key_freq_idxs[2000],
+						 spread = target_freq_["spread"],
+						 current = False
+						):
+		'''
+		ideally this function will serve two purposes: it will return a new filename and return 
+		a dict of data so that we can recreate the experiment. 
+		This should include 
+			1) The obs and resp indices, the "best_arguments" (the optimized hyper-parameters),
+			and the prediction.
+		'''
+		if exp:
+			prefix = 'exp_w'
+		else: 
+			prefix = 'non_exp_w'
+		obs, ctr, spread  = str(obs), str(ctr), str(spread)
+		
+		new_dir = "results/" + size + "/" + target_freq + "/"
+		count = count_files(new_dir, current = current)
+		new_filename =  prefix  + count + ".txt"
+		return(new_dir +  new_filename )
 
-	def getData2Save(): #best_arguments, prediction = obs_prediction
-	    '''
-	    Save the data
-	    current issue: how do we initialize this function properly?
-	    '''
-	    err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
-	    json2be = {}
-	    
-	    
-	    
-	    # 1) saving the structure of the data and split
-	    json2be["basic_info"] = {"size" : size, 
-	                             "freq" : freq,
-	                        "target_freq_" : target_freq_, 
-	                        "n_obs" : len(dat["obs_idx"]),
-	                        "n_target" : len(dat["resp_idx"]),
-	                        "split_cutoff" : dat["resp_tr"].shape[0]}
-	    #jsonify dat
-	    new_dat = dat.copy().copy()
-	    for key, item in new_dat.items():
-	        if type(item) != list:
-	            new_dat[key] = item.tolist()
-	    
-	    json2be["dat"] = new_dat
-	    
-	    
-	    # 2) saving the optimized hyper-parameters
-	    try:
-	        best_arguments
-	    except NameError:
-	         err_msg + "RC not yet trained"
-	    else:
-	        json2be["best_arguments"] = best_arguments
-	    
-	    # 3) saving the prediction, mse
-	    try:
-	        obs_prediction
-	    except NameError:
-	         err_msg + "obs_prediction not yet created"
-	    else:
-	        json2be["prediction"] = obs_prediction.tolist()
-	        mse = my_MSE(obs_prediction, dat["resp_te"], verbose = False)
-	        json2be["results"] = {
-	            "MSE" :  mse,
-	            "RMSE" : np.sqrt(mse)
-	        }
-	    return(json2be)
+	
 
-	def save_json(exp):
-	    save_spec_ = getData2Save()
-	    new_file = get_new_filename(exp = exp)
-	    with open(new_file, "w") as outfile:
-	        data = json.dump(save_spec_, outfile)
-	        
+	
+			
 	def my_MSE(prediction, truth, verbose = True, label = ""):
-	    mse_matrix = (prediction - truth)**2
-	    mse = np.sum(mse_matrix)/(mse_matrix.shape[0]*mse_matrix.shape[1])
-	    if verbose == True:
-	        print(label + " MSE: " + str(mse))
-	    return(mse)
+		mse_matrix = (prediction - truth)**2
+		mse = np.sum(mse_matrix)/(mse_matrix.shape[0]*mse_matrix.shape[1])
+		if verbose == True:
+			print(label + " MSE: " + str(mse))
+		return(mse)
 	"""
 
 	"""
