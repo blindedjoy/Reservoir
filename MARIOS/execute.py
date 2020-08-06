@@ -32,7 +32,7 @@ cv_args = {
 
 }
 experiment.RC_CV(cv_args = cv_args, model = "uniform")
-#experiment.RC_CV(cv_args = cv_args, model = "exponential")
+experiment.RC_CV(cv_args = cv_args, model = "exponential")
 #experiment.RC_CV(cv_args = cv_args, model = "hybrid")
 
 #TODO write a function that reveals the results:

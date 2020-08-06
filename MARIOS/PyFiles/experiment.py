@@ -962,8 +962,6 @@ class EchoStateExperiment:
 			model_ = "_unif"
 		"""
 		new_file += ".txt"
-		
-
 
 		with open(new_file, "w") as outfile:
 			data = json.dump(self.json2be, outfile)
