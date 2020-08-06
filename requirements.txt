@@ -5,3 +5,8 @@ GPy
 PyDOE
 GPyOpt
 numba
+datetime
+pandas
+seaborn
+pathlib
+matplotlib
