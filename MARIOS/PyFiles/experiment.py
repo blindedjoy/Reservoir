@@ -717,8 +717,8 @@ class EchoStateExperiment:
 			jsonMerge({"prediction" : ip_pred})
 			jsonMerge({"nrmse" : ip_nrmse})
 			jsonMerge({"best arguments" : {}})
-			print("json2be after initi: ")
-			print(self.json2be)
+			#print("json2be after initi: ")
+			#print(self.json2be)
 
 		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
 
@@ -748,18 +748,18 @@ class EchoStateExperiment:
 		for key, item in new_dat.items():
 			if type(item) != list:
 				new_dat[key] = item.tolist()
-				if type(new_dat[key][0]) == int:
+				if type(new_dat[key]) == int:
 					new_dat[key] = [int(item) for item in new_dat[key]]
 
-				if type(new_dat[key][0]) == float:
+				if type(new_dat[key]) == float:
 					new_dat[key] = [float(item) for item in new_dat[key]]
 		
 		#json2be["dat"] = new_dat
 		
 		# 2) saving the optimized hyper-parameters, nrmse
 
-		print("json2be before pred assignment: ")
-		print(self.json2be)
+		#print("json2be before pred assignment: ")
+		#print(self.json2be)
 		try:
 			self.best_arguments
 		except NameError:

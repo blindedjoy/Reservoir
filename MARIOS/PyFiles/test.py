@@ -13,7 +13,7 @@ def load_data(file = "default"):
 
 #experiment.save_json(exp = False)
 print("DATA STRUCTURE: (it's a dict)")
-bp =  "../"
+bp =  "./"
 fp = bp + 'experiment_results/2k/medium/split_0.5/targetKhz:_0.01__obskHz:_0.03.txt'
 hi = load_data(file = fp)
 for i in hi.keys():
