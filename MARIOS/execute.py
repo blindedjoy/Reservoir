@@ -120,7 +120,7 @@ def run_experiment(inputs, n_cores = 8, cv_samples = 5):
 
     }
     experiment.RC_CV(cv_args = cv_args, model = "uniform")
-    #experiment.RC_CV(cv_args = cv_args, model = "exponential")
+    experiment.RC_CV(cv_args = cv_args, model = "exponential")
 
 
 """
