@@ -11,6 +11,9 @@ from itertools import combinations
 ### Timing
 import timeit
 import multiprocessing
+from random import randint
+import time
+
 start = timeit.default_timer()
 
 
@@ -180,8 +183,7 @@ for target_frequency_ in [2000, 4000]:
 # because the latter is only a wrapper function, not a proper class.
 #https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic#:~:text=Pool%20(%20multiprocessing.,used%20for%20the%20worker%20processes.&text=The%20important%20parts%20are%20the,top%20and%20to%20call%20pool.
 
-from random import randint
-import time
+
 
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
