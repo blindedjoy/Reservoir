@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#estimated number of cores:
+
+# 16 tests, 8 cores each. Then we have the cv loop, requesting four cores per run.
+# 16 * 8
+
 #install the customized version of Reinier's reservoir package
 cd ..
 chmod a+x ./reinstall.sh
