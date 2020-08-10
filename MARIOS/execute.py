@@ -13,6 +13,9 @@ import timeit
 import multiprocessing
 start = timeit.default_timer()
 
+#16 * 4 = 64 for the main part, then the cv loop: 5 cores per run so that's 5 * 4: 84 cores.
+# Alternatively we could request say  8 * 4 = 32 cores , 8 cores for validation loop: 64 cores.
+
 if TEST == True:
     experiment_set = [
          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},

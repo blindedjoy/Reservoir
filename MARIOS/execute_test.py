@@ -14,6 +14,12 @@ import multiprocessing
 start = timeit.default_timer()
 
 if TEST == True:
+  experiment_set = [
+         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
+         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}]
+    """
     experiment_set = [
          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
@@ -32,6 +38,7 @@ if TEST == True:
          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
+    """
 
     bounds = {
         'llambda' : (-12, 3), 
