@@ -13,39 +13,42 @@ import timeit
 import multiprocessing
 start = timeit.default_timer()
 
+
 if TEST == True:
+  print("TEST")
   experiment_set = [
          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}]
-    """
-    experiment_set = [
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
-    """
+  """
+  experiment_set = [
+       {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
+       {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+       {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+       {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10},
+       {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
+       {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
+       {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
+       {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
+       {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}, 
+       {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10}, 
+       {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}, 
+       {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}, 
+       {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
+       {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
+       {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
+       {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
+       {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
+  """
+  # 8 * 4 --> 32
 
-    bounds = {
-        'llambda' : (-12, 3), 
-        'connectivity': (-3, 0), # 0.5888436553555889, 
-        'n_nodes': 100,#(100, 1500),
-        'spectral_radius': (0.05, 0.99),
-        'regularization': (-10,-2)}
+  bounds = {
+      'llambda' : (-12, 3), 
+      'connectivity': (-3, 0), # 0.5888436553555889, 
+      'n_nodes': 100,#(100, 1500),
+      'spectral_radius': (0.05, 0.99),
+      'regularization': (-10,-2)}
 else:
   experiment_set = [
         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
