@@ -1,7 +1,6 @@
 numpy
 scipy
 paramz
-GPy
 PyDOE
 GPyOpt
 numba
