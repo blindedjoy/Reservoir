@@ -163,6 +163,8 @@ class EchoStateExperiment:
 					   "resp_freq" : resp_Freq_Lst}
 
 		self.resp_obs_idx_dict = dict2Return
+		self.obs_idx  = dict2Return["obs_idx"]
+		self.resp_idx = dict2Return["resp_idx"]
 
 
 
@@ -717,8 +719,12 @@ class EchoStateExperiment:
 			jsonMerge({"prediction" : ip_pred})
 			jsonMerge({"nrmse" : ip_nrmse})
 			jsonMerge({"best arguments" : {}})
+			json2be["obs_idx"] = self.obs_idx
+			json2be["resp_idx"] = self.resp_idx
+
 			#print("json2be after initi: ")
 			#print(self.json2be)
+
 
 		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
 
@@ -988,7 +994,9 @@ class EchoStateExperiment:
 		point_lst = []
 		
 		resp_idx = self.resp_obs_idx_dict["resp_idx"]
+		
 		obs_idx = self.resp_obs_idx_dict["obs_idx"]
+
 
 		total_zone_idx = resp_idx + obs_idx
 		#Train zone
