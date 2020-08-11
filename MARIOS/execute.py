@@ -77,7 +77,7 @@ else:
 
 # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
 
-def run_experiment(inputs, n_cores = 8, cv_samples = 5):
+def run_experiment(inputs, n_cores = 2, cv_samples = 3):
     """
     The final form of the input dict is:
 
@@ -224,7 +224,5 @@ def test():
 if __name__ == '__main__':
     test()
 
-stop = timeit.default_timer()
-
-print('Time: ', stop - start)  
+ 
 #experiment.RC_CV(cv_args = cv_args, model = "hybrid")

@@ -49,6 +49,8 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         super(MyPool, self).__init__(*args, **kwargs)
 def run_experiment(inputs, n_cores = 4, cv_samples = 4):
       """
+      4*4 = 16 + 
+
       The final form of the input dict is:
 
         inputs = {"target_frequency_" : ...
@@ -202,11 +204,6 @@ def test():
                 "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
-      experiment_set = [
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}]
       """
       experiment_set = [
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
@@ -225,6 +222,15 @@ def test():
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
+      """
+      experiment_set = [
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}]
+      
+      """
+      
       """
       
     for experiment in experiment_set:
@@ -269,7 +275,7 @@ if __name__ == '__main__':
   """
   
   """
-  TEST = True
+  TEST = False #TODO: fix this so that it's a command line argument
 
   #set_start_method('spawn')#, force = True) # set_start_method('spawn'
   start = timeit.default_timer()
