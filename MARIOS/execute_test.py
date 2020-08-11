@@ -1,4 +1,4 @@
-#!/bin/bash/python3
+#!/bin/bash/env python3
 
 #SBATCH -n 16 # 5 cores
 #SBATCH --mem=32000
