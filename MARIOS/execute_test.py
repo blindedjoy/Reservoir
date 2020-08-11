@@ -210,8 +210,9 @@ def test():
     
     n_experiments = len(experiment_set)
     print("Creating "+str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+    set_start_method('forkserver')
     pool = MyPool(n_experiments)
-    pool.set_start_method('forkserver')
+
 
     pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
 
