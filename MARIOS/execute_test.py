@@ -147,9 +147,7 @@ def test():
       print("TEST")
       experiment_set = [
              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}]
+             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}]
       """
       experiment_set = [
            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
@@ -220,6 +218,7 @@ def test():
     #print(result)
 
 if __name__ == '__main__':
+    set_start_method('forkserver')
     #set_start_method('spawn')#, force = True) # set_start_method('spawn'
     start = timeit.default_timer()
     test()
