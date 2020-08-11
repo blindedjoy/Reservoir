@@ -6,7 +6,7 @@
 #SBATCH --nodes=1                    # Run all processes on a single node	
 #SBATCH --ntasks=2                   # Run a single task		
 #SBATCH --cpus-per-task=8            # Number of CPU cores per task
-#SBATCH --mem-per-cpu=64gb                    # Job memory request
+#SBATCH --mem=200gb                    # Job memory request
 #SBATCH --time=00:05:00              # Time limit hrs:min:sec
 #SBATCH --output=parallel_%j.log     # Standard output and error log
 SLURM_CPUS_ON_NODE=20

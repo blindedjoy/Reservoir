@@ -1,19 +1,24 @@
 #!/bin/bash/python
-from reservoir import *
-from PyFiles.imports import *
-from PyFiles.helpers import *
-from PyFiles.experiment import *
-from itertools import combinations
-from random import randint
 
-### multiprocessing
-import multiprocessing
-from multiprocessing import set_start_method
 
-### Timing
-import time
-import timeit
-class NoDaemonProcess(multiprocessing.Process):
+
+#https://github.com/pytorch/pytorch/issues/3492
+if __name__ == '__main__':
+  from reservoir import *
+  from PyFiles.imports import *
+  from PyFiles.helpers import *
+  from PyFiles.experiment import *
+  from itertools import combinations
+  from random import randint
+
+  ### multiprocessing
+  import multiprocessing
+  from multiprocessing import set_start_method
+
+  ### Timing
+  import time
+  import timeit
+  class NoDaemonProcess(multiprocessing.Process):
       @property
       def daemon(self):
           return False
@@ -23,18 +28,15 @@ class NoDaemonProcess(multiprocessing.Process):
           pass
 
 
-class NoDaemonContext(type(multiprocessing.get_context())):
-    Process = NoDaemonProcess
+  class NoDaemonContext(type(multiprocessing.get_context())):
+      Process = NoDaemonProcess
 
-# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
-# because the latter is only a wrapper function, not a proper class.
-class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
-    def __init__(self, *args, **kwargs):
-        kwargs['context'] = NoDaemonContext()
-        super(MyPool, self).__init__(*args, **kwargs)
-
-#https://github.com/pytorch/pytorch/issues/3492
-if __name__ == '__main__':
+  # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+  # because the latter is only a wrapper function, not a proper class.
+  class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
+      def __init__(self, *args, **kwargs):
+          kwargs['context'] = NoDaemonContext()
+          super(MyPool, self).__init__(*args, **kwargs)
 
   #imports
   
