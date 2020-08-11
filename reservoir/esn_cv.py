@@ -509,10 +509,16 @@ class EchoStateNetworkCV:
         # Get samples
         Pool = multiprocessing.Pool(self.cv_samples)
         start_indices = np.random.randint(viable_start, viable_stop, size = self.cv_samples)
-        results = list(zip(*Pool.map(self.define_tr_val, start_indices)))
+        #get the asynch object:
+        results = list(zip(*Pool.map(self.define_tr_val, start_indices)))#.get(timeout=5)))
         results = np.array(results)
 
-        Pool.terminate() #close()
+        #apply_results = [pool.apply_async(mesh_subset, [population]) for i in range(len(population))]
+        # the call to result.get() blocks until its worker process (running
+        # mesh_subset) returns a value
+        #population = [result.get() for result in apply_results]
+
+        Pool.close() #close()
         Pool.join()
         ###
 

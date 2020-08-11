@@ -18,10 +18,10 @@ echo "Running bayesRC on 20 CPU cores"
 # 16 * 8
 
 #install the customized version of Reinier's reservoir package
-#cd ..
+cd ..; ./reinstall.sh; cd MARIOS; 
 #chmod a+x ./reinstall.sh
-# ./reinstall.sh
-#cd MARIOS ##### asfSBATCH	--cpus-per-task=8
+# 
+# ##### asfSBATCH	--cpus-per-task=8
 
 #chmod a+x ./build_file_system.sh
 #./build_filesystem.sh
