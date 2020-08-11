@@ -237,7 +237,7 @@ if __name__ == '__main__':
     except RuntimeError:
       pass
     """
-    set_start_method('spawn')#'forkserver')
+    #set_start_method('spawn')#'forkserver')
     TEST = True
 
     #set_start_method('spawn')#, force = True) # set_start_method('spawn'
