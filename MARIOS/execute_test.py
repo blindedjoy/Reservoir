@@ -47,7 +47,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
-def run_experiment(inputs, n_cores = 2, cv_samples = 4):
+def run_experiment(inputs, n_cores = 4, cv_samples = 4):
       """
       The final form of the input dict is:
 
@@ -206,6 +206,12 @@ def test():
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}]
+      """
+      experiment_set = [
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000},
             {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
             {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
@@ -219,6 +225,7 @@ def test():
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
+      """
       
     for experiment in experiment_set:
       experiment["bounds"] = bounds
