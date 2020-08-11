@@ -1,4 +1,4 @@
-#!/bin/bash/python
+#!/bin/bash/env python
 
 #SBATCH --job-name=multiprocess
 #SBATCH --output=logs/multiprocess_%j.out
