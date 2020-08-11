@@ -1,12 +1,8 @@
-#!/bin/bash/env python
+#!/bin/bash/python3
 
-#SBATCH --job-name=multiprocess
-#SBATCH --output=logs/multiprocess_%j.out
-#SBATCH --time=01:00:00
-#SBATCH --partition=kicp
-#SBATCH --account=kicp
-#SBATCH --nodes=1
-#SBATCH --exclusive
+#SBATCH -n 16 # 5 cores
+#SBATCH --mem=32000
+#SBATCH --time=00:05:00
 
 import multiprocessing
 import sys
