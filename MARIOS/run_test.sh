@@ -2,9 +2,9 @@
 
 #estimated number of cores:
 
-#SBATCH -n 20 				# Number of cores requested
+#SBATCH -n 64				# Number of cores requested
 #SBATCH -N 1 				# Ensure that all cores are on one machine
-#SBATCH -t 15 				# Runtime in minutes
+#SBATCH -t 60 				# Runtime in minutes
 #SBATCH -p serial_requeue 	#	 Partition to submit to
 #SBATCH --mem=14 			# Memory in GB (see also --mem-per-cpu)
 #SBATCH -o output_%j.out 	# Standard out goes to this file
@@ -29,4 +29,4 @@ python execute_test.py
 
 
 
-module load Anaconda3/2019.10
+#module load Anaconda3/2019.10
