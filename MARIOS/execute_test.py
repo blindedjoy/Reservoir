@@ -211,6 +211,7 @@ def test():
     n_experiments = len(experiment_set)
     print("Creating "+str(n_experiments) + " (non-daemon) workers and jobs in main process.")
     pool = MyPool(n_experiments)
+    pool.set_start_method('forkserver')
 
     pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
 
@@ -224,7 +225,7 @@ if __name__ == '__main__':
 
   
   
-  set_start_method('forkserver', force = True)
+  
 
   #imports
   
