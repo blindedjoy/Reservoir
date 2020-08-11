@@ -133,7 +133,7 @@ class MyPool(multiprocessing.pool.Pool):
 class NoDaemonProcess(multiprocessing.Process):
     @property
     def daemon(self):
-        return True#False
+        return False
 
     @daemon.setter
     def daemon(self, value):
@@ -145,7 +145,7 @@ class NoDaemonContext(type(multiprocessing.get_context())):
 
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
-class MyPool(multiprocessing.pool.ThreadPool):#Pool):
+class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
