@@ -28,8 +28,7 @@ echo "Running bayesRC on 20 CPU cores"
 
 #chmod a+x ./build_file_system.sh
 #./build_filesystem.sh
-module load mpi4py/1.3-2014q3+intelmpi-4.0
 
-mpirun python execute_test.py
+python execute_test.py
 
 #python PyFiles/test.py
