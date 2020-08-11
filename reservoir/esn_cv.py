@@ -512,7 +512,7 @@ class EchoStateNetworkCV:
         results = list(zip(*Pool.map(self.define_tr_val, start_indices)))
         results = np.array(results)
 
-        Pool.close()
+        Pool.terminate() #close()
         Pool.join()
         ###
 
