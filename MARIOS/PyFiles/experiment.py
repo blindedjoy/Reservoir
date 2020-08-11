@@ -719,8 +719,8 @@ class EchoStateExperiment:
 			jsonMerge({"prediction" : ip_pred})
 			jsonMerge({"nrmse" : ip_nrmse})
 			jsonMerge({"best arguments" : {}})
-			json2be["obs_idx"] = self.obs_idx
-			json2be["resp_idx"] = self.resp_idx
+			self.json2be["obs_idx"] = self.obs_idx
+			self.json2be["resp_idx"] = self.resp_idx
 
 			#print("json2be after initi: ")
 			#print(self.json2be)
