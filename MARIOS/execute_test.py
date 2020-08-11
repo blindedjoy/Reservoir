@@ -97,7 +97,7 @@ def run_experiment(inputs, n_cores = 2, cv_samples = 3):
 
       }
       experiment.RC_CV(cv_args = cv_args, model = "uniform")
-      #experiment.RC_CV(cv_args = cv_args, model = "exponential")
+      experiment.RC_CV(cv_args = cv_args, model = "exponential")
 
 
 """
