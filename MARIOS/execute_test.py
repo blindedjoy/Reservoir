@@ -226,13 +226,13 @@ def test():
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
-    set_start_method('forkserver', force = True)
-    """
+    #set_start_method('forkserver')#, force = True)
+
     try:
       set_start_method('forkserver')
     except RuntimeError:
       pass
-    """
+
     #set_start_method('spawn')#, force = True) # set_start_method('spawn'
     start = timeit.default_timer()
     test()
