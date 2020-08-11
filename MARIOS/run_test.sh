@@ -2,16 +2,16 @@
 
 #SBATCH -n 30		    # Number of cores requested
 #SBATCH -N 1 				# Ensure that all cores are on one machine
-#SBATCH --ntasks-per-node=8
+#SBATCH --ntasks-per-node=6
 #SBATCH -t 1440 		    # Runtime in minutes
 #SBATCH -p serial_requeue 	#	 Partition to submit to
-#SBATCH --mem=128gb 			# Memory in GB (see also --mem-per-cpu)
+#SBATCH --mem=200gb 			# Memory in GB (see also --mem-per-cpu)
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
 
 #cv_samples = 3 ; n_cores = 2 ==> 6 tasks ; n_experiments = 5 ==> 30
 
-# 2 * 3 * 5
+# Labtop uses 8 gb per core, try to go way above that. Let's say, 20 gb per core. 20*8 = 160gb, let's go for 200gb.
 
 echo "Running bayesRC on 20 CPU cores"
 

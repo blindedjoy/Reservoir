@@ -47,7 +47,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
-def run_experiment(inputs, n_cores = 4, cv_samples = 4):
+def run_experiment(inputs, n_cores = 2, cv_samples = 3):
       """
       4*4 = 16 + 
 
@@ -187,6 +187,7 @@ def test():
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
       """
+      print("Real Run")
       bounds = {
           'llambda' : (-12, 3), 
           'connectivity': (-3, 0), # 0.5888436553555889, 
