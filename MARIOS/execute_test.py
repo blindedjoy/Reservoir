@@ -210,7 +210,10 @@ def test():
     
     n_experiments = len(experiment_set)
     print("Creating "+str(n_experiments) + " (non-daemon) workers and jobs in main process.")
-    set_start_method('forkserver')
+    try:
+      set_start_method('forkserver')
+    except RuntimeError:
+      pass
     pool = MyPool(n_experiments)
 
 
@@ -242,10 +245,7 @@ if __name__ == '__main__':
 
   
   """
-  try:
-    set_start_method('forkserver')
-  except RuntimeError:
-    pass
+  
   """
   TEST = True
 
