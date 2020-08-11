@@ -1,6 +1,6 @@
 #!/bin/bash/python
-
-
+from multiprocessing import set_start_method
+set_start_method('forkserver', force = True)
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
@@ -13,11 +13,12 @@ if __name__ == '__main__':
 
   ### multiprocessing
   import multiprocessing
-  from multiprocessing import set_start_method
+  
 
   ### Timing
   import time
   import timeit
+  
   class NoDaemonProcess(multiprocessing.Process):
       @property
       def daemon(self):
@@ -233,7 +234,7 @@ if __name__ == '__main__':
       pool.join()
       #print(result)
 
-  #set_start_method('forkserver', force = True)
+  
   """
   try:
     set_start_method('forkserver')
