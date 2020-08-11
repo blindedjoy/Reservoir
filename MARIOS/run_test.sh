@@ -1,17 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=parallel_job      # Job name
-#SBATCH --mail-type=END,FAIL         # Mail events (NONE, BEGIN, END, FAIL, ALL)
-#SBATCH --mail-user=hnjoy@mac.com   # Where to send mail	
-
-#SBATCH --output=parallel_%j.log     # Standard output and error log
-
-#SBATCH --job-name=slurm-test    # create a short name for your job
-#SBATCH --nodes=1                # node count
-#SBATCH --ntasks>1         # total number of tasks across all nodes
-#SBATCH --cpus-per-task>1        # cpu-cores per task (>1 if multi-threaded tasks)
-#SBATCH --mem-per-cpu=8G         # memory per cpu-core
-#SBATCH --time=00:05:00          # total run time limit (HH:MM:SS)
+#SBATCH -n 20			    # Number of cores requested
+#SBATCH -N 1 				# Ensure that all cores are on one machine
+#SBATCH -t 1440 		    # Runtime in minutes
+#SBATCH -p serial_requeue 	#	 Partition to submit to
+#SBATCH --mem=64gb 			# Memory in GB (see also --mem-per-cpu)
+#SBATCH -o output_%j.out 	# Standard out goes to this file
+#SBATCH -e error_%j.err 	# Standard err goes to this file
 
 echo "Running bayesRC on 20 CPU cores"
 
