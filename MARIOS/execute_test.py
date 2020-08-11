@@ -84,62 +84,62 @@ def run_experiment(inputs, n_cores = 8, cv_samples = 5):
       #experiment.RC_CV(cv_args = cv_args, model = "exponential")
 
 
-  """
-  things_2_combine = { 
-      "obs500" :  500,
-      "obs1k"  : 1000,
-      "targ500" : 500,
-      "targ1k" : 1000,
-      "split0.5" : ,
-  }
+"""
+things_2_combine = { 
+    "obs500" :  500,
+    "obs1k"  : 1000,
+    "targ500" : 500,
+    "targ1k" : 1000,
+    "split0.5" : ,
+}
 
-  lst_of_dicts = []
-  count = 0
-  for target_frequency_ in [2000, 4000]:
-      for split_ in [0.5, 0.9]:
-          for obs_hz_ in [ 10,  20]:
-              for target_hz_ in [10, 20]:
-                  count += 1
-                  print( "set " + str(count) + ": { tf: " + str(target_frequency_) +
-                         ", split: " + str(split_) + 
-                         ", obs_hz: " + str(obs_hz_) + 
-                         ", targ_hz: " + str(target_hz_) + "}")
-                  dict_spec_ = {
-                                "target_freq" : target_frequency_, 
-                                "split" : split_, 
-                                "obs_hz" : obs_hz_,
-                                "target_hz" : target_hz_
-                                }
-                  lst_of_dicts += [dict_spec_]
+lst_of_dicts = []
+count = 0
+for target_frequency_ in [2000, 4000]:
+    for split_ in [0.5, 0.9]:
+        for obs_hz_ in [ 10,  20]:
+            for target_hz_ in [10, 20]:
+                count += 1
+                print( "set " + str(count) + ": { tf: " + str(target_frequency_) +
+                       ", split: " + str(split_) + 
+                       ", obs_hz: " + str(obs_hz_) + 
+                       ", targ_hz: " + str(target_hz_) + "}")
+                dict_spec_ = {
+                              "target_freq" : target_frequency_, 
+                              "split" : split_, 
+                              "obs_hz" : obs_hz_,
+                              "target_hz" : target_hz_
+                              }
+                lst_of_dicts += [dict_spec_]
 
-  #print(lst_of_dicts)
+#print(lst_of_dicts)
 
-  #for experiment_input in experiment_set:
-  #  run_experiment(experiment_input)
+#for experiment_input in experiment_set:
+#  run_experiment(experiment_input)
 
-  #parrallelized loop:
-  #Pool = multiprocessing.Pool(n_experiments)
-  #results = zip(*Pool.map(run_experiment, experiment_set))
-  """
+#parrallelized loop:
+#Pool = multiprocessing.Pool(n_experiments)
+#results = zip(*Pool.map(run_experiment, experiment_set))
+"""
 
-  # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
-  # because the latter is only a wrapper function, not a proper class.
-  #https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic#:~:text=Pool%20(%20multiprocessing.,used%20for%20the%20worker%20processes.&text=The%20important%20parts%20are%20the,top%20and%20to%20call%20pool.
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+#https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic#:~:text=Pool%20(%20multiprocessing.,used%20for%20the%20worker%20processes.&text=The%20important%20parts%20are%20the,top%20and%20to%20call%20pool.
 
 
-  # THE FOLLOWING IS FROM 2011, needs to be updated: from the same stackoverflow:
-  """
-  class NoDaemonProcess(multiprocessing.Process):
-      # make 'daemon' attribute always return False
-      def _get_daemon(self):
-          return False
-      def _set_daemon(self, value):
-          pass
-      daemon = property(_get_daemon, _set_daemon)
+# THE FOLLOWING IS FROM 2011, needs to be updated: from the same stackoverflow:
+"""
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
 
-  class MyPool(multiprocessing.pool.Pool):
-      Process = NoDaemonProcess
-  """
+class MyPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
+"""
   
 
 
