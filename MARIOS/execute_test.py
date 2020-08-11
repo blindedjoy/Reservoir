@@ -220,7 +220,7 @@ def test():
     #print(result)
 
 if __name__ == '__main__':
-    set_start_method('spawn', force = True) # set_start_method('spawn'
+    #set_start_method('spawn')#, force = True) # set_start_method('spawn'
     start = timeit.default_timer()
     test()
     stop = timeit.default_timer()
