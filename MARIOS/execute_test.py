@@ -11,6 +11,7 @@ from itertools import combinations
 ### Timing
 import timeit
 import multiprocessing
+from multiprocessing import set_start_method
 from random import randint
 import time
 
@@ -219,6 +220,7 @@ def test():
     #print(result)
 
 if __name__ == '__main__':
+    set_start_method('forkserver', force = True) # set_start_method('spawn'
     start = timeit.default_timer()
     test()
     stop = timeit.default_timer()
