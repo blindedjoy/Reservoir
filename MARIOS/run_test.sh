@@ -1,14 +1,18 @@
 #!/bin/bash
 
-#estimated number of cores:
+#SBATCH --job-name=parallel_job      # Job name
+#SBATCH --mail-type=END,FAIL         # Mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=hnjoy@mac.com   # Where to send mail	
+#SBATCH --nodes=1                    # Run all processes on a single node	
+#SBATCH --ntasks=2                   # Run a single task		
+#SBATCH --cpus-per-task=8            # Number of CPU cores per task
+#SBATCH --mem=32gb                    # Job memory request
+#SBATCH --time=00:05:00              # Time limit hrs:min:sec
+#SBATCH --output=parallel_%j.log     # Standard output and error log
 
-#SBATCH -n 16				# Number of cores requested
-#SBATCH -N 2
-#SBATCH --cpus-per-task=8			# Ensure that all cores are on one machine
-#SBATCH -t 60 				# Runtime in minutes
-#SBATCH --mem=128000			# Memory in GB (see also --mem-per-cpu)
-#SBATCH -o output_%j.out 	# Standard out goes to this file
-#SBATCH -e error_%j.err 	# Standard err goes to this file
+echo "Running bayesRC on $SLURM_CPUS_ON_NODE CPU cores"
+
+
 
 # 16 tests, 8 cores each. Then we have the cv loop, requesting four cores per run.
 # 16 * 8
@@ -19,8 +23,8 @@
 # ./reinstall.sh
 #cd MARIOS ##### asfSBATCH	--cpus-per-task=8
 
-chmod a+x ./build_file_system.sh
-./build_filesystem.sh
+#chmod a+x ./build_file_system.sh
+#./build_filesystem.sh
 
 python execute_test.py
 
