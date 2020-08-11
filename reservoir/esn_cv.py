@@ -15,6 +15,7 @@ import multiprocessing
 __all__ = ['EchoStateNetworkCV']
 
 
+
 class EchoStateNetworkCV:
     """A cross-validation object that automatically optimizes ESN hyperparameters using Bayesian optimization with
     Gaussian Process priors.
@@ -510,6 +511,9 @@ class EchoStateNetworkCV:
         start_indices = np.random.randint(viable_start, viable_stop, size = self.cv_samples)
         results = list(zip(*Pool.map(self.define_tr_val, start_indices)))
         results = np.array(results)
+
+        Pool.close()
+        Pool.join()
         ###
 
         self.scores = results.reshape(scores.shape)

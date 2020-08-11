@@ -163,8 +163,8 @@ class EchoStateExperiment:
 					   "resp_freq" : resp_Freq_Lst}
 
 		self.resp_obs_idx_dict = dict2Return
-		self.obs_idx  = dict2Return["obs_idx"]
-		self.resp_idx = dict2Return["resp_idx"]
+		self.obs_idx  = [int(i) for i in dict2Return["obs_idx"]]
+		self.resp_idx = [int(i) for i in dict2Return["resp_idx"]]
 
 
 
