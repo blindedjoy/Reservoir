@@ -1,7 +1,8 @@
 #!/bin/bash
 
-#SBATCH -n 20			    # Number of cores requested
+#SBATCH -n 16		    # Number of cores requested
 #SBATCH -N 1 				# Ensure that all cores are on one machine
+#SBATCH --ntasks-per-node=8
 #SBATCH -t 1440 		    # Runtime in minutes
 #SBATCH -p serial_requeue 	#	 Partition to submit to
 #SBATCH --mem=64gb 			# Memory in GB (see also --mem-per-cpu)
@@ -10,7 +11,8 @@
 
 echo "Running bayesRC on 20 CPU cores"
 
-
+# n-tasks per node: n_cores * cv_samples
+# -n or num_cores: len(experiment_set) * n-tasks
 
 # 16 tests, 8 cores each. Then we have the cv loop, requesting four cores per run.
 # 16 * 8

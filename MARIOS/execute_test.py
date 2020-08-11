@@ -47,7 +47,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
-def run_experiment(inputs, n_cores = 8, cv_samples = 5):
+def run_experiment(inputs, n_cores = 2, cv_samples = 4):
       """
       The final form of the input dict is:
 
