@@ -53,7 +53,7 @@ def run_experiment(inputs, n_cores = 8, cv_samples = 5):
     #(-12, 1)}
     #example cv args:
     cv_args = {
-        'bounds' : bounds,
+        'bounds' : inputs["bounds"],
         'initial_samples' : 100,
         'subsequence_length' : 250, #150 for 500
         'eps' : 1e-5,
@@ -176,6 +176,16 @@ def test():
           'spectral_radius': (0.05, 0.99),
           'regularization': (-10,-2)}
     else:
+      bounds = {
+                 #all are log scale except  spectral radius, leaking rate and n_nodes
+                'llambda' : (-12, 3), 
+                'connectivity': (-3, 0), # 0.5888436553555889, 
+                'n_nodes': (100, 1500),
+                'spectral_radius': (0.05, 0.99),
+                'regularization': (-12, 1),
+                "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
+                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
+                }
       experiment_set = [
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
@@ -193,17 +203,10 @@ def test():
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
-      bounds = {
-                 #all are log scale except  spectral radius, leaking rate and n_nodes
-                'llambda' : (-12, 3), 
-                'connectivity': (-3, 0), # 0.5888436553555889, 
-                'n_nodes': (100, 1500),
-                'spectral_radius': (0.05, 0.99),
-                'regularization': (-12, 1),
-                "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
-                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
-                }
-
+      
+    for experiment in experiment_set:
+      experiment["bounds"] = bounds
+      
 
     n_experiments = len(experiment_set)
     print("Creating "+str(n_experiments) + " (non-daemon) workers and jobs in main process.")
