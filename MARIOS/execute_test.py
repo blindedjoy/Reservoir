@@ -112,6 +112,9 @@ for target_frequency_ in [2000, 4000]:
 # because the latter is only a wrapper function, not a proper class.
 #https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic#:~:text=Pool%20(%20multiprocessing.,used%20for%20the%20worker%20processes.&text=The%20important%20parts%20are%20the,top%20and%20to%20call%20pool.
 
+
+# THE FOLLOWING IS FROM 2011, needs to be updated: from the same stackoverflow:
+"""
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
     def _get_daemon(self):
@@ -122,25 +125,28 @@ class NoDaemonProcess(multiprocessing.Process):
 
 class MyPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
+"""
+class NoDaemonProcess(multiprocessing.Process):
+    @property
+    def daemon(self):
+        return False
 
-def sleepawhile(t):
-    print("Sleeping %i seconds..." % t)
-    time.sleep(t)
-    return t
+    @daemon.setter
+    def daemon(self, value):
+        pass
 
-def work(num_procs):
-    print("Creating %i (daemon) workers and jobs in child." % num_procs)
-    pool = multiprocessing.Pool(num_procs)
 
-    result = pool.map(sleepawhile,
-        [randint(1, 5) for x in range(num_procs)])
+class NoDaemonContext(type(multiprocessing.get_context())):
+    Process = NoDaemonProcess
 
-    # The following is not really needed, since the (daemon) workers of the
-    # child's pool are killed when the child is terminated, but it's good
-    # practice to cleanup after ourselves anyway.
-    pool.close()
-    pool.join()
-    return result
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class MyPool(multiprocessing.pool.Pool):
+    def __init__(self, *args, **kwargs):
+        kwargs['context'] = NoDaemonContext()
+        super(MyPool, self).__init__(*args, **kwargs)
+
+
 
 def test():
     if TEST == True:
@@ -220,7 +226,7 @@ def test():
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
-    set_start_method('forkserver', force = True)
+    #set_start_method('forkserver', force = True)
     """
     try:
       set_start_method('forkserver')
