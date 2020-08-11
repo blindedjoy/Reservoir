@@ -1,21 +1,25 @@
 #!/bin/bash/python
 
-TEST = True
-
+#imports
 from reservoir import *
 from PyFiles.imports import *
 from PyFiles.helpers import *
 from PyFiles.experiment import *
 from itertools import combinations
+from random import randint
 
-### Timing
-import timeit
+### multiprocessing
 import multiprocessing
 from multiprocessing import set_start_method
-from random import randint
+
+### Timing
 import time
+import timeit
+
 
 set_start_method('forkserver')
+
+
 
 # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
 
@@ -233,6 +237,7 @@ if __name__ == '__main__':
     except RuntimeError:
       pass
     """
+    TEST = True
 
     #set_start_method('spawn')#, force = True) # set_start_method('spawn'
     start = timeit.default_timer()
