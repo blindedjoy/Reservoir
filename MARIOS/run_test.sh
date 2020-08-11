@@ -7,7 +7,7 @@
 #SBATCH	--cpus-per-task=8
 #SBATCH -N >1				# Ensure that all cores are on one machine
 #SBATCH -t 60 				# Runtime in minutes
-#SBATCH --mem=64000			# Memory in GB (see also --mem-per-cpu)
+#SBATCH --mem=128000			# Memory in GB (see also --mem-per-cpu)
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
 
