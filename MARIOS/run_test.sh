@@ -4,9 +4,9 @@
 #SBATCH --mail-type=END,FAIL         # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=hnjoy@mac.com   # Where to send mail	
 #SBATCH --nodes=1                    # Run all processes on a single node	
-#SBATCH --ntasks=2                   # Run a single task		
-#SBATCH --cpus-per-task=40            # Number of CPU cores per task
-#SBATCH --mem=128000                   # Job memory request
+#SBATCH --ntasks=1                   # Run a single task		
+#SBATCH --cpus-per-task=8           # Number of CPU cores per task
+#SBATCH --mem=32000                   # Job memory request
 #SBATCH --time=00:05:00              # Time limit hrs:min:sec
 #SBATCH --output=parallel_%j.log     # Standard output and error log
 
