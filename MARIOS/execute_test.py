@@ -1,25 +1,20 @@
 #!/bin/bash/python
+from multiprocessing import set_start_method
+from reservoir import *
+from PyFiles.imports import *
+from PyFiles.helpers import *
+from PyFiles.experiment import *
+from itertools import combinations
+from random import randint
+
+### multiprocessing
+import multiprocessing
 
 
-#https://github.com/pytorch/pytorch/issues/3492
-if __name__ == '__main__':
-  from multiprocessing import set_start_method
-  from reservoir import *
-  from PyFiles.imports import *
-  from PyFiles.helpers import *
-  from PyFiles.experiment import *
-  from itertools import combinations
-  from random import randint
-
-  ### multiprocessing
-  import multiprocessing
-
-
-  ### Timing
-  import time
-  import timeit
-
-  class NoDaemonProcess(multiprocessing.Process):
+### Timing
+import time
+import timeit
+class NoDaemonProcess(multiprocessing.Process):
       @property
       def daemon(self):
           return False
@@ -29,29 +24,16 @@ if __name__ == '__main__':
           pass
 
 
-  class NoDaemonContext(type(multiprocessing.get_context())):
-      Process = NoDaemonProcess
+class NoDaemonContext(type(multiprocessing.get_context())):
+    Process = NoDaemonProcess
 
-  # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
-  # because the latter is only a wrapper function, not a proper class.
-  class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
-      def __init__(self, *args, **kwargs):
-          kwargs['context'] = NoDaemonContext()
-          super(MyPool, self).__init__(*args, **kwargs)
-  
-  set_start_method('forkserver', force = True)
-
-  #imports
-  
-
-
-  #set_start_method('forkserver')
-
-
-
-  # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
-
-  def run_experiment(inputs, n_cores = 8, cv_samples = 5):
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
+    def __init__(self, *args, **kwargs):
+        kwargs['context'] = NoDaemonContext()
+        super(MyPool, self).__init__(*args, **kwargs)
+def run_experiment(inputs, n_cores = 8, cv_samples = 5):
       """
       The final form of the input dict is:
 
@@ -162,79 +144,99 @@ if __name__ == '__main__':
 
 
 
-  def test():
-      if TEST == True:
-        print("TEST")
-        experiment_set = [
-               {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
-               {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}]
-        """
-        experiment_set = [
+def test():
+    if TEST == True:
+      print("TEST")
+      experiment_set = [
              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
-             {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
-             {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
-             {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
-             {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}, 
-             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10}, 
-             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}, 
-             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}, 
-             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
-             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
-             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
-             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
-             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
-        """
-        bounds = {
-            'llambda' : (-12, 3), 
-            'connectivity': (-3, 0), # 0.5888436553555889, 
-            'n_nodes': 100,#(100, 1500),
-            'spectral_radius': (0.05, 0.99),
-            'regularization': (-10,-2)}
-      else:
-        bounds = {
-                   #all are log scale except  spectral radius, leaking rate and n_nodes
-                  'llambda' : (-12, 3), 
-                  'connectivity': (-3, 0), # 0.5888436553555889, 
-                  'n_nodes': (100, 1500),
-                  'spectral_radius': (0.05, 0.99),
-                  'regularization': (-12, 1),
-                  "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
-                  # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
-                  }
-        experiment_set = [
-              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
-              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
-              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000},
-              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
-              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
-              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, 
-              {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
-              {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
-              {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, 
-              {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}, 
-              {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, 
-              {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
-              {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-              {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
-        
-      for experiment in experiment_set:
-        experiment["bounds"] = bounds
+             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}]
+      """
+      experiment_set = [
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
+      """
+      bounds = {
+          'llambda' : (-12, 3), 
+          'connectivity': (-3, 0), # 0.5888436553555889, 
+          'n_nodes': 100,#(100, 1500),
+          'spectral_radius': (0.05, 0.99),
+          'regularization': (-10,-2)}
+    else:
+      bounds = {
+                 #all are log scale except  spectral radius, leaking rate and n_nodes
+                'llambda' : (-12, 3), 
+                'connectivity': (-3, 0), # 0.5888436553555889, 
+                'n_nodes': (100, 1500),
+                'spectral_radius': (0.05, 0.99),
+                'regularization': (-12, 1),
+                "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
+                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
+                }
+      experiment_set = [
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000},
+            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
+            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
+            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
+            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, 
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, 
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}, 
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, 
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
       
-      n_experiments = len(experiment_set)
-      print("Creating "+str(n_experiments) + " (non-daemon) workers and jobs in main process.")
-      pool = MyPool(n_experiments)
+    for experiment in experiment_set:
+      experiment["bounds"] = bounds
+    
+    n_experiments = len(experiment_set)
+    print("Creating "+str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+    pool = MyPool(n_experiments)
 
-      pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
+    pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
 
-      pool.close()
-      pool.join()
+    pool.close()
+    pool.join()
       #print(result)
+
+#https://github.com/pytorch/pytorch/issues/3492
+if __name__ == '__main__':
+  
+
+  
+  
+  set_start_method('forkserver', force = True)
+
+  #imports
+  
+
+
+  #set_start_method('forkserver')
+
+
+
+  # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
+
+  
 
   
   """
