@@ -1,9 +1,5 @@
 #!/bin/bash/python
 
-#SBATCH -n 16 # 5 cores
-#SBATCH --mem=32000
-#SBATCH --time=00:05:00
-
 import multiprocessing
 import sys
 import os
@@ -163,6 +159,7 @@ class MyPool(multiprocessing.pool.Pool):
 
 
 def test():
+    assert type(TEST) == bool
     if TEST == True:
       print("TEST")
       experiment_set = [
