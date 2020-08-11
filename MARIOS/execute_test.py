@@ -1,4 +1,29 @@
 #!/bin/bash/python
+
+#SBATCH --job-name=multiprocess
+#SBATCH --output=logs/multiprocess_%j.out
+#SBATCH --time=01:00:00
+#SBATCH --partition=kicp
+#SBATCH --account=kicp
+#SBATCH --nodes=1
+#SBATCH --exclusive
+
+import multiprocessing
+import sys
+import os
+
+# necessary to add cwd to path when script run 
+# by slurm (since it executes a copy)
+sys.path.append(os.getcwd()) 
+from pk import work
+
+# get number of cpus available to job
+try:
+    ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+except KeyError:
+    ncpus = multiprocessing.cpu_count()
+
+
 from multiprocessing import set_start_method
 from reservoir import *
 from PyFiles.imports import *
@@ -7,8 +32,6 @@ from PyFiles.experiment import *
 from itertools import combinations
 from random import randint
 
-### multiprocessing
-import multiprocessing
 
 
 ### Timing
@@ -209,7 +232,7 @@ def test():
       experiment["bounds"] = bounds
     
     n_experiments = len(experiment_set)
-    print("Creating "+str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+    print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
     try:
       set_start_method('forkserver')
     except RuntimeError:
