@@ -87,7 +87,7 @@ def run_experiment(inputs, n_cores = 2, cv_samples = 3):
           'bounds' : inputs["bounds"],
           'initial_samples' : 100,
           'subsequence_length' : 250, #150 for 500
-          'eps' : 1e-4,
+          'eps' : 1e-5,
           'cv_samples' : cv_samples, 
           'max_iterations' : 1000, 
           'scoring_method' : 'tanh',
