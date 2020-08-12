@@ -27,8 +27,8 @@ cd ..; ./reinstall.sh; cd MARIOS;
 # 
 # ##### asfSBATCH	--cpus-per-task=8
 
-#chmod a+x ./build_file_system.sh
-#./build_filesystem.sh
+chmod a+x ./build_filesystem.sh
+./build_filesystem.sh
 
 python execute_test.py
 
