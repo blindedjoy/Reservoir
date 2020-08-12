@@ -43,25 +43,30 @@ if TEST == True:
         'spectral_radius': (0.05, 0.99),
         'regularization': (-10,-2)}
 else:
-  experiment_set = [
+  exp_set1 = 
+
+
+  set1 = [
         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}]
-        """
+  set2 = [
         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, 
-        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
+        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}] 
+  set3 = [{'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, 
-        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}, 
-        {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, 
+        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}] 
+  set4 = [{'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, 
         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-        {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}
+        {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
+  experiment_set = set2
         """
+        
   bounds = {
              #all are log scale except  spectral radius, leaking rate and n_nodes
             'llambda' : (-12, 3), 
