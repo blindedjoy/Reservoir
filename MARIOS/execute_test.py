@@ -96,7 +96,7 @@ def run_experiment(inputs, n_cores = 2, cv_samples = 3):
           "plot" : False,
 
       }
-      experiment.RC_CV(cv_args = cv_args, model = "uniform")
+      #experiment.RC_CV(cv_args = cv_args, model = "uniform")
       experiment.RC_CV(cv_args = cv_args, model = "exponential")
 
 
@@ -160,7 +160,7 @@ class MyPool(multiprocessing.pool.Pool):
 
 
 
-def test():
+def test(TEST):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
@@ -206,15 +206,11 @@ def test():
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
       """
-      experiment_set = [
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
+      uncompleted_experiment_set = [
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000},
-            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
-            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
-            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, 
+
+            
             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, 
@@ -232,13 +228,25 @@ def test():
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}]
             """
-      experiment_set = [{'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
-            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
-            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-            {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, 
-            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}]
+      experiment_set = [
+                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
+                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}]
       
       """
+      completed_experiments: [
+                              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, checked
+                              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500} checked
+                              ]
+      partially_completed: [
+                              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, RUNNING
+                              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},  RUNNING
+
+
+                              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, checked
+                              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},  checked
+
+      ]
+
       
       """
       
@@ -262,33 +270,18 @@ def test():
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
-  
-
-  
-  
-  
-
   #imports
   
 
 
   #set_start_method('forkserver')
 
-
-
   # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
-
-  
-
-  
-  """
-  
-  """
   TEST = False #TODO: fix this so that it's a command line argument
 
   #set_start_method('spawn')#, force = True) # set_start_method('spawn'
   start = timeit.default_timer()
-  test()
+  test(TEST = TEST)
   stop = timeit.default_timer()
   print('Time: ', stop - start) 
 

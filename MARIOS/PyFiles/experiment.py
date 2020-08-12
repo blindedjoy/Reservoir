@@ -185,6 +185,10 @@ class EchoStateExperiment:
 		self.T, self.A = self.T['T'], self.A['M']
 		self.T, self.A = np.transpose(self.T), (self.A - np.mean(self.A))/np.std(self.A)
 
+		# 
+		#
+		#A = (self.A - np.mean(self.A))/np.std(self.A)
+
 
 		self.A_orig = self.A.copy()
 		self.A_orig = np.rot90(self.A_orig, k = 1, axes = (0, 1))
@@ -315,13 +319,22 @@ class EchoStateExperiment:
 		return(df)
 
 
-	def plot_timeseries(self, prediction_, train, test, titl = "ESN ", series2plot = 0, method = None, label_loc = (0., 0.)):
+	def plot_timeseries(self, 
+						titl = "ESN ", 
+						series2plot = 0, 
+						method = None, 
+						label_loc = (0., 0.)): #prediction_, train, test, 
 		'''
 		This function makes three plots:
 			the prediction, the residual, the loss.
 		It was built for single predictions, but needs to be upgraded to deal with multiple output.
 		We need to show: average residual, average loss.
 		'''
+		prediction_ = self.prediction
+		train = self.Train
+		test  = self.Test
+
+
 		full_dat = np.concatenate([train, test], axis = 0); full_dat_avg = np.mean(full_dat, axis = 1)
 		n_series, series_len = test.shape[1], test.shape[0]
 		assert method in ["all", "single", "avg"], "Please choose a method: avg, all, or single"
@@ -357,7 +370,7 @@ class EchoStateExperiment:
 			full_dat = np.concatenate([train, test], axis = 0)
 			
 		elif method == "avg":
-			rmse_spec =  str(round(myMSE(prediction_, test), 5))
+			rmse_spec =  str(round(nrmse(prediction_, test), 5))
 			prediction = prediction_.copy().copy()
 			
 			def collapse(array):
@@ -375,7 +388,7 @@ class EchoStateExperiment:
 		else: ##############################################################################################
 			#TODO make a loop and finish this, hopefully pretty colors.
 			
-			rmse_spec =  str(round(myMSE(prediction_, test), 5))
+			rmse_spec =  str(round(nrmse(prediction_, test), 5))
 			
 			pd_names = ["Lines", "prediction", "resid"]
 			pd_datasets = [ full_dat, prediction_, test - prediction_]
@@ -583,9 +596,22 @@ class EchoStateExperiment:
 			assert type(response_idx) != type(None), "oops, your response index cannot be None"
 			response = dataset[ : , response_idx].reshape( -1, len( response_idx))
 
+		elif method == "exact":
+			"""
+			The newest method, the only one we care to have survive because it is not based on indices but rather desired Hz.
+			This method is just like simple_block but upgraded to take in only frequencies by using the helper function hz2freq which must
+			be called first.
+			"""
+			obs_idx  = self.obs_idx
+			response_idx = self.resp_idx
+			assert type(obs_idx) != type(None), "oops, your observer index cannot be None, first run hz2idx helper function"
+			assert type(response_idx) != type(None), "oops, your response index cannot be None"
+			response = dataset[ : , response_idx].reshape( -1, len( response_idx))
 
 
-		assert method == "freq", "at this time only use the freq method."
+
+		assert method in  ["freq", "exact"], "at this time only use the 'freq' method for cluster, \
+												  'exact' for analysis"
 				
 		
 		# PARTITION THE DATA
@@ -733,8 +759,8 @@ class EchoStateExperiment:
 		self.json2be["experiment_inputs"] = {
 			 "size" : self.size, 
 			 "target_frequency" : int(self.target_frequency),
-			 "obs_hz" : float(self.obs_kHz / 1000),
-			 "target_hz" : float(self.target_kHz / 1000),
+			 "obs_hz" :    float(self.obs_kHz)    * 1000,
+			 "target_hz" : float(self.target_kHz) * 1000,
 			 "verbose" : self.verbose,
 			 }
 		self.json2be["get_observer_inputs"] = {
@@ -931,6 +957,22 @@ class EchoStateExperiment:
 		print("\n \n exp rc cv data saved @ : " + self.outfile +".txt")
 
 
+	def already_trained(self, best_args):
+
+
+		self.best_arguments = best_args
+
+		self.esn = self.esn_spec(**self.best_arguments,
+								 obs_idx  = self.obs_idx,
+								 resp_idx = self.resp_idx)
+
+		self.esn.train(x = self.Train, y = self.xTr)
+
+		def my_predict(test, n_steps = None):
+			if not n_steps:
+				n_steps = test.shape[0]
+			return self.esn.predict(n_steps, x = test[ :n_steps, :])
+		self.prediction = my_predict(self.Test)
 
 
 	def Unif_RC_CV(self, cv_args):
