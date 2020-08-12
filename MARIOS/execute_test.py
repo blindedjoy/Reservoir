@@ -230,7 +230,8 @@ def test(TEST):
             """
       experiment_set = [
                         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}]
+                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}
+                        ]
       
       """
       completed_experiments: [

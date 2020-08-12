@@ -2,7 +2,7 @@
 
 #SBATCH -n 30		    # Number of cores requested
 #SBATCH -N 1 				# Ensure that all cores are on one machine
-#SBATCH --ntasks-per-node=6
+#SBATCH --ntasks-per-node=15
 #SBATCH -t 1440 		    # Runtime in minutes
 #SBATCH -p serial_requeue 	#	 Partition to submit to
 #SBATCH --mem=200gb 			# Memory in GB (see also --mem-per-cpu)
@@ -33,3 +33,4 @@ chmod a+x ./build_filesystem.sh
 python execute_test.py
 
 #python PyFiles/test.py
+# asfdsfasjk;nATCH --ntasks-per-node=6
