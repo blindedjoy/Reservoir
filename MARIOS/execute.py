@@ -1,4 +1,4 @@
-#!/bin/bash/python
+#!/bin/bash/env python3
 
 import multiprocessing
 import sys
