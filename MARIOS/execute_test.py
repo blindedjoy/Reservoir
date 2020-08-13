@@ -158,8 +158,6 @@ class MyPool(multiprocessing.pool.Pool):
 """
   
 
-
-
 def test(TEST):
     assert type(TEST) == bool
     if TEST == True:
@@ -206,12 +204,21 @@ def test(TEST):
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
       """
+      
+      """
+
+      experiment_set = [
+                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}#,
+                        #{'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}
+                        ]
+      
+      """
+
       uncompleted_experiment_set = [
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000},
 
-            
-            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
+    
             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, 
             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}, 
@@ -219,33 +226,27 @@ def test(TEST):
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
-      """
-     
-      """
-      experiment_set = [
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}]
-            """
-      experiment_set = [
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}
-                        ]
-      
-      """
+
+
+      #####################################################################################################
       completed_experiments: [
                               {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, checked
                               {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500} checked
                               ]
+      need2beCombinded:
+                [
+                    {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, ready to combine
+                ]
+
       partially_completed: [
-                              {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, RUNNING
                               {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},  RUNNING
 
 
                               {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, checked
                               {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},  checked
+=
 
+                              {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, ???
       ]
 
       
