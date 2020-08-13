@@ -208,19 +208,19 @@ def test(TEST):
       """
 
       experiment_set = [
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}
+                        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+                        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}
                         ]
       
       """
 
       uncompleted_experiment_set = [
-            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, RUNNING
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},  RUNNING
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}  RUNNING
 
     
-            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
-            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, 
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, RUNNING
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, RUNNING
             {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, 
             {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
@@ -270,7 +270,7 @@ def test(TEST):
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
   #imports
-  
+  print("Total cpus available: " + str(ncpus))
 
 
   #set_start_method('forkserver')
