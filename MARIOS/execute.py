@@ -30,6 +30,7 @@ from random import randint
 
 
 
+
 ### Timing
 import time
 import timeit
@@ -52,7 +53,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
-def run_experiment(inputs, n_cores = 15, cv_samples = 5):
+def run_experiment(inputs, n_cores = 3, cv_samples = 5):
       """
       4*4 = 16 + 
 
