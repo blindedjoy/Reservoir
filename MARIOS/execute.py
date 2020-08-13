@@ -4,6 +4,8 @@ import multiprocessing
 import sys
 import os
 
+module load Anaconda3/2019.10; 
+
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
 sys.path.append(os.getcwd()) 
