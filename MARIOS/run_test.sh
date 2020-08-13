@@ -1,6 +1,5 @@
 #!/bin/bash
-
-#SBATCH -n 30		    # Number of cores requested
+	    # Number of cores requested
 #SBATCH -N 1 				# Ensure that all cores are on one machine
 
 #SBATCH -t 1440 		    # Runtime in minutes
@@ -20,6 +19,9 @@ echo "Running bayesRC on 20 CPU cores"
 
 # 16 tests, 8 cores each. Then we have the cv loop, requesting four cores per run.
 # 16 * 8
+
+
+# afSBasdfATCH -n 30	
 
 #install the customized version of Reinier's reservoir package
 cd ..; ./reinstall.sh; cd MARIOS; 
