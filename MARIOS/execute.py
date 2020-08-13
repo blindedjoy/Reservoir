@@ -301,7 +301,7 @@ def test(TEST):
 if __name__ == '__main__':
   #imports
   print("Total cpus available: " + str(ncpus))
-  print("RUNNING EXPERIMENT " + str(experiment_specifaction))
+  print("RUNNING EXPERIMENT " + str(experiment_specification))
 
 
   #set_start_method('forkserver')
