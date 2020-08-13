@@ -1,0 +1,100 @@
+Running bayesRC on 20 CPU cores
+Found existing installation: reservoir 0.0.post0.dev470+nge5be8a9
+Uninstalling reservoir-0.0.post0.dev470+nge5be8a9:
+  Successfully uninstalled reservoir-0.0.post0.dev470+nge5be8a9
+Defaulting to user installation because normal site-packages is not writeable
+Processing /n/boslfs/LABS/bellono_lab/Users/hjoy/rc/Reservoir
+Requirement already satisfied: numpy in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (1.18.1)
+Requirement already satisfied: scipy in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (1.4.1)
+Requirement already satisfied: paramz in /n/home00/hjoy/.local/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (0.9.5)
+Requirement already satisfied: PyDOE in /n/home00/hjoy/.local/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (0.3.8)
+Requirement already satisfied: GPyOpt in /n/home00/hjoy/.local/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (1.2.6)
+Requirement already satisfied: numba in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (0.48.0)
+Requirement already satisfied: datetime in /n/home00/hjoy/.local/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (4.3)
+Requirement already satisfied: pandas in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (1.0.3)
+Requirement already satisfied: seaborn in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (0.10.0)
+Requirement already satisfied: pathlib in /n/home00/hjoy/.local/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (1.0.1)
+Requirement already satisfied: matplotlib in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from reservoir==0.0.post0.dev470+nge5be8a9) (3.1.3)
+Requirement already satisfied: six in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from paramz->reservoir==0.0.post0.dev470+nge5be8a9) (1.14.0)
+Requirement already satisfied: decorator>=4.0.10 in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from paramz->reservoir==0.0.post0.dev470+nge5be8a9) (4.4.2)
+Requirement already satisfied: GPy>=1.8 in /n/home00/hjoy/.local/lib/python3.7/site-packages (from GPyOpt->reservoir==0.0.post0.dev470+nge5be8a9) (1.9.9)
+Requirement already satisfied: llvmlite<0.32.0,>=0.31.0dev0 in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from numba->reservoir==0.0.post0.dev470+nge5be8a9) (0.31.0)
+Requirement already satisfied: setuptools in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from numba->reservoir==0.0.post0.dev470+nge5be8a9) (46.1.3.post20200330)
+Requirement already satisfied: pytz in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from datetime->reservoir==0.0.post0.dev470+nge5be8a9) (2019.3)
+Requirement already satisfied: zope.interface in /n/home00/hjoy/.local/lib/python3.7/site-packages (from datetime->reservoir==0.0.post0.dev470+nge5be8a9) (5.1.0)
+Requirement already satisfied: python-dateutil>=2.6.1 in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from pandas->reservoir==0.0.post0.dev470+nge5be8a9) (2.8.1)
+Requirement already satisfied: kiwisolver>=1.0.1 in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from matplotlib->reservoir==0.0.post0.dev470+nge5be8a9) (1.1.0)
+Requirement already satisfied: cycler>=0.10 in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from matplotlib->reservoir==0.0.post0.dev470+nge5be8a9) (0.10.0)
+Requirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,>=2.0.1 in /n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/site-packages (from matplotlib->reservoir==0.0.post0.dev470+nge5be8a9) (2.4.6)
+Building wheels for collected packages: reservoir
+  Building wheel for reservoir (setup.py): started
+  Building wheel for reservoir (setup.py): finished with status 'done'
+  Created wheel for reservoir: filename=reservoir-0.0.post0.dev470+nge5be8a9-py2.py3-none-any.whl size=44292 sha256=c6d96ba45c8c4b4173a500e90aaf55de0178719aea38de2a5fbf91173148369a
+  Stored in directory: /tmp/pip-ephem-wheel-cache-gxuiynv4/wheels/5c/a3/05/6c8c49ff10b2c9290de7d73aaa78a6b7de0a759ccd64949f11
+Successfully built reservoir
+Installing collected packages: reservoir
+Successfully installed reservoir-0.0.post0.dev470+nge5be8a9
+the experiment_results directory exists
+the experiment_results/2k directory exists
+the experiment_results/2k/small/ directory exists
+the experiment_results/2k/small/split_0.5 directory exists
+the experiment_results/2k/small/split_0.9 directory exists
+the experiment_results/2k/medium/ directory exists
+the experiment_results/2k/medium/split_0.5 directory exists
+the experiment_results/2k/medium/split_0.9 directory exists
+the experiment_results/2k/publish/ directory exists
+the experiment_results/2k/publish/split_0.5 directory exists
+the experiment_results/2k/publish/split_0.9 directory exists
+the experiment_results/4k directory exists
+the experiment_results/4k/small/ directory exists
+the experiment_results/4k/small/split_0.5 directory exists
+the experiment_results/4k/small/split_0.9 directory exists
+the experiment_results/4k/medium/ directory exists
+the experiment_results/4k/medium/split_0.5 directory exists
+the experiment_results/4k/medium/split_0.9 directory exists
+the experiment_results/4k/publish/ directory exists
+the experiment_results/4k/publish/split_0.5 directory exists
+the experiment_results/4k/publish/split_0.9 directory exists
+experiment_results
+├── 2k
+│   ├── medium
+│   │   ├── split_0.5
+│   │   │   ├── targetKhz:_0.01__obskHz:_0.01.txt
+│   │   │   ├── targetKhz:_0.02__obskHz:_0.01.txt
+│   │   │   └── targetKhz:_0.5__obskHz:_0.5.txt
+│   │   └── split_0.9
+│   │       ├── targetKhz:_0.5__obskHz:_0.5.txt
+│   │       ├── targetKhz:_0.5__obskHz:_1.0.txt
+│   │       ├── targetKhz:_1.0__obskHz:_0.5.txt
+│   │       └── targetKhz:_1.0__obskHz:_1.0.txt
+│   ├── publish
+│   │   ├── split_0.5
+│   │   └── split_0.9
+│   └── small
+│       ├── split_0.5
+│       └── split_0.9
+└── 4k
+    ├── medium
+    │   ├── split_0.5
+    │   │   └── targetKhz:_0.5__obskHz:_0.5.txt
+    │   └── split_0.9
+    ├── publish
+    │   ├── split_0.5
+    │   └── split_0.9
+    └── small
+        ├── split_0.5
+        └── split_0.9
+
+20 directories, 8 files
+Creating 1 (non-daemon) workers and jobs in main process.
+exponentialrc cv set, ready to train
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2af67c63ccd0>
+Hayden edit: fixed_parameters: []
+Hayden edit: free_parameters: ['llambda', 'connectivity', 'n_nodes', 'spectral_radius', 'regularization', 'leaking_rate']
+Score: 0.5706787248812397
+Score: 0.5026298922018881
+Score: 0.4295572896612309
+Score: 0.4055789475678807
