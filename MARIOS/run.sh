@@ -1,29 +1,36 @@
 #!/bin/bash
 
+#SBATCH -n 64		    # Number of cores requested
+#SBATCH -N 1 				# Ensure that all cores are on one machine
+#SBATCH -t 1440 		    # Runtime in minutes
+#SBATCH -o output_%j.out 	# Standard out goes to this file
+#SBATCH -e error_%j.err 	# Standard err goes to this file
 
-#SBATCH --job-name=parallel_job      # Job name
-#SBATCH --mail-type=END,FAIL         # Mail events (NONE, BEGIN, END, FAIL, ALL)
-#SBATCH --mail-user=hnjoy@mac.com   # Where to send mail	
+#cv_samples = 3 ; n_cores = 2 ==> 6 tasks ; n_experiments = 5 ==> 30
 
-#SBATCH --output=parallel_%j.log     # Standard output and error log
+# Labtop uses 8 gb per core, try to go way above that. Let's say, 20 gb per core. 20*8 = 160gb, let's go for 200gb.
 
-#SBATCH --job-name=slurm-test    # create a short name for your job
-#SBATCH --nodes=1                # node count
-#SBATCH --ntasks>1         # total number of tasks across all nodes
-#SBATCH --cpus-per-task=8        # cpu-cores per task (>1 if multi-threaded tasks)
-#SBATCH --mem-per-cpu=64000        # memory per cpu-core
-#SBATCH --time=00:05:00          # total run time limit (HH:MM:SS)
+echo "Running bayesRC on 20 CPU cores"
+
+# n-tasks per node: n_cores * cv_samples
+# -n or num_cores: len(experiment_set) * n-tasks
+
+# 16 tests, 8 cores each. Then we have the cv loop, requesting four cores per run.
+# 16 * 8
 
 #install the customized version of Reinier's reservoir package
-cd ..
-chmod a+x ./reinstall.sh
-./reinstall.sh
-cd MARIOS
+#cd ..; ./reinstall.sh; cd MARIOS; 
+#chmod a+x ./reinstall.sh
+# 
+# ##### asfSBATCH	--cpus-per-task=8
 
-chmod a+x ./build_file_system.sh
+chmod a+x ./build_filesystem.sh
 ./build_filesystem.sh
 
-chmod a+x ./execute.py
-python execute.py
+python execute.py $1
 
-#python PyFiles/test.py
+echo "$1"
+
+#python PyFiles/test.py asdfknl
+#asdlfk;SBA -p serial_requeue #SBATCH -p serial_requeue
+# asfdsfasjk;nATCH --ntasks-per-node=6 # faSasdfH --ntasks-per-node=15 v#SBACH --mem=200gb 			# Memory in GB (see also --mem-per-cpu)

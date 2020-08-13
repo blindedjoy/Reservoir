@@ -1,136 +1,108 @@
 #!/bin/bash/python
 
-TEST = False
+import multiprocessing
+import sys
+import os
 
+# necessary to add cwd to path when script run 
+# by slurm (since it executes a copy)
+sys.path.append(os.getcwd()) 
+
+# get number of cpus available to job
+try:
+    ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+except KeyError:
+    ncpus = multiprocessing.cpu_count()
+
+experiment_specification = int(sys.argv[1])
+
+assert experiment_specification in list(range(4)) + 1
+
+
+
+from multiprocessing import set_start_method
 from reservoir import *
 from PyFiles.imports import *
 from PyFiles.helpers import *
 from PyFiles.experiment import *
 from itertools import combinations
+from random import randint
+
+
 
 ### Timing
+import time
 import timeit
-import multiprocessing
-start = timeit.default_timer()
+class NoDaemonProcess(multiprocessing.Process):
+      @property
+      def daemon(self):
+          return False
 
-#16 * 4 = 64 for the main part, then the cv loop: 5 cores per run so that's 5 * 4: 84 cores.
-# Alternatively we could request say  8 * 4 = 32 cores , 8 cores for validation loop: 64 cores.
-
-if TEST == True:
-    experiment_set = [
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10},
-         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
-         {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
-         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
-
-    bounds = {
-        'llambda' : (-12, 3), 
-        'connectivity': (-3, 0), # 0.5888436553555889, 
-        'n_nodes': 100,#(100, 1500),
-        'spectral_radius': (0.05, 0.99),
-        'regularization': (-10,-2)}
-else:
-  exp_set1 = 
+      @daemon.setter
+      def daemon(self, value):
+          pass
 
 
-  set1 = [
-        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500},
-        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
-        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}]
-  set2 = [
-        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
-        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
-        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}] 
-  set3 = [{'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
-        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
-        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, 
-        {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}] 
-  set4 = [{'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, 
-        {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}, 
-        {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}, 
-        {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}]
-  experiment_set = set2
-        """
-        
-  bounds = {
-             #all are log scale except  spectral radius, leaking rate and n_nodes
-            'llambda' : (-12, 3), 
-            'connectivity': (-3, 0), # 0.5888436553555889, 
-            'n_nodes': (100, 1500),
-            'spectral_radius': (0.05, 0.99),
-            'regularization': (-12, 1),
-            "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
-            # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
-            }
+class NoDaemonContext(type(multiprocessing.get_context())):
+    Process = NoDaemonProcess
 
-
-
-# 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
-
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
+    def __init__(self, *args, **kwargs):
+        kwargs['context'] = NoDaemonContext()
+        super(MyPool, self).__init__(*args, **kwargs)
 def run_experiment(inputs, n_cores = 2, cv_samples = 3):
-    """
-    The final form of the input dict is:
+      """
+      4*4 = 16 + 
 
-      inputs = {"target_frequency_" : ...
-                "obs_hz" : ...
-                "target_hz" : ...
-                "split" : ...
-                ""
-                }
+      The final form of the input dict is:
 
-    Reinier's example:
-    {
-      'leaking_rate' : (0, 1), 
-      'spectral_radius': (0, 1.25),
-      'regularization': (-12, 1),
-      'connectivity': (-3, 0),
-      'n_nodes':  (100, 1000)
-    }
+        inputs = {"target_frequency_" : ...
+                  "obs_hz" : ...
+                  "target_hz" : ...
+                  "split" : ...
+                  ""
+                  }
 
-    """
-    target_frequency_ = inputs["target_freq"]
-    split_, obs_hz_, target_hz_ = inputs["split"], inputs["obs_hz"], inputs["target_hz"]
+      Reinier's example:
+      {
+        'leaking_rate' : (0, 1), 
+        'spectral_radius': (0, 1.25),
+        'regularization': (-12, 1),
+        'connectivity': (-3, 0),
+        'n_nodes':  (100, 1000)
+      }
+
+      """
+      target_frequency_ = inputs["target_freq"]
+      split_, obs_hz_, target_hz_ = inputs["split"], inputs["obs_hz"], inputs["target_hz"]
 
 
-    experiment = EchoStateExperiment(size = "medium", 
-                                     target_frequency = target_frequency_, 
-                                     obs_hz = obs_hz_, 
-                                     target_hz = target_hz_, 
-                                     verbose = False)
+      experiment = EchoStateExperiment(size = "medium", 
+                                       target_frequency = target_frequency_, 
+                                       obs_hz = obs_hz_, 
+                                       target_hz = target_hz_, 
+                                       verbose = False)
 
-    experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
-    #(-12, 1)}
-    #example cv args:
-    cv_args = {
-        'bounds' : bounds,
-        'initial_samples' : 100,
-        'subsequence_length' : 250, #150 for 500
-        'eps' : 1e-5,
-        'cv_samples' : cv_samples, 
-        'max_iterations' : 1000, 
-        'scoring_method' : 'tanh',
-        "n_jobs" : n_cores,
-        "verbose" : True,
-        "plot" : False,
+      experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
+      #(-12, 1)}
+      #example cv args:
+      cv_args = {
+          'bounds' : inputs["bounds"],
+          'initial_samples' : 100,
+          'subsequence_length' : 250, #150 for 500
+          'eps' : 1e-5,
+          'cv_samples' : cv_samples, 
+          'max_iterations' : 1000, 
+          'scoring_method' : 'tanh',
+          "n_jobs" : n_cores,
+          "verbose" : True,
+          "plot" : False,
 
-    }
-    experiment.RC_CV(cv_args = cv_args, model = "uniform")
-    experiment.RC_CV(cv_args = cv_args, model = "exponential")
+      }
+      experiment.RC_CV(cv_args = cv_args, model = "uniform")
+      experiment.RC_CV(cv_args = cv_args, model = "exponential")
 
 
 """
@@ -140,7 +112,8 @@ things_2_combine = {
     "targ500" : 500,
     "targ1k" : 1000,
     "split0.5" : ,
-}"""
+}
+
 lst_of_dicts = []
 count = 0
 for target_frequency_ in [2000, 4000]:
@@ -168,21 +141,15 @@ for target_frequency_ in [2000, 4000]:
 #parrallelized loop:
 #Pool = multiprocessing.Pool(n_experiments)
 #results = zip(*Pool.map(run_experiment, experiment_set))
-
-
-
-
-
-"""
 """
 
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
 #https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic#:~:text=Pool%20(%20multiprocessing.,used%20for%20the%20worker%20processes.&text=The%20important%20parts%20are%20the,top%20and%20to%20call%20pool.
 
-from random import randint
-import time
 
+# THE FOLLOWING IS FROM 2011, needs to be updated: from the same stackoverflow:
+"""
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
     def _get_daemon(self):
@@ -193,41 +160,160 @@ class NoDaemonProcess(multiprocessing.Process):
 
 class MyPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
+"""
+  
 
-def sleepawhile(t):
-    print("Sleeping %i seconds..." % t)
-    time.sleep(t)
-    return t
+def test(TEST):
+    assert type(TEST) == bool
+    if TEST == True:
+      print("TEST")
+      experiment_set = [
+             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
+             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}]
+      """
+      experiment_set = [
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10},
+           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
+           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 20, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
+           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
+      """
+      print("Real Run")
+      bounds = {
+          'llambda' : (-12, 3), 
+          'connectivity': (-3, 0), # 0.5888436553555889, 
+          'n_nodes': 100,#(100, 1500),
+          'spectral_radius': (0.05, 0.99),
+          'regularization': (-10,-2)}
+    else:
+      bounds = {
+                 #all are log scale except  spectral radius, leaking rate and n_nodes
+                'llambda' : (-12, 3), 
+                'connectivity': (-3, 0), # 0.5888436553555889, 
+                'n_nodes': (100, 1500),
+                'spectral_radius': (0.05, 0.99),
+                'regularization': (-12, 1),
+                "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
+                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
+                }
+      """
+      
+      """
+      if experiment_specification == 1:
 
-def work(num_procs):
-    print("Creating %i (daemon) workers and jobs in child." % num_procs)
-    pool = multiprocessing.Pool(num_procs)
+        experiment_set = [
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}
+                          
+                          ]
+      elif experiment_specification == 2:
+        experiment_set = [
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}
+                          
+                          ]
+      elif experiment_specification == 3:
+        experiment_set = [
+                           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}
+                           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}
+                          
+                          ]
+      elif experiment_specification == 4:
+        experiment_set = [
+                           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},
+                           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}
+                          ]
+      elif experiment_specification == 5:
+        experiment_set = [
+                           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}
+                          ]
+        
+      """
 
-    result = pool.map(sleepawhile,
-        [randint(1, 5) for x in range(num_procs)])
+      uncompleted_experiment_set = [
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},  RUNNING 1
+            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}  RUNNING 1
 
-    # The following is not really needed, since the (daemon) workers of the
-    # child's pool are killed when the child is terminated, but it's good
-    # practice to cleanup after ourselves anyway.
-    pool.close()
-    pool.join()
-    return result
+    
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},  RUNNING 2
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},  RUNNING 2
 
-def test():
-    print("Creating N (non-daemon) workers and jobs in main process.")
+            {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}, RUNNING 3
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},   RUNNING 3
+
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},  RUNNING 4
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500},  RUNNING 4
+            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}] RUNNING 5
 
 
+      #####################################################################################################
+      completed_experiments: [
+                              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500}, checked
+                              {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500} checked
+                              ]
+      need2beCombinded:
+                [
+                    {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500}, ready to combine
+                    {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, reading to combine
+                    {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}, ready to combine
+                    {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},  ready to combine
+                ]
+
+      partially_completed: [
+                              
+                              {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, ???
+      ]
+
+      
+      """
+      
+    for experiment in experiment_set:
+      experiment["bounds"] = bounds
+    
     n_experiments = len(experiment_set)
+    print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+    try:
+      set_start_method('forkserver')
+    except RuntimeError:
+      pass
     pool = MyPool(n_experiments)
+
 
     pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
 
     pool.close()
     pool.join()
-    #print(result)
+      #print(result)
 
+#https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
-    test()
+  #imports
+  print("Total cpus available: " + str(ncpus))
+  print("RUNNING EXPERIMENT " + str(experiment_specifaction))
+
+
+  #set_start_method('forkserver')
+
+  # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
+  TEST = False #TODO: fix this so that it's a command line argument
+
+  #set_start_method('spawn')#, force = True) # set_start_method('spawn'
+  start = timeit.default_timer()
+  test(TEST = TEST)
+  stop = timeit.default_timer()
+  print('Time: ', stop - start) 
 
  
 #experiment.RC_CV(cv_args = cv_args, model = "hybrid")
