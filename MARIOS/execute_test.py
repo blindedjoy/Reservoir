@@ -96,7 +96,7 @@ def run_experiment(inputs, n_cores = 2, cv_samples = 3):
           "plot" : False,
 
       }
-      #experiment.RC_CV(cv_args = cv_args, model = "uniform")
+      experiment.RC_CV(cv_args = cv_args, model = "uniform")
       experiment.RC_CV(cv_args = cv_args, model = "exponential")
 
 
@@ -208,8 +208,8 @@ def test(TEST):
       """
 
       experiment_set = [
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}#,
-                        #{'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}
+                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000},
+                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}
                         ]
       
       """
