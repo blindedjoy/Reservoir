@@ -1,10 +1,8 @@
 #!/bin/bash
 
-#SBATCH -n 30		    # Number of cores requested
+#SBATCH -n 64		    # Number of cores requested
 #SBATCH -N 1 				# Ensure that all cores are on one machine
 #SBATCH -t 1440 		    # Runtime in minutes
-
-
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
 
