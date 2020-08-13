@@ -1,12 +1,5 @@
 #!/bin/bash
 	    # Number of cores requested
-#SBATCH -N 1 				# Ensure that all cores are on one machine
-
-#SBATCH -t 1440 		    # Runtime in minutes
-#SBATCH -p serial_requeue 	#	 Partition to submit to
-#SBATCH --mem=200gb 			# Memory in GB (see also --mem-per-cpu)
-#SBATCH -o output_%j.out 	# Standard out goes to this file
-#SBATCH -e error_%j.err 	# Standard err goes to this file
 
 #cv_samples = 3 ; n_cores = 2 ==> 6 tasks ; n_experiments = 5 ==> 30
 
@@ -36,3 +29,10 @@ python execute_test.py
 
 #python PyFiles/test.py
 # asfdsfasjk;nATCH --ntasks-per-node=6 # faSasdfH --ntasks-per-node=15
+
+#SB -N 1 				# Ensure that all cores are on one machine
+
+#S -t 1440 		    # Runtime in minutes
+#S --mem=200gb 			# Memory in GB (see also --mem-per-cpu)
+#S -o output_%j.out 	# Standard out goes to this file
+#Sasdk;fBATCH -e error_%j.err 	# Standard err goes to this file
