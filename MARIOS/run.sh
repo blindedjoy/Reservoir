@@ -7,7 +7,7 @@
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
 
-
+module load Anaconda3/2019.10;
 #--cores-per-socket=15	        Number of cores in a socket to dedicate to a job (minimum)
 #--threads-per-core=cv_samples	Number of threads in a core to dedicate to a job (minimum)
 
