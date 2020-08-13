@@ -1,10 +1,9 @@
 #!/bin/bash
 
-#SBATCH -n 64		    # Number of cores requested
+#SBATCH -n 30		    # Number of cores requested
 #SBATCH -N 1 				# Ensure that all cores are on one machine
-
 #SBATCH -t 1440 		    # Runtime in minutes
-#SBATCH -p serial_requeue 	#	 Partition to submit to
+
 #SBATCH --mem=200gb 			# Memory in GB (see also --mem-per-cpu)
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
@@ -32,5 +31,6 @@ chmod a+x ./build_filesystem.sh
 
 python execute_test.py
 
-#python PyFiles/test.py
+#python PyFiles/test.py asdfknl
+#asdlfk;SBA -p serial_requeue #SBATCH -p serial_requeue
 # asfdsfasjk;nATCH --ntasks-per-node=6 # faSasdfH --ntasks-per-node=15
