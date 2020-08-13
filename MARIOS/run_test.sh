@@ -4,7 +4,7 @@
 #SBATCH -N 1 				# Ensure that all cores are on one machine
 #SBATCH -t 1440 		    # Runtime in minutes
 
-#SBATCH --mem=200gb 			# Memory in GB (see also --mem-per-cpu)
+
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
 
@@ -33,4 +33,4 @@ python execute_test.py
 
 #python PyFiles/test.py asdfknl
 #asdlfk;SBA -p serial_requeue #SBATCH -p serial_requeue
-# asfdsfasjk;nATCH --ntasks-per-node=6 # faSasdfH --ntasks-per-node=15
+# asfdsfasjk;nATCH --ntasks-per-node=6 # faSasdfH --ntasks-per-node=15 v#SBACH --mem=200gb 			# Memory in GB (see also --mem-per-cpu)
