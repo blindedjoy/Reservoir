@@ -1,12 +1,14 @@
 #!/bin/bash
 
-#SBATCH -n 64		    # Number of cores requested
-#SBATCH -N 1 				# Ensure that all cores are on one machine
-#SBATCH -t 1440 		    # Runtime in minutes
+#SBATCH -n 40		    # Number of cores requested
+#SBATCH -N 1 				# Ensure that all cores are on one machine		    # Runtime in minutes
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
 
-#cv_samples = 3 ; n_cores = 2 ==> 6 tasks ; n_experiments = 5 ==> 30
+#--cores-per-socket=C	Number of cores in a socket to dedicate to a job (minimum)
+#--threads-per-core=T	Number of threads in a core to dedicate to a job (minimum)
+
+#cv_samples = 5 ; n_cores = 3 ==> 15 tasks ; n_experiments = 2 ==> 30
 
 # Labtop uses 8 gb per core, try to go way above that. Let's say, 20 gb per core. 20*8 = 160gb, let's go for 200gb.
 
