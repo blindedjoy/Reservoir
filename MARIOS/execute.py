@@ -16,7 +16,7 @@ except KeyError:
 
 experiment_specification = int(sys.argv[1])
 
-assert experiment_specification in [1,2,3,4,5]
+assert experiment_specification in [1,2,3,4,5, 100]
 
 
 
