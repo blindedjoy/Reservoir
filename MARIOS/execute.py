@@ -95,7 +95,7 @@ def run_experiment(inputs, n_cores = 3, cv_samples = 5):
           'subsequence_length' : 250, #150 for 500
           'eps' : 1e-5,
           'cv_samples' : cv_samples, 
-          'max_iterations' : 1000, 
+          'max_iterations' : 5000, #1000, 
           'scoring_method' : 'tanh',
           "n_jobs" : n_cores,
           "verbose" : True,
@@ -195,15 +195,15 @@ def test(TEST):
       bounds = {
           'llambda' : (-12, 3), 
           'connectivity': (-3, 0), # 0.5888436553555889, 
-          'n_nodes': 100,#(100, 1500),
+          'n_nodes': 1000,#(100, 1500),
           'spectral_radius': (0.05, 0.99),
           'regularization': (-10,-2)}
     else:
       bounds = {
                  #all are log scale except  spectral radius, leaking rate and n_nodes
-                'llambda' : (-12, 3), 
+                'llambda' : (-10, 3), 
                 'connectivity': (-3, 0), # 0.5888436553555889, 
-                'n_nodes': (100, 1500),
+                'n_nodes': 1000, #(100, 1500),
                 'spectral_radius': (0.05, 0.99),
                 'regularization': (-12, 1),
                 "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
