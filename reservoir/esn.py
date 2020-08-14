@@ -55,7 +55,7 @@ class EchoStateNetwork:
                  n_nodes=1000, input_scaling=0.5, feedback_scaling=0.5, spectral_radius=0.8, leaking_rate=1.0,
                  connectivity = np.exp(-.23),#0.1,
                  regularization=1e-8, feedback=False, random_seed=123,
-                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, plot = False):
+                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, plot = False, noise = 0.0):
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
@@ -72,6 +72,7 @@ class EchoStateNetwork:
         self.exp_weights = None
         self.llambda = llambda
         self.plot = plot
+        self.noise = noise
         self.generate_reservoir()
 
 
@@ -94,7 +95,7 @@ class EchoStateNetwork:
         exp_np = exp_np.reshape(-1,)
         #print("exp_np sahep : " + str(exp_np.shape))
 
-        white_Noise = np.random.normal(size = exp_np.shape[0])/100
+        white_Noise = np.random.normal(size = exp_np.shape[0]) * self.noise
         exp_np += white_Noise
         return(exp_np)
        
@@ -277,7 +278,7 @@ class EchoStateNetwork:
         # Syntactic sugar
         return tuple(transformed) if len(transformed) > 1 else transformed[0]
 
-    def train(self, y, x=None, burn_in=100, input_weight=None):
+    def train(self, y, x=None, burn_in=0, input_weight=None):
         """Trains the Echo State Network.
 
         Trains the out weights on the random network. This is needed before being able to make predictions.

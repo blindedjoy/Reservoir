@@ -190,23 +190,25 @@ def test(TEST):
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
-      """
-      print("Real Run")
+           print("Real Run")"""
       bounds = {
-          'llambda' : (-12, 3), 
+          'noise' : (-2, -4),
+          'llambda' : (-3, -1), 
           'connectivity': (-3, 0), # 0.5888436553555889, 
           'n_nodes': 1000,#(100, 1500),
           'spectral_radius': (0.05, 0.99),
           'regularization': (-10,-2)}
+      
+      
     else:
-      bounds = {
+      bounds = { #noise hyper-parameter.
                  #all are log scale except  spectral radius, leaking rate and n_nodes
-                'llambda' : (-10, 3), 
-                'connectivity': (-3, 0), # 0.5888436553555889, 
-                'n_nodes': 1000, #(100, 1500),
-                'spectral_radius': (0.05, 0.99),
-                'regularization': (-12, 1),
-                "leaking_rate" : (0.05, 1) # we want some memory. 0 would mean no memory.
+                'llambda' :        (-3, -1), 
+                'connectivity':    (-3, 0), # 0.5888436553555889, 
+                'n_nodes':         1000, #(100, 1500),
+                'spectral_radius': (0.01, 0.99),
+                'regularization':  (-12, 1),
+                "leaking_rate" :   (0.01, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
       """
@@ -327,7 +329,7 @@ if __name__ == '__main__':
   #set_start_method('forkserver')
 
   # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
-  TEST = False #TODO: fix this so that it's a command line argument
+  TEST = False#False #TODO: fix this so that it's a command line argument
 
   #set_start_method('spawn')#, force = True) # set_start_method('spawn'
   start = timeit.default_timer()

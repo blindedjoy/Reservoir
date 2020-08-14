@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --cores-per-socket=15
-#SBATCH --threads-per-core=5
-#SBATCH -n 30		    # Number of cores requested
+#
+#SBATCH --threads-per-core=8
+#SBATCH -n 30		    # Number of cores requested SBATCH --cores-per-socket=15
 #SBATCH -N 1 				# Ensure that all cores are on one machine		    # Runtime in minutes
 #SBATCH -o output_%j.out 	# Standard out goes to this file
 #SBATCH -e error_%j.err 	# Standard err goes to this file
@@ -24,7 +24,7 @@ echo "Running bayesRC on 20 CPU cores"
 # 16 * 8
 
 #install the customized version of Reinier's reservoir package
-#cd ..; ./reinstall.sh; cd MARIOS; 
+cd ..; ./reinstall.sh; cd MARIOS; 
 #chmod a+x ./reinstall.sh
 # 
 # ##### asfSBATCH	--cpus-per-task=8

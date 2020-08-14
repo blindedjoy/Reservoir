@@ -77,7 +77,7 @@ class EchoStateNetworkCV:
                  validate_fraction=0.2, steps_ahead=1, max_iterations=1000, batch_size=1, cv_samples=1,
                  scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=100, acquisition_type='LCB',
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
-                 plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None):
+                 plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0):
         # Bookkeeping
         self.bounds = OrderedDict(bounds)  # Fix order
         self.parameters = list(self.bounds.keys())
@@ -110,6 +110,7 @@ class EchoStateNetworkCV:
         self.exp_weights = exp_weights
         self.obs_index = obs_index
         self.target_index = target_index
+        self.noise = noise
 
 
         # Normalize bounds domains and remember transformation
@@ -217,6 +218,9 @@ class EchoStateNetworkCV:
 
         if 'llambda' in arguments:
             arguments['llambda'] = 10. ** arguments['llambda']  # Log scale correction
+
+        if 'noise' in arguments:
+            arguments['noise'] = 10. ** arguments['noise']  # Log scale correction
 
         if 'n_nodes' in arguments:
             arguments['n_nodes'] = int(np.round(arguments['n_nodes']))  # Discretize
