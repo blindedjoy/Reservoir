@@ -203,6 +203,7 @@ def test(TEST):
     else:
       bounds = { #noise hyper-parameter.
                  #all are log scale except  spectral radius, leaking rate and n_nodes
+                 'noise' : (-2, -4),
                 'llambda' :        (-3, -1), 
                 'connectivity':    (-3, 0), # 0.5888436553555889, 
                 'n_nodes':         1000, #(100, 1500),
