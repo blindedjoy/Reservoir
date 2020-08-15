@@ -104,6 +104,7 @@ def run_experiment(inputs, n_cores = 3, cv_samples = 5):
       }
       experiment.RC_CV(cv_args = cv_args, model = "uniform")
       experiment.RC_CV(cv_args = cv_args, model = "exponential")
+      experiment.RC_CV(cv_args = cv_args, model = "hybrid")
 
 
 """
@@ -339,4 +340,4 @@ if __name__ == '__main__':
   print('Time: ', stop - start) 
 
  
-#experiment.RC_CV(cv_args = cv_args, model = "hybrid")
+#
