@@ -807,6 +807,7 @@ class EchoStateExperiment:
 		elif self.model == "uniform":
 			assert self.esn_cv.exp_weights == False
 			args2export = ifdel(args2export, "llambda")
+			args2export = ifdel(args2export, "noise")
 
 
 		
