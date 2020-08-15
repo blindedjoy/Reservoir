@@ -254,7 +254,7 @@ def test(TEST):
         experiment_set = [
                           {'target_freq':  2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
                           {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}
-                            
+                          
                            
                           
                           ]
@@ -270,9 +270,10 @@ def test(TEST):
                            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 2000} #DO NEXT
                           ]
 
-      elif experiment_specification == 100:
+      elif experiment_specification == 6:
         experiment_set = [
-                          
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+                          #./experiment_results/4k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.5.txt
                           
                           ]
 
