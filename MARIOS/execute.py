@@ -104,7 +104,7 @@ def run_experiment(inputs, n_cores = 3, cv_samples = 5):
       }
       experiment.RC_CV(cv_args = cv_args, model = "uniform")
       experiment.RC_CV(cv_args = cv_args, model = "exponential")
-      experiment.RC_CV(cv_args = cv_args, model = "hybrid")
+      #experiment.RC_CV(cv_args = cv_args, model = "hybrid")
 
 
 """
@@ -204,10 +204,10 @@ def test(TEST):
     else:
       bounds = { #noise hyper-parameter.
                  #all are log scale except  spectral radius, leaking rate and n_nodes
-                 'noise' : (-2, -4),
+                'noise' :          (-2, -4),
                 'llambda' :        (-3, -1), 
-                'connectivity':    (-3, 0), # 0.5888436553555889, 
-                'n_nodes':         1000, #(100, 1500),
+                'connectivity':    (-3, 0),       # 0.5888436553555889, 
+                'n_nodes':         1000,          #(100, 1500),
                 'spectral_radius': (0.01, 0.99),
                 'regularization':  (-12, 1),
                 "leaking_rate" :   (0.01, 1) # we want some memory. 0 would mean no memory.
@@ -221,7 +221,7 @@ def test(TEST):
       running two more experiments
   
       0.9 split 2k #3 and #4
-      RUN ALLL
+      RUN ALL
 
       0.5 split 4k, run last experiment
       {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
@@ -272,8 +272,42 @@ def test(TEST):
 
       elif experiment_specification == 100:
         experiment_set = [
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+                          #{'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
                           #./experiment_results/4k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.5.txt
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500,  'target_hz': 2000},  #DO NEXT
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 2000},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 2000}
+                            #DO NEXT
+                          
+                          ]
+      elif experiment_specification == 200:
+        experiment_set = [
+                          #{'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+                          #./experiment_results/4k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.5.txt
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500,  'target_hz': 3000},  #DO NEXT
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 3000},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 3000}
+                            #DO NEXT
+                          
+                          ]
+      elif experiment_specification == 300:
+        experiment_set = [
+                          #{'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+                          #./experiment_results/4k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.5.txt
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500,  'target_hz': 4000},  #DO NEXT
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 4000},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 4000}
+                            #DO NEXT
+                          
+                          ]
+      elif experiment_specification == 400:
+        experiment_set = [
+                          #{'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
+                          #./experiment_results/4k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.5.txt
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500,  'target_hz': 5000},  #DO NEXT
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 5000},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 5000}
+                            #DO NEXT
                           
                           ]
 
