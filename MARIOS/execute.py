@@ -216,67 +216,77 @@ def test(TEST):
       """
       finished experiments: #1
       0.5 split 2k
-      {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, #DONE
-      {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000} #DONE
+
+      {'target_freq': 2000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 1000} #DONE
       running two more experiments
   
-      0.9 split 2k #3 and #4
-      RUN ALL
+      0.9 split 2k run 0.9
+      {'target_freq': 2000, 'split': 0.9, 'target_hz': 500,  'obs_hz': 500},
 
-      0.5 split 4k, run last experiment
-      {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
-      {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 500},
-      {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000},
+      {'target_freq': 2000, 'split': 0.9, 'target_hz': 500,  'obs_hz': 1000}
+      {'target_freq': 2000, 'split': 0.9, 'target_hz': 1000, 'obs_hz': 1000}
+      
+
+
 
       0.9 split 4k medium is complete.
-      {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
-      {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},
-      {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500}
-      {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}
+      {'target_freq': 4000, 'split': 0.9, 'target_hz': 500,  'obs_hz': 500},
+      {'target_freq': 4000, 'split': 0.9, 'target_hz': 1000, 'obs_hz': 500},
+      {'target_freq': 4000, 'split': 0.9, 'target_hz': 500,  'obs_hz': 1000}
+      {'target_freq': 4000, 'split': 0.9, 'target_hz': 1000, 'obs_hz': 1000}
+
+      0.5 split 4k, run last experiment
+      {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500}, 
+      {'target_freq': 4000, 'split': 0.5, 'target_hz': 500, 'obs_hz': 1000},
+      {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 1000},
 
 
 
       """
       if experiment_specification == 1:
 
-        experiment_set = [
-                         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},  #DO NEXT
-                         {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 1000}, #DO NEXT
+        experiment_set = [  #2k, 0.9
+
+
+                         {'target_freq': 2000, 'split': 0.9, 'target_hz': 1000, 'obs_hz': 500},
+
+          
                           
                           ]
-      elif experiment_specification == 2:
-        experiment_set = [
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 500}, 
+      elif experiment_specification == 2: 
+        experiment_set = [  #2k, 0.5
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 500, 'obs_hz': 1000},  #DO NEXT
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500},  #DO NEXT
+                          
                           
                           
                           ]
       elif experiment_specification == 3:
-        experiment_set = [
-                          {'target_freq':  2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 500},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000}
-                          
-                           
+        experiment_set = [ 
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 500, 'obs_hz':  500}, #DO NEXT
+                          #4k 0.5
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500}
+          
                           
                           ]
       elif experiment_specification == 4:
         experiment_set = [
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 500},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1000, 'target_hz': 1000}
+                          
                            
                           ]
       elif experiment_specification == 5:
         experiment_set = [
-                           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500,  'target_hz': 2000},  #DO NEXT
-                           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 2000} #DO NEXT
+                           {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 500},  #DO NEXT
+                           {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 1000} #DO NEXT
                           ]
 
       elif experiment_specification == 100:
         experiment_set = [
                           #{'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000}, 
                           #./experiment_results/4k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.5.txt
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500,  'target_hz': 2000},  #DO NEXT
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 1000, 'target_hz': 2000},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 2000}
+                          {'target_freq': 4000, 'split': 0.5,  'target_hz': 2000, 'obs_hz': 500},  #DO NEXT
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 2000}
                             #DO NEXT
                           
                           ]
