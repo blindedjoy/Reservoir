@@ -193,7 +193,7 @@ def test(TEST):
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
            print("Real Run")"""
       bounds = {
-          'noise' : (-2, -4),
+          #'noise' : (-2, -4),
           'llambda' : (-3, -1), 
           'connectivity': (-3, 0), # 0.5888436553555889, 
           'n_nodes': 1000,#(100, 1500),
@@ -398,7 +398,7 @@ if __name__ == '__main__':
   #set_start_method('forkserver')
 
   # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
-  TEST = False#False #TODO: fix this so that it's a command line argument
+  TEST = True#False #TODO: fix this so that it's a command line argument
 
   #set_start_method('spawn')#, force = True) # set_start_method('spawn'
   start = timeit.default_timer()
