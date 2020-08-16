@@ -396,7 +396,7 @@ if __name__ == '__main__':
   #set_start_method('forkserver')
 
   # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
-  TEST = True#False #TODO: fix this so that it's a command line argument
+  TEST = False #TODO: fix this so that it's a command line argument
 
   #set_start_method('spawn')#, force = True) # set_start_method('spawn'
   start = timeit.default_timer()
