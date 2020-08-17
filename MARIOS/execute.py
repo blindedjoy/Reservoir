@@ -288,11 +288,14 @@ def test(TEST):
                           ]
       elif experiment_specification == 300:
         experiment_set = [
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},  
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000}, 
                          
                           ]
       elif experiment_specification == 400:
         experiment_set = [
-                          
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},  
+                          {'target_freq':4000, 'split': 0.9,  'target_hz': 1250, 'obs_hz': 1000},
                           
                           ]
 
