@@ -19,7 +19,7 @@ experiment_specification = int(sys.argv[1])
 accept_Specs = [1,2,3,4,5, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
 
-assert experiment_specification in 
+assert experiment_specification in accept_Specs
 
 
 
