@@ -13,13 +13,13 @@ def nrmse(pred_, truth, columnwise = False):
 	inputs should be numpy arrays
 	"""
 	if columnwise == True:
-		rmse_ = np.sqrt((truth - pred_) ** 2)
+		rmse_ = (truth - pred_) ** 2
 		denom_ = np.sum(truth ** 2, axis = 1).reshape(-1, 1)
 	else:
-		rmse_ = np.sqrt(np.sum((truth - pred_) ** 2))
+		rmse_ = np.sum((truth - pred_) ** 2)
 		denom_ = np.sum(truth ** 2)
 	
-	nrmse_ = rmse_ / denom_
+	nrmse_ = np.sqrt(rmse_ / denom_)
 	return(nrmse_)
 
 def idx2Freq(val):
