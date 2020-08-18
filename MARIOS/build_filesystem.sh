@@ -22,7 +22,7 @@ if [ "$build_all" == "T" ];
 then
 	curr_directory="experiment_results";  ifdir "${curr_directory}"
 	
-	for freq in "2k" "4k"
+	for freq in "1k" "2k" "4k"
 	do
 		curr_directory="experiment_results/$freq"; ifdir "${curr_directory}"
 		for size in "small" "medium" "publish"
