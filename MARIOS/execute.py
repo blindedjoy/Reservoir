@@ -344,6 +344,17 @@ def test(TEST):
                           {'target_freq': 2000, 'split': 0.5,  'target_hz': 1500, 'obs_hz': 1000}
                           ]
 
+       elif experiment_specification == 10000:
+        experiment_set = [
+                          {'target_freq': 1000, 'split': 0.5, 'target_hz': 100, 'obs_hz': 100},  
+                          {'target_freq': 1000, 'split': 0.5,  'target_hz': 100, 'obs_hz': 250}
+                          ]
+       elif experiment_specification == 10001:
+        experiment_set = [
+                          {'target_freq': 1000, 'split': 0.5,  'target_hz': 200, 'obs_hz': 100},  
+                          {'target_freq': 1000, 'split': 0.5,  'target_hz': 200, 'obs_hz': 250}
+                          ]
+
         
       """
       #STILL RUN THE BELOW:
