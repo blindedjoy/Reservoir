@@ -56,7 +56,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
-def run_experiment(inputs, n_cores = 10, cv_samples = 5):
+def run_experiment(inputs, n_cores = 10, cv_samples = 5, size = "publish"):
       """
       4*4 = 16 + 
 
@@ -83,7 +83,7 @@ def run_experiment(inputs, n_cores = 10, cv_samples = 5):
       split_, obs_hz_, target_hz_ = inputs["split"], inputs["obs_hz"], inputs["target_hz"]
 
 
-      experiment = EchoStateExperiment(size = "medium", 
+      experiment = EchoStateExperiment(size = size, 
                                        target_frequency = target_frequency_, 
                                        obs_hz = obs_hz_, 
                                        target_hz = target_hz_, 
@@ -92,13 +92,26 @@ def run_experiment(inputs, n_cores = 10, cv_samples = 5):
       experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
       #(-12, 1)}
       #example cv args:
+      if size == "medium":
+        cv_samples = 5
+        max_iterations = 5000
+        eps = 1e-5
+        sub_seq_len = 250
+        init_samples = 100
+      elif size == "publish":
+        cv_samples = 5
+        max_iterations = 2000
+        eps = 1e-4
+        sub_seq_len = 500
+        init_samples = 200
+
       cv_args = {
           'bounds' : inputs["bounds"],
-          'initial_samples' : 100,
-          'subsequence_length' : 250, #150 for 500
-          'eps' : 1e-5,
+          'initial_samples' : init_samples, #100,
+          'subsequence_length' : sub_seq_len, #250, #150 for 500
+          'eps' : eps,#1e-5,
           'cv_samples' : cv_samples, 
-          'max_iterations' : 5000, #1000, 
+          'max_iterations' : max_iterations, 
           'scoring_method' : 'tanh',
           "n_jobs" : n_cores,
           "verbose" : True,

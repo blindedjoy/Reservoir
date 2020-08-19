@@ -206,6 +206,7 @@ class EchoStateExperiment:
 				str2print += "successfully loaded: " + file_name_ + ".mat, "
 			print("maximum frequency: " + str(self.max_freq))
 			print("dataset shape: " + str(self.A.shape))
+
 		self.freq_idx = [int(i) for i in self.f]
 			#plt.imshow(A_orig)
 
