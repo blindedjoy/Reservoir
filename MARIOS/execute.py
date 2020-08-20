@@ -9,19 +9,19 @@ import os
 sys.path.append(os.getcwd()) 
 
 # get number of cpus available to job
-"""
+
 try:
     ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
 except KeyError:
     ncpus = multiprocessing.cpu_count()
 
 experiment_specification = int(sys.argv[1])
-"""
+
 
 accept_Specs = [1,2,3,4,5, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 10000, 10001]
 
-#try
-#assert experiment_specification in accept_Specs
+
+assert experiment_specification in accept_Specs
 
 
 
