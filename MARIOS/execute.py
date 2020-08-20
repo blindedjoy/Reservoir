@@ -264,7 +264,7 @@ def test(TEST):
       if experiment_specification == 1:
 
         experiment_set = [  #4k, 0.5 filling in some gaps:
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 750, 'obs_hz': 500}, 
+                          
                           {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500}
               
                           ]
