@@ -11,7 +11,7 @@ sys.path.append(os.getcwd())
 # get number of cpus available to job
 
 try:
-    ncpus = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+    ncpus = os.environ["SLURM_JOB_CPUS_PER_NODE"]
 except KeyError:
     ncpus = multiprocessing.cpu_count()
 
