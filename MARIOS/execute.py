@@ -56,7 +56,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
-def run_experiment(inputs, n_cores = 10, cv_samples = 5, size = "publish"):
+def run_experiment(inputs, n_cores = 10, cv_samples = 5, size = "medium"):
       """
       4*4 = 16 + 
 
@@ -261,99 +261,61 @@ def test(TEST):
       """
       if experiment_specification == 1:
 
-        experiment_set = [  #4k, 0.9 LAST ONE!
-                          {'target_freq': 1000, 'split': 0.9, 'target_hz': 500, 'obs_hz': 500}, 
-                          {'target_freq': 1000, 'split': 0.9, 'target_hz': 1000, 'obs_hz': 500},
-                          
-                          
+        experiment_set = [  #4k, 0.5 filling in some gaps:
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 750, 'obs_hz': 500}, 
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500}
+              
                           ]
       elif experiment_specification == 2: 
         # for 2k lets add some 750 target hz.
-        experiment_set = [  #2k, 0.5
-                          {'target_freq': 1000, 'split': 0.9, 'target_hz': 500, 'obs_hz': 1000},
-                          {'target_freq': 1000, 'split': 0.9, 'target_hz': 1000, 'obs_hz': 1000} 
-
+        experiment_set = [  #4k, 0.5 filling in some more gaps:
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+                          
+                          
                           ]
-      elif experiment_specification == 3:
+      elif experiment_specification == 3: # this is a stretch but worth a try:
         experiment_set = [ 
-                          {'target_freq': 1000, 'split': 0.5, 'target_hz': 500, 'obs_hz': 500}, 
-                          {'target_freq': 1000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
+                          
   
                           ]
       elif experiment_specification == 4:
         experiment_set = [
-                          {'target_freq': 1000, 'split': 0.5, 'target_hz': 500, 'obs_hz': 1000},
-                          {'target_freq': 1000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 1000} 
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000}
                            
                           ]
       elif experiment_specification == 5:
         experiment_set = [
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000}
                           
                           ]
 
       elif experiment_specification == 100:
         experiment_set = [
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 750, 'obs_hz': 500},  
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 750, 'obs_hz': 1000}, 
+                          
                           ]
       elif experiment_specification == 200:
         experiment_set = [
-                         {'target_freq': 4000, 'split': 0.9, 'target_hz': 750, 'obs_hz': 500},  
-                          {'target_freq':4000, 'split': 0.9, 'target_hz': 750, 'obs_hz': 1000},
+                         
                           ]
       elif experiment_specification == 300:
         experiment_set = [
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},  
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000}, 
+                          
                          
                           ]
       elif experiment_specification == 400:
         experiment_set = [
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},  
-                          {'target_freq': 4000, 'split': 0.9,  'target_hz': 1250, 'obs_hz': 1000},
+                          
                           
                           ]
       elif experiment_specification == 500:
         experiment_set = [
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},  
-                          {'target_freq': 4000, 'split': 0.5,  'target_hz': 1250, 'obs_hz': 1000},
+                          
                           ]   
-      elif experiment_specification == 600:
-        experiment_set = [
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},  
-                          {'target_freq': 2000, 'split': 0.5,  'target_hz': 1250, 'obs_hz': 1000},
-                          ]    
-      elif experiment_specification == 700:
-        experiment_set = [
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},  
-                          {'target_freq': 4000, 'split': 0.9,  'target_hz': 1500, 'obs_hz': 1000},
-                          ]   
-      elif experiment_specification == 800:
-        experiment_set = [
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},  
-                          {'target_freq': 2000, 'split': 0.9,  'target_hz': 1500, 'obs_hz': 1000},
-                          ]                          
-      elif experiment_specification == 900:
-        experiment_set = [
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 500},  
-                          {'target_freq': 4000, 'split': 0.5,  'target_hz': 1500, 'obs_hz': 1000},
-                          ]   
-      elif experiment_specification == 1000:
-        experiment_set = [
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 500},  
-                          {'target_freq': 2000, 'split': 0.5,  'target_hz': 1500, 'obs_hz': 1000}
-                          ]
-
-      elif experiment_specification == 10000:
-        experiment_set = [
-                          {'target_freq': 1000, 'split': 0.5, 'target_hz': 100, 'obs_hz': 100},  
-                          {'target_freq': 1000, 'split': 0.5,  'target_hz': 100, 'obs_hz': 250}
-                          ]
-      elif experiment_specification == 10001:
-        experiment_set = [
-                          {'target_freq': 1000, 'split': 0.5,  'target_hz': 200, 'obs_hz': 100},  
-                          {'target_freq': 1000, 'split': 0.5,  'target_hz': 200, 'obs_hz': 250}
-                          ]
 
         
       """

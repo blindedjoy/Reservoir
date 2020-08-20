@@ -9,18 +9,25 @@ def Merge(dict1, dict2):
 	return res 
 
 def nrmse(pred_, truth, columnwise = False):
-	"""
-	inputs should be numpy arrays
-	"""
-	if columnwise == True:
-		rmse_ = (truth - pred_) ** 2
-		denom_ = np.sum(truth ** 2, axis = 1).reshape(-1, 1)
-	else:
-		rmse_ = np.sum((truth - pred_) ** 2)
-		denom_ = np.sum(truth ** 2)
-	
-	nrmse_ = np.sqrt(rmse_ / denom_)
-	return(nrmse_)
+    """
+    inputs should be numpy arrays
+    variables:
+    pred_ : the prediction numpy matrix
+    truth : ground truth numpy matrix
+    columnwise: bool if set to true takes row-wise numpy array (assumes reader thinks of time as running left to right
+        while the code actually runs vertically.)
+
+    """
+    if columnwise == True:
+        rmse_ = np.sum((truth - pred_) ** 2, axis = 1).reshape(-1, )
+        denom_ = np.sum(truth ** 2) * (1/len(rmse_))#np.sum(truth ** 2, axis = 1).reshape(-1, )
+    else:
+        rmse_ = np.sum((truth - pred_) ** 2)
+        denom_ = np.sum(truth ** 2)
+    
+    nrmse_ = np.sqrt(rmse_ / denom_)
+    return(nrmse_)
+
 
 def idx2Freq(val):
 	idx = min(range(len(f)), key=lambda i: abs(f[i]-val))
