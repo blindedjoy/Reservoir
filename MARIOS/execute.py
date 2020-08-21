@@ -1,6 +1,6 @@
 #!/bin/bash/env python3
 
-#SBATCH -n=40                              # number of cores
+#SBATCH -n 40                              # number of cores
 #SBATCH -p shared                          # partition (queue)
 #SBATCH --mem 250000                       # memory
 #SBATCH -t 7-0:00                          # time (D-HH:MM)
