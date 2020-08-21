@@ -425,7 +425,7 @@ def test(TEST, multiprocessing = False):
       """
       
       n_experiments = len(experiment_set)
-      exper_ = [experiment_set[experiment_specification]
+      exper_ = [experiment_set[experiment_specification]]
 
       print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
 
