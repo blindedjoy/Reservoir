@@ -7,7 +7,7 @@ import os
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
-sys.path.append(os.getcwd()) 
+#sys.path.append(os.getcwd()) 
 
 # get number of cpus available to job
 
