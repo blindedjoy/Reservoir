@@ -1,7 +1,7 @@
 #!/bin/bash/env python3
 
-#SBATCH -n 40                              # number of cores
 #SBATCH -p shared                          # partition (queue)
+#SBATCH -n 30                              # number of cores                 
 #SBATCH --mem 250000                       # memory
 #SBATCH -t 7-0:00                          # time (D-HH:MM)
 #SBATCH -o myscript_%j_output.out          # STDOUT
