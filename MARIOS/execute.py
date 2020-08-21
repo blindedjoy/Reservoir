@@ -59,7 +59,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
-def run_experiment(inputs, n_cores = 40, cv_samples = 5, size = "medium"):
+def run_experiment(inputs, n_cores = 25, cv_samples = 5, size = "medium"):
       """
       4*4 = 16 + 
 
@@ -184,7 +184,7 @@ class MyPool(multiprocessing.pool.Pool):
 """
   
 
-def test(TEST):
+def test(TEST, multiprocessing = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
@@ -262,40 +262,58 @@ def test(TEST):
 
 
       """
+      experiment_set = [  #4k, 0.5 filling in some gaps:
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1000},
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
+              
+                          ]
       if experiment_specification == 1:
 
         experiment_set = [  #4k, 0.5 filling in some gaps:
-                          
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500}
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1000},
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
               
                           ]
       elif experiment_specification == 2: 
         # for 2k lets add some 750 target hz.
         experiment_set = [  #4k, 0.5 filling in some more gaps:
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1000},
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+
+                          
                           
                           
                           
                           ]
       elif experiment_specification == 3: # this is a stretch but worth a try:
         experiment_set = [ 
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000},
+                          
+
                           
                           
   
                           ]
       elif experiment_specification == 4:
         experiment_set = [
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000}
+
+                          
                            
                           ]
       elif experiment_specification == 5:
         experiment_set = [
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
+                          
                           
                           
                           ]
@@ -374,24 +392,37 @@ def test(TEST):
     for experiment in experiment_set:
       experiment["bounds"] = bounds
     
-    n_experiments = len(experiment_set)
-    print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
-    try:
-      set_start_method('forkserver')
-    except RuntimeError:
-      pass
-    pool = MyPool(n_experiments)
+    
+    
+    if multiprocessing != False:
+      """
+      This method turned out to be too complex and difficult to run on slurm, at least given my current knowledge. 
+      Better to simply run individual jobs. This code is just too heavy.
+      """
+      try:
+        set_start_method('forkserver')
+      except RuntimeError:
+        pass
+      n_experiments = len(experiment_set)
+      print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+      pool = MyPool(n_experiments)
 
 
-    pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
+      pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
 
-    pool.close()
-    pool.join()
+      pool.close()
+      pool.join()
+    else:
+      run_experiment(experiment_set[experiment_specification])
       #print(result)
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
   #imports
+
+
+
+
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification))
 
