@@ -1,9 +1,6 @@
 #!/bin/bash/env python3
 
 
-
-
-
 import multiprocessing #S--cpus-per-task=15 # notifications for job done #--continuous
 import sys
 import os
@@ -277,8 +274,7 @@ def test(TEST):
         experiment_set = [  #4k, 0.5 filling in some more gaps:
                           {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1000},
                           {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
+                          
                           
                           
                           ]
@@ -286,18 +282,20 @@ def test(TEST):
         experiment_set = [ 
                           {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},
                           {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000}
+                          
                           
   
                           ]
       elif experiment_specification == 4:
         experiment_set = [
-                          
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000}
                            
                           ]
       elif experiment_specification == 5:
         experiment_set = [
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
                           
                           
                           ]
