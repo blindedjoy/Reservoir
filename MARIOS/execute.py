@@ -404,14 +404,17 @@ def test(TEST, multiprocessing = False):
       except RuntimeError:
         pass
       n_experiments = len(experiment_set)
+      exper_ = [experiment_set[experiment_specification]
+
+
+
       print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+
       pool = MyPool(n_experiments)
-
-
       pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
-
       pool.close()
       pool.join()
+    """
     else:
       try:
         set_start_method('forkserver')
@@ -423,15 +426,16 @@ def test(TEST, multiprocessing = False):
 
       exper_ = [experiment_set[experiment_specification]
       print(exper_)
-      """
+    
       pool = MyPool(n_experiments)
 
       pool.map( run_experiment, exper_ )#work, [randint(1, 5) for x in range(5)])
 
       pool.close()
       pool.join()
-      """
+      
       #print(result)
+    """
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
