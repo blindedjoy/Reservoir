@@ -15,7 +15,7 @@
 for x in {0..1}
 do
 	echo $x
-	srun -t 5760 -n 12 -mem-per-cpu=11gb  bash -c "python execute.py '$x'" & #-N 1 -t 9000 --mem 124gb -n 20 bash -c "python execute.py '$x'" & #--cpus-per-task=32 -p shared 
+	srun -t 5760 -n 16 -p shared -mem-per-cpu=11gb  bash -c "python execute.py '$x'" & #-N 1 -t 9000 --mem 124gb -n 20 bash -c "python execute.py '$x'" & #--cpus-per-task=32 -p shared 
 done
 #python execute.py 1 & #'$1' --continuous -c 30 -  -N 1 
 # #--cpus-per-task=24 
