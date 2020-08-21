@@ -406,7 +406,7 @@ def test(TEST, multiprocessing = False):
     print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
 
     pool = MyPool(n_experiments)
-    pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
+    pool.map(run_experiment, exper_)#work, [randint(1, 5) for x in range(5)])
     pool.close()
     pool.join()
 
