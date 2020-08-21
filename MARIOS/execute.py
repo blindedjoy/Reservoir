@@ -1,4 +1,4 @@
-#!/bin/bash/env python3
+#!/bin/bash/python3 #/env python3
 
 #SBATCH --export=ALL
 #SBATCH -N 1 
