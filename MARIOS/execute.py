@@ -2,7 +2,7 @@
 
 #SBATCH -p shared                          # partition (queue)
 #SBATCH -n 30                              # number of cores                 
-#SBATCH --mem 250000                       # memory
+#SBATCH --mem 200gb                       # memory
 #SBATCH -t 7-0:00                          # time (D-HH:MM)
 #SBATCH -o myscript_%j_output.out          # STDOUT
 #SBATCH --mail-type=END                    # notifications for job done
