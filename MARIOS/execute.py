@@ -7,7 +7,7 @@ import os
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
-#sys.path.append(os.getcwd()) 
+sys.path.append(os.getcwd()) 
 
 # get number of cpus available to job
 
@@ -375,42 +375,40 @@ def test(TEST, multiprocessing = False):
     except RuntimeError:
       pass
     
-    
-    if multiprocessing != False:
-      """
-      This method turned out to be too complex and difficult to run on slurm, at least given my current knowledge. 
-      Better to simply run individual jobs. This code is just too heavy.
-      else:
-        try:
-          set_start_method('forkserver')
-        except RuntimeError:
-          pass
-        n_experiments = len(experiment_set)
-        print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
-        
-
-        exper_ = [experiment_set[experiment_specification]
-        print(exper_)
-      
-        pool = MyPool(n_experiments)
-
-        pool.map( run_experiment, exper_ )#work, [randint(1, 5) for x in range(5)])
-
-        pool.close()
-        pool.join()
-        
-        #print(result)
-      """
-      
+    """
+    This method turned out to be too complex and difficult to run on slurm, at least given my current knowledge. 
+    Better to simply run individual jobs. This code is just too heavy.
+    else:
+      try:
+        set_start_method('forkserver')
+      except RuntimeError:
+        pass
       n_experiments = len(experiment_set)
-      exper_ = [experiment_set[experiment_specification]]
-
       print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+      
 
+      exper_ = [experiment_set[experiment_specification]
+      print(exper_)
+    
       pool = MyPool(n_experiments)
-      pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
+
+      pool.map( run_experiment, exper_ )#work, [randint(1, 5) for x in range(5)])
+
       pool.close()
       pool.join()
+      
+      #print(result)
+    """
+    
+    n_experiments = len(experiment_set)
+    exper_ = [experiment_set[experiment_specification]]
+
+    print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+
+    pool = MyPool(n_experiments)
+    pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
+    pool.close()
+    pool.join()
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
