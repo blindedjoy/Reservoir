@@ -1,5 +1,6 @@
 #!/bin/bash/env python3
 
+#SBATCH --export=ALL
 #SBATCH -N 1 
 #SBATCH -p shared                          # partition (queue)
 #SBATCH -n 25                              # number of cores                 
