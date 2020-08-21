@@ -391,22 +391,41 @@ def test(TEST, multiprocessing = False):
       
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-    
+
+    try:
+      set_start_method('forkserver')
+    except RuntimeError:
+      pass
     
     
     if multiprocessing != False:
       """
       This method turned out to be too complex and difficult to run on slurm, at least given my current knowledge. 
       Better to simply run individual jobs. This code is just too heavy.
+      else:
+        try:
+          set_start_method('forkserver')
+        except RuntimeError:
+          pass
+        n_experiments = len(experiment_set)
+        print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+        
+
+        exper_ = [experiment_set[experiment_specification]
+        print(exper_)
+      
+        pool = MyPool(n_experiments)
+
+        pool.map( run_experiment, exper_ )#work, [randint(1, 5) for x in range(5)])
+
+        pool.close()
+        pool.join()
+        
+        #print(result)
       """
-      try:
-        set_start_method('forkserver')
-      except RuntimeError:
-        pass
+      
       n_experiments = len(experiment_set)
       exper_ = [experiment_set[experiment_specification]
-
-
 
       print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
 
@@ -414,35 +433,10 @@ def test(TEST, multiprocessing = False):
       pool.map(run_experiment, experiment_set)#work, [randint(1, 5) for x in range(5)])
       pool.close()
       pool.join()
-    """
-    else:
-      try:
-        set_start_method('forkserver')
-      except RuntimeError:
-        pass
-      n_experiments = len(experiment_set)
-      print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
-      
-
-      exper_ = [experiment_set[experiment_specification]
-      print(exper_)
-    
-      pool = MyPool(n_experiments)
-
-      pool.map( run_experiment, exper_ )#work, [randint(1, 5) for x in range(5)])
-
-      pool.close()
-      pool.join()
-      
-      #print(result)
-    """
 
 #https://github.com/pytorch/pytorch/issues/3492
 if __name__ == '__main__':
   #imports
-
-
-
 
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification))
