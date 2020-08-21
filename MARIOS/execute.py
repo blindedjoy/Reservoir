@@ -1,13 +1,6 @@
-#!/bin/bash/python3 #/env python3
+#!/bin/bash/env python3
 
-#SBATCH --export=ALL
-#SBATCH -N 1 
-#SBATCH -p shared                          # partition (queue)
-#SBATCH -n 25                              # number of cores                 
-#SBATCH --mem 150gb                        # memory
-#SBATCH -t 7-0:00                          # time (D-HH:MM)
-#SBATCH -o myscript_%j_output.out          # STDOUT
-#SBATCH --mail-type=END                    # notifications for job done
+
 
 
 
