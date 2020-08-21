@@ -318,28 +318,6 @@ def test(TEST, multiprocessing = False):
                           
                           ]
 
-      elif experiment_specification == 100:
-        experiment_set = [
-                          
-                          ]
-      elif experiment_specification == 200:
-        experiment_set = [
-                         
-                          ]
-      elif experiment_specification == 300:
-        experiment_set = [
-                          
-                         
-                          ]
-      elif experiment_specification == 400:
-        experiment_set = [
-                          
-                          
-                          ]
-      elif experiment_specification == 500:
-        experiment_set = [
-                          
-                          ]   
 
         
       """
@@ -445,7 +423,7 @@ if __name__ == '__main__':
   #set_start_method('forkserver')
 
   # 16 total experiments, 8 cores each --> 16 * 8 cores = 128 total cores. But first lets try some experiments.
-  TEST = False #TODO: fix this so that it's a command line argument
+  TEST = True#False #TODO: fix this so that it's a command line argument
 
   #set_start_method('spawn')#, force = True) # set_start_method('spawn'
   start = timeit.default_timer()

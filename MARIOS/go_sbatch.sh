@@ -5,7 +5,7 @@ module load Anaconda3/2019.10;
 
 
 #--cpus-per-task=32
-srun -t 5760 -p shared -n 30  --mem 200000 --mem-per-cpu=11gb  bash -c "python execute.py '$1'" & #--cpus-per-task=24 
+srun -t 5760 -p shared -n 30  --mem 64000 --mem-per-cpu=11gb  bash -c "python execute.py '$1'" & #--cpus-per-task=24 
 # 2 nodes for main tasks, 5 cv samples so 2 + (5*2)
 
 
