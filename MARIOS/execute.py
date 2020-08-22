@@ -28,7 +28,7 @@ except KeyError:
 experiment_specification = int(sys.argv[1])
 
 
-accept_Specs = list(range(10))#[1, 2, 3, 4, 5, 100, 200, 300, 400, 500]
+accept_Specs = list(range(100))#[1, 2, 3, 4, 5, 100, 200, 300, 400, 500]
 
 
 assert experiment_specification in accept_Specs
