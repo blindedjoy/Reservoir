@@ -169,6 +169,37 @@ def test(TEST, multiprocessing = False):
                 "leaking_rate" :   (0.01, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
+      experiment_set = [  #4k, 0.5 filling in some gaps:
+
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 750},
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1250},
+
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 750},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1250},
+
+                          #####3
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 750},
+                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 1250},
+
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1750, 'obs_hz': 750},
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1750, 'obs_hz': 1250},
+
+                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
+
+                          #####
+
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 750},
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1250},
+                          
+                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 750},
+                          
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 750},
+                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1250}
+              
+                          ]
+
+      #already running:                  
+      """          
       
       experiment_set = [  #4k, 0.5 filling in some gaps:
 
@@ -198,6 +229,9 @@ def test(TEST, multiprocessing = False):
                           {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
               
                           ]
+
+
+        """
       
       
     for experiment in experiment_set:
