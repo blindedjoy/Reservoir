@@ -171,68 +171,18 @@ def test(TEST, multiprocessing = False):
                 }
       experiment_set = [  #4k, 0.5 filling in some gaps:
 
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 750},
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1250},
-
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 750},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1250},
-
-                          #####3
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 750},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 1250},
-
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1750, 'obs_hz': 750},
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1750, 'obs_hz': 1250},
-
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
-
-                          #####
-
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 750},
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1250},
-                          
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 750},
-                          
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 750},
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1250}
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 750, 'target_hz': 500} ,
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1250, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1500, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1750, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 750, 'target_hz': 750} ,
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1250, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1500, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1750, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 750}
               
                           ]
-
-      #already running:                  
-      """          
-      
-      experiment_set = [  #4k, 0.5 filling in some gaps:
-
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000},
-
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000},
-
-                          #####3
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 2000, 'obs_hz': 1000},
-
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1750, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1750, 'obs_hz': 1000},
-
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
-
-                          #####
-
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1000},
-                          
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
-                          
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
-              
-                          ]
-
-
-        """
-      
       
     for experiment in experiment_set:
       experiment["bounds"] = bounds
