@@ -180,7 +180,17 @@ def test(TEST, multiprocessing = False):
                           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1250, 'target_hz': 750},
                           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1500, 'target_hz': 750},
                           {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1750, 'target_hz': 750},
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 750}
+                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 2000, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 750, 'target_hz': 500}  ,
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1250, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1500, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1750, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 2000, 'target_hz': 500},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 750, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1250, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1500, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 1750, 'target_hz': 750},
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 2000, 'target_hz': 750}
               
                           ]
       
