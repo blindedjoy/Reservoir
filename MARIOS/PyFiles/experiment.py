@@ -29,6 +29,7 @@ def nrmse(pred_, truth, columnwise = False):
     return(nrmse_)
 
 
+
 def idx2Freq(val):
 	idx = min(range(len(f)), key=lambda i: abs(f[i]-val))
 	return(idx)
@@ -966,14 +967,14 @@ class EchoStateExperiment:
 		print("\n \n exp rc cv data saved @ : " + self.outfile +".txt")
 
 
-	def already_trained(self, best_args):
-
+	def already_trained(self, best_args, exponential):
 
 		self.best_arguments = best_args
 
 		self.esn = self.esn_spec(**self.best_arguments,
 								 obs_idx  = self.obs_idx,
-								 resp_idx = self.resp_idx)
+								 resp_idx = self.resp_idx,
+								 exponential = exponential)
 
 		self.esn.train(x = self.Train, y = self.xTr)
 
@@ -981,14 +982,15 @@ class EchoStateExperiment:
 			if not n_steps:
 				n_steps = test.shape[0]
 			return self.esn.predict(n_steps, x = test[ :n_steps, :])
+
 		self.prediction = my_predict(self.Test)
 
-
+	"""
 	def Unif_RC_CV(self, cv_args):
-		"""
+		'''
 		for example bounds see the above function. 
 		#TODO consider combining these functions.
-		"""
+		'''
 
 		predetermined_args = {
 			'exp_weights' : False,
@@ -1006,6 +1008,7 @@ class EchoStateExperiment:
 
 		self.save_json(exp = False)
 		print("uniform rc cv data saved")
+	"""
 
 	def save_json(self):
 		
@@ -1084,8 +1087,8 @@ class EchoStateExperiment:
 		#points we can see in the training set
 
 		###plots:
-		self.ip_res = {"prediction": ip2_pred, "nrmse" : nrmse(pred_ = ip2_pred,  
-				  truth = self.xTe, columnwise = columnwise)} #"resid" : ip2_resid, 
+		self.ip_res = {"prediction": ip2_pred, 
+		               "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} #"resid" : ip2_resid, 
 		#return(ip_res)
 #sns.distplot(esn_obs.weights)
 
