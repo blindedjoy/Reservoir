@@ -1026,7 +1026,7 @@ class EchoStateExperiment:
 		with open(new_file, "w") as outfile:
 			data = json.dump(self.json2be, outfile)
 
-	def runInterpolation(self, columnwise = False):
+	def runInterpolation(self, columnwise = False, show_prediction = False):
 		#2D interpolation
 		#observer coordinates
 		
@@ -1061,16 +1061,16 @@ class EchoStateExperiment:
 				values	+= [self.A[x,y]]
 				
 		#Test zone
-		for x in range(self.A.shape[0] - self.xTe.shape[0], self.A.shape[0]):
+		for x in range(self.xTr.shape[0], self.A.shape[0]):
 			# resonse points : train
 			for y in resp_idx:
 				points_to_predict += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
-				#values	+= [A[x,y]]
+				#values	+= [self.A[x,y]]
 				
 			#observer points
 			for y in obs_idx:
 				point_lst += [(x,y)]
-				values += [self.A[x,y]]
+				values    += [self.A[x,y]]
 			
 			
 			#just iterate through dat_idx
@@ -1081,10 +1081,17 @@ class EchoStateExperiment:
 		#values += list(A[:Train.shape[0], column_idx].reshape(-1,))
 		
 		#nnpoints_to_predict = list(zip(list(range(Train.shape[0], A.shape[0])), [missing_]*xTe.shape[0]))
-		ip2_pred = griddata(point_lst, values, points_to_predict, method='cubic')
+		ip2_pred = griddata(point_lst, values, points_to_predict, method="linear")#'cubic')
 		ip2_pred = ip2_pred.reshape(self.xTe.shape)
 		#ip2_resid = ip2_pred - self.xTe
 		#points we can see in the training set
+
+		if show_prediction == True:
+			plt.imshow(ip2_pred, aspect = 0.1)
+			plt.show()
+			
+			plt.imshow(self.xTe, aspect = 0.1)
+			plt.show()
 
 		###plots:
 		self.ip_res = {"prediction": ip2_pred, 
