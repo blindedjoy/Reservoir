@@ -7,7 +7,7 @@ from PyFiles.imports import *
 def Merge(dict1, dict2): 
 	res = {**dict1, **dict2} 
 	return res 
-
+from scipy.interpolate import Rbf
 def nrmse(pred_, truth, columnwise = False):
     """
     inputs should be numpy arrays
@@ -97,6 +97,7 @@ class EchoStateExperiment:
 			assert is_numeric(target_hz), "you must enter a numeric target frequency range"
 			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		self.json2be = {}
+		
 
 	
 
@@ -175,8 +176,12 @@ class EchoStateExperiment:
 		self.resp_idx = [int(i) for i in dict2Return["resp_idx"]]
 
 
+	def smooth(self):
+		from scipy.ndimage import gaussian_filter
+		#from scipy.ndimage import gaussian_filter
+		self.A = gaussian_filter( self.A, sigma = 1)
 
-	def load_data(self):
+	def load_data(self, smooth = True):
 		
 
 		spect_files  = { "publish" : "_new", "small" : "_512" , "original" : "", "medium" : "_1024"}
@@ -189,9 +194,15 @@ class EchoStateExperiment:
 
 		self.T, self.f, self.A = data_lst #TODO rename T, f and A (A should be 'spectogram' or 'dataset')
 
+
+
 		#preprocessing
 		self.T, self.A = self.T['T'], self.A['M']
-		self.T, self.A = np.transpose(self.T), (self.A - np.mean(self.A))/np.std(self.A)
+		self.T, self.A = np.transpose(self.T), (self.A - np.mean(self.A)) / np.std(self.A)
+
+		self.A_orig = self.A.copy()
+
+		#self.smooth()
 
 		# 
 		#
@@ -707,6 +718,7 @@ class EchoStateExperiment:
 				"resp_idx" : response_idx}
 		self.Train, self.Test = self.dat["obs_tr"], self.dat["obs_te"]
 		self.xTr, self.xTe = self.dat["resp_tr"], self.dat["resp_te"]
+		self.runInterpolation()
 
 		# print statements:
 		if self.verbose == True:
@@ -734,6 +746,8 @@ class EchoStateExperiment:
 
 		self.outfile += str(self.obs_kHz)
 
+
+
 		#"targetKhz:_{}__obskHz:_{}"
 
 
@@ -748,7 +762,7 @@ class EchoStateExperiment:
 
 		if self.json2be == {}:
 			print("initialiazing json2be")
-			self.runInterpolation()
+			#self.runInterpolation()
 			ip_pred = {"interpolation" : self.ip_res["prediction"].tolist()}
 			ip_nrmse = {"interpolation" : self.ip_res["nrmse"]}
 			jsonMerge({"prediction" : ip_pred})
@@ -1026,7 +1040,18 @@ class EchoStateExperiment:
 		with open(new_file, "w") as outfile:
 			data = json.dump(self.json2be, outfile)
 
-	def runInterpolation(self, columnwise = False, show_prediction = False):
+	def rbf_add_point(self, point_tuple, test_set = False):
+
+		x, y = point_tuple
+		if test_set == True:
+			self.xs_unknown  += [x]
+			self.ys_unknown  += [y]
+		else:
+			self.xs_known += [x]
+			self.ys_known += [y]
+			self.values   += [self.A[x,y]]
+
+	def runInterpolation(self, columnwise = False, show_prediction = False, method = "Rbf"):
 		#2D interpolation
 		#observer coordinates
 		
@@ -1038,64 +1063,132 @@ class EchoStateExperiment:
 		print(len(point_lst))
 		print(len(values))
 		"""
+		print("STARTING INTERPOLATION")
 		
 		#Training points
-		#missing_ = 60
-		points_to_predict = []
-		
-		values = []
-		#visible
-		point_lst = []
-		
 		resp_idx = self.resp_obs_idx_dict["resp_idx"]
-		
+			
 		obs_idx = self.resp_obs_idx_dict["obs_idx"]
 
-
 		total_zone_idx = resp_idx + obs_idx
-		#Train zone
-		for x in range(self.xTr.shape[0]):
-			# resonse points : train
-			for y in total_zone_idx:
-				point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
-				values	+= [self.A[x,y]]
+
+		#missing_ = 60
+		if method == "griddata":
+			points_to_predict = []
+			
+			values = []
+			#visible
+			point_lst = []
+			
+			
+			#Train zone
+			for x in range(self.xTr.shape[0]):
+				# resonse points : train
+				for y in total_zone_idx:
+					point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
+					values	  += [self.A[x,y]]
+					
+			#Test zone
+			for x in range(self.xTr.shape[0], self.A.shape[0]):
+				# test set
+				for y in resp_idx:
+					points_to_predict += [(x,y)]
+					
+				# test set observers
+				for y in obs_idx:
+					point_lst += [(x,y)]
+					values    += [self.A[x,y]]
 				
-		#Test zone
-		for x in range(self.xTr.shape[0], self.A.shape[0]):
-			# resonse points : train
-			for y in resp_idx:
-				points_to_predict += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
-				#values	+= [self.A[x,y]]
 				
+				#just iterate through dat_idx
+			#print("point list length: " + str(len(point_lst)))
+			#print(xTe.shape)
+			#print(xTe.shape[0] * xTe.shape[1])
 			#observer points
-			for y in obs_idx:
-				point_lst += [(x,y)]
-				values    += [self.A[x,y]]
+			#values += list(A[:Train.shape[0], column_idx].reshape(-1,))
 			
-			
-			#just iterate through dat_idx
-		#print("point list length: " + str(len(point_lst)))
-		#print(xTe.shape)
-		#print(xTe.shape[0] * xTe.shape[1])
-		#observer points
-		#values += list(A[:Train.shape[0], column_idx].reshape(-1,))
-		
-		#nnpoints_to_predict = list(zip(list(range(Train.shape[0], A.shape[0])), [missing_]*xTe.shape[0]))
-		ip2_pred = griddata(point_lst, values, points_to_predict)#, method="linear")#"nearest")#"linear")#'cubic')
-		ip2_pred = ip2_pred.reshape(self.xTe.shape)
-		#ip2_resid = ip2_pred - self.xTe
-		#points we can see in the training set
+			#nnpoints_to_predict = list(zip(list(range(Train.shape[0], A.shape[0])), [missing_]*xTe.shape[0]))
 
-		if show_prediction == True:
-			plt.imshow(ip2_pred, aspect = 0.1)
-			plt.show()
-			
-			plt.imshow(self.xTe, aspect = 0.1)
-			plt.show()
+			ip2_pred = griddata(point_lst, values, points_to_predict, method = "cubic", rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
+			ip2_pred = ip2_pred.reshape(self.xTe.shape)
+			#ip2_resid = ip2_pred - self.xTe
+			#points we can see in the training set
 
-		###plots:
-		self.ip_res = {"prediction": ip2_pred, 
-		               "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} #"resid" : ip2_resid, 
+			if show_prediction == True:
+				plt.imshow(ip2_pred, aspect = 0.1)
+				plt.show()
+				
+				plt.imshow(self.xTe, aspect = 0.1)
+				plt.show()
+
+			###plots:
+			self.ip_res = {"prediction": ip2_pred, 
+			               "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} 
+
+
+		elif method == "Rbf":
+
+			self.xs_known, self.ys_known, self.values, self.xs_unknown, self.ys_unknown  = [], [], [], [], []
+
+			for x in range(self.xTr.shape[0]):
+				# resonse points : train
+				for y in total_zone_idx:
+					self.rbf_add_point((x, y))
+
+			#Test zone
+			for x in range(self.xTr.shape[0], self.A.shape[0]):
+				for y in resp_idx:		# test set
+					self.rbf_add_point((x,y), test_set = True)
+					
+				for y in obs_idx:		# test set observers
+					self.rbf_add_point((x,y))
+
+			x, y, values = [np.array(i) for i in [self.xs_known, self.ys_known, self.values]]
+			
+
+			ALL_POINTS_AT_ONCE = False
+
+			self.rbfi = Rbf(x, y, values, function='cubic') 
+
+			print("RBF SET")
+
+			if ALL_POINTS_AT_ONCE == True:
+
+				xi, yi = [np.array(i) for i in [self.xs_unknown, self.ys_unknown]]
+
+				#epsilon=2, #function = "cubic")  # radial basis function interpolato
+				di   = rbfi(xi, yi) 				# interpolated values
+				di   = di.reshape(self.xTe.shape)
+				diR  = nrmse(pred_ = di, truth = self.xTe, columnwise = columnwise)
+
+				self.ip_res = {"prediction" : di, 
+				                    "nrmse" : diR} 
+				print("FINISHED INTERPOLATION: R = " + str(diR))
+
+			else:
+				values_rbf_output = []
+				LEN = len(self.xs_unknown)
+				print(LEN)
+				for i, xi in enumerate(self.xs_unknown):
+					print( i / LEN * 100)
+					yi = np.array(self.ys_unknown[i])
+					xi = np.array(xi)
+					di   = self.rbfi(xi, yi) 
+
+					values_rbf_output +=[di]#[0]
+				values_rbf_output = np.array(values_rbf_output).reshape(self.xTe.shape)
+				diR  = nrmse(pred_ = di, truth = self.xTe, columnwise = columnwise)
+
+				self.ip_res = {"prediction" : di, 
+				                    "nrmse" : diR} 
+				print("FINISHED INTERPOLATION: R = " + str(diR))
+
+
+
+
+
+
+			               #"resid" : ip2_resid, 
 		#return(ip_res)
 #sns.distplot(esn_obs.weights)
 

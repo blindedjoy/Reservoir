@@ -57,6 +57,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
+
 def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "medium"):
       """
       4*4 = 16 + 
@@ -280,9 +281,9 @@ def test(TEST, multiprocessing = False):
     n_experiments = len(experiment_set)
     exper_ = [experiment_set[experiment_specification]]
 
-    print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
+    #print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
 
-    pool = MyPool(n_experiments)
+    pool = MyPool(1)#n_experiments)
     pool.map(run_experiment, exper_)#work, [randint(1, 5) for x in range(5)])
     pool.close()
     pool.join()
