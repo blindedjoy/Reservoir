@@ -100,6 +100,7 @@ class EchoStateExperiment:
 			assert is_numeric(target_hz), "you must enter a numeric target frequency range"
 			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		self.json2be = {}
+		self.smooth_bool = smooth_bool
 
 
 	def hz2idx(self, 
@@ -259,7 +260,7 @@ class EchoStateExperiment:
 		plt.yticks(rotation=0)
 		if return_index == True:
 			return(freq_idx)
-	
+
 
 	def Freq2idx(self, val, init = False):
 		"""
