@@ -269,6 +269,12 @@ def test(TEST, multiprocessing = False):
                         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1750, 'target_hz': 2000},
                         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 2000, 'target_hz': 2000}
                         ]
+    experiment_set = [  #4k, 0.5 filling in some gaps:
+
+                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 550, 'target_hz': 500} 
+                        
+                        
+                        ]
       
     for experiment in experiment_set:
       experiment["bounds"] = bounds
