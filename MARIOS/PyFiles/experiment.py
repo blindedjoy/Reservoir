@@ -2,12 +2,14 @@
 #where we transform the notebook into an object oriented approach worthy of Reinier's library.
 from reservoir import *
 from PyFiles.imports import *
+from scipy.interpolate import Rbf
 
 
 def Merge(dict1, dict2): 
 	res = {**dict1, **dict2} 
 	return res 
-from scipy.interpolate import Rbf
+
+
 def nrmse(pred_, truth, columnwise = False):
     """
     inputs should be numpy arrays
@@ -76,7 +78,8 @@ class EchoStateExperiment:
 				 out_path = None,
 				 obs_hz = None,
 				 target_hz = None,
-				 verbose = True):
+				 verbose = True,
+				 smooth_bool = False):
 		# Parameters
 		assert target_frequency != None, "you must enter a target frequency"
 		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
@@ -97,9 +100,7 @@ class EchoStateExperiment:
 			assert is_numeric(target_hz), "you must enter a numeric target frequency range"
 			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		self.json2be = {}
-		
 
-	
 
 	def hz2idx(self, 
 		   	   obs_hz = None, 
@@ -111,6 +112,7 @@ class EchoStateExperiment:
 		
 		To do one frequency use Freq2idx.
 		"""
+
 		### START helper functions
 		def my_sort(lst):
 			return(list(np.sort(lst)))
@@ -123,15 +125,15 @@ class EchoStateExperiment:
 		height   = self.freq_axis_len 
 
 		#items needed for the file name:
-		self.obs_kHz, self.target_kHz = obs_hz / 1000.0, target_hz / 1000
+		self.obs_kHz, self.target_kHz = obs_hz / 1000, target_hz / 1000
 
 		# spread vs total hz
 		obs_spread, target_spread = obs_hz / 2, target_hz / 2
 		
 		# get the obs, response range endpoints
-		respLb, respUb = [self.Freq2idx(midpoint - target_spread), 
+		respLb, respUb = [self.Freq2idx(midpoint - target_spread), self.Freq2idx(midpoint + target_spread)]
 
-						  self.Freq2idx(midpoint + target_spread)]
+
 		obs_high_Ub, obs_high_lb =  respUb + self.Freq2idx(obs_spread) + 1, respUb + 1
 		obs_low_lb, obs_low_Ub = respLb - self.Freq2idx(obs_spread) - 1, respLb - 1
 	  
@@ -202,7 +204,8 @@ class EchoStateExperiment:
 
 		self.A_orig = self.A.copy()
 
-		#self.smooth()
+		if self.smooth_bool == True:
+			self.smooth()
 
 		# 
 		#
@@ -256,6 +259,7 @@ class EchoStateExperiment:
 		plt.yticks(rotation=0)
 		if return_index == True:
 			return(freq_idx)
+	
 
 	def Freq2idx(self, val, init = False):
 		"""
@@ -267,6 +271,7 @@ class EchoStateExperiment:
 			return(freq_spec)
 		else:
 			self.targetIdx = freq_spec
+
 
 	def simple_block(self, 
 					 target_freq = 2000, 
@@ -718,7 +723,8 @@ class EchoStateExperiment:
 				"resp_idx" : response_idx}
 		self.Train, self.Test = self.dat["obs_tr"], self.dat["obs_te"]
 		self.xTr, self.xTe = self.dat["resp_tr"], self.dat["resp_te"]
-		self.runInterpolation()
+		
+		self.runInterpolation(method = "griddata")
 
 		# print statements:
 		if self.verbose == True:
@@ -1109,7 +1115,7 @@ class EchoStateExperiment:
 			
 			#nnpoints_to_predict = list(zip(list(range(Train.shape[0], A.shape[0])), [missing_]*xTe.shape[0]))
 
-			ip2_pred = griddata(point_lst, values, points_to_predict, method = "cubic", rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
+			ip2_pred = griddata(point_lst, values, points_to_predict, method = "linear", rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
 			ip2_pred = ip2_pred.reshape(self.xTe.shape)
 			#ip2_resid = ip2_pred - self.xTe
 			#points we can see in the training set
