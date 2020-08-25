@@ -270,7 +270,8 @@ def test(TEST, multiprocessing = False):
                         ]"""
     experiment_set = [  #4k, 0.5 filling in some gaps:
 
-                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 550, 'target_hz': 500} 
+                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 550, 'target_hz': 500}, 
+                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 250, 'target_hz': 250} 
                         
                         
                         ]
