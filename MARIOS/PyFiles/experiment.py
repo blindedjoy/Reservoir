@@ -1081,7 +1081,7 @@ class EchoStateExperiment:
 		#values += list(A[:Train.shape[0], column_idx].reshape(-1,))
 		
 		#nnpoints_to_predict = list(zip(list(range(Train.shape[0], A.shape[0])), [missing_]*xTe.shape[0]))
-		ip2_pred = griddata(point_lst, values, points_to_predict, method="linear")#"nearest")#"linear")#'cubic')
+		ip2_pred = griddata(point_lst, values, points_to_predict)#, method="linear")#"nearest")#"linear")#'cubic')
 		ip2_pred = ip2_pred.reshape(self.xTe.shape)
 		#ip2_resid = ip2_pred - self.xTe
 		#points we can see in the training set
