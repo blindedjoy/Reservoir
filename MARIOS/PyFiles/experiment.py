@@ -1092,7 +1092,9 @@ class EchoStateExperiment:
 		total_zone_idx = resp_idx + obs_idx
 
 		#missing_ = 60
+		assert self.interpolation_method in ["griddata-linear", "rbf"]
 		if self.interpolation_method == "griddata-linear":
+			print("griddata-linear")
 			points_to_predict = []
 			
 			values = []

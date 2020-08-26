@@ -90,7 +90,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
                                        target_frequency = target_frequency_, 
                                        obs_hz = obs_hz_, 
                                        target_hz = target_hz_, 
-                                       verbose = False)
+                                       verbose = False,
+                                       interpolation_method = "rbf")
 
       experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
       
