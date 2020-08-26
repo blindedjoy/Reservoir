@@ -1202,7 +1202,7 @@ class EchoStateExperiment:
 				self.ip_res = {"prediction" : di, 
 				                    "nrmse" : diR} 
 				print("FINISHED INTERPOLATION: R = " + str(diR))
-
+"""
 #TODO THIS NEEDS EDITING, is mostly useless.
 complex_dict = {
 "small" : { 
@@ -1251,7 +1251,6 @@ complex_dict = {
 }
 }
 
-	"""
 	def currTime():
 		now = datetime.now()
 
