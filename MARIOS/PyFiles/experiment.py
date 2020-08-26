@@ -20,7 +20,7 @@ def nrmse(pred_, truth, columnwise = False):
         while the code actually runs vertically.)
 
     """
-    if columnwise == True:
+    if columnwise:
         rmse_ = np.sum((truth - pred_) ** 2, axis = 1).reshape(-1, )
         denom_ = np.sum(truth ** 2) * (1/len(rmse_))#np.sum(truth ** 2, axis = 1).reshape(-1, )
     else:
@@ -79,9 +79,10 @@ class EchoStateExperiment:
 				 obs_hz = None,
 				 target_hz = None,
 				 verbose = True,
-				 smooth_bool = False):
+				 smooth_bool = False,
+				 interpolation_method = "griddata-linear"):
 		# Parameters
-		assert target_frequency != None, "you must enter a target frequency"
+		assert target_frequency, "you must enter a target frequency"
 		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
 		assert size in ["small", "medium", "publish"], "Please choose a size from ['small', 'medium', 'publish']"
 		assert type(verbose) == bool, "verbose must be a boolean"
@@ -91,16 +92,23 @@ class EchoStateExperiment:
 		self.size = size
 		self.file_path = file_path + self.size + "/"
 		self.target_frequency = target_frequency
-		self.load_data()
-		self.horiz_display()
+		self.smooth_bool = smooth_bool
+		self.interpolation_method = interpolation_method
+		
+		
 		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
 		self.out_path = out_path
-		if obs_hz != None and target_hz != None:
+
+		self.json2be = {}
+		self.load_data()
+		if obs_hz and target_hz: #obs_hz != None and target_hz != None:
 			assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 			assert is_numeric(target_hz), "you must enter a numeric target frequency range"
 			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
-		self.json2be = {}
-		self.smooth_bool = smooth_bool
+		
+		self.horiz_display()
+
+		
 
 
 	def hz2idx(self, 
@@ -154,7 +162,7 @@ class EchoStateExperiment:
 		obs_idx_Lst1, obs_idx_Lst2, resp_idx_Lst = my_sort(obs_idx_Lst1), my_sort(obs_idx_Lst2), my_sort(resp_idx_Lst)
 		
 		
-		if silent != True:
+		if not silent:
 			print("resp_indexes : " + str(resp_idx_Lst))
 			print("observer frequencies upper domain: " + str(resp_Freq_Lst) + 
 				  " , range: "+ str(abs(resp_Freq_Lst[0] - resp_Freq_Lst[-1])) +" Hz\n")
@@ -205,7 +213,7 @@ class EchoStateExperiment:
 
 		self.A_orig = self.A.copy()
 
-		if self.smooth_bool == True:
+		if self.smooth_bool:
 			self.smooth()
 
 		# 
@@ -224,7 +232,7 @@ class EchoStateExperiment:
 		self.freq_axis_len = self.A.shape[0]
 		self.time_axis_len = self.A.shape[1]
 		str2print = ""
-		if self.verbose == True:
+		if self.verbose:
 			for file_name_ in files2import:
 				str2print += "successfully loaded: " + file_name_ + ".mat, "
 			print("maximum frequency: " + str(self.max_freq))
@@ -258,7 +266,7 @@ class EchoStateExperiment:
 		axis.set_xlabel('time')
 		my_heat.invert_yaxis()
 		plt.yticks(rotation=0)
-		if return_index == True:
+		if return_index:
 			return(freq_idx)
 
 
@@ -287,7 +295,7 @@ class EchoStateExperiment:
 		"""
 
 		ctr = self.key_freq_idxs[target_freq]
-		if target_timeseries != None:  
+		if target_timeseries:  
 			#TODO EVEN AND ODD TIMESERIES
 			target_spread = target_timeseries // 2
 			#resp_bounds is the response bounds ie the target area bounds.
@@ -295,12 +303,12 @@ class EchoStateExperiment:
 		else: #TODO does this part of the if-else statement actually do anything?
 			response_bounds = None
 			resp_bounds = [ctr, ctr]
-		assert n_obs != None, "if you want to have no observers then #TODO"
+		assert n_obs, "if you want to have no observers then #TODO"
 		
 		obs_bounds  = [[resp_bounds[0] - n_obs, resp_bounds[0]],
 					   [resp_bounds[1], resp_bounds[1] + n_obs ]]
 
-		if silent != True:
+		if not silent:
 			print("response bounds: " + str(resp_bounds))
 			print("observers bounds: " + str(obs_bounds))
 		self.bounds = {"response_bounds" : resp_bounds, "observer_bounds" : obs_bounds}
@@ -318,7 +326,7 @@ class EchoStateExperiment:
 		assert type(plot) == bool, "plot must be a bool"
 		A_pd = pd.DataFrame(self.A_orig)
 		A_pd.columns = self.freq_idx
-		if plot == True:
+		if plot:
 			fig, ax = plt.subplots(1,1, figsize = (6,4))
 			my_heat= sns.heatmap(A_pd,  center=0, cmap=sns.color_palette("CMRmap"), ax = ax)
 			ax.set_xlabel('Frequency (Hz)')
@@ -608,7 +616,8 @@ class EchoStateExperiment:
 			union_obs_resp_set = set(obs_idx) & set(response_idx)
 			err_msg = "Error: overlap in obs_idx and response_idx \n"
 			err_msg += "overlap: " + str(list(union_obs_resp_set))
-			assert list(union_obs_resp_set) == [], err_msg
+			
+			assert union_obs_resp_set, err_msg # check if the list is empty
 
 		elif method == "freq":
 			"""
@@ -618,8 +627,11 @@ class EchoStateExperiment:
 			"""
 			obs_idx  = self.resp_obs_idx_dict["obs_idx"]
 			response_idx = self.resp_obs_idx_dict["resp_idx"]
-			assert type(obs_idx) != type(None), "oops, your observer index cannot be None, first run hz2idx helper function"
-			assert type(response_idx) != type(None), "oops, your response index cannot be None"
+			#assert type(obs_idx) != type(None), "oops, your observer index cannot be None, first run hz2idx helper function"
+			#assert type(response_idx) != type(None), "oops, your response index cannot be None"
+			assert obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
+			assert response_idx, "oops, your response index cannot be None"
+
 			response = dataset[ : , response_idx].reshape( -1, len( response_idx))
 
 		elif method == "exact":
@@ -630,8 +642,8 @@ class EchoStateExperiment:
 			"""
 			obs_idx  = self.obs_idx
 			response_idx = self.resp_idx
-			assert type(obs_idx) != type(None), "oops, your observer index cannot be None, first run hz2idx helper function"
-			assert type(response_idx) != type(None), "oops, your response index cannot be None"
+			assert obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
+			assert response_idx, "oops, your response index cannot be None"
 			response = dataset[ : , response_idx].reshape( -1, len( response_idx))
 
 
@@ -648,7 +660,7 @@ class EchoStateExperiment:
 		response_tr, response_te = response[ :train_len, : ], response[ train_len: , : ]
 		
 		### Visualize the train test split and the observers
-		if plot_split == True:
+		if plot_split:
 			red, yellow, blue, black = [255, 0, 0], [255, 255, 0], [0, 255, 255], [0, 0, 0]
 			orange, green, white = [255, 165, 0], [ 0, 128, 0], [255, 255, 255]
 
@@ -725,10 +737,10 @@ class EchoStateExperiment:
 		self.Train, self.Test = self.dat["obs_tr"], self.dat["obs_te"]
 		self.xTr, self.xTe = self.dat["resp_tr"], self.dat["resp_te"]
 		
-		self.runInterpolation(method = "griddata")
+		self.runInterpolation()
 
 		# print statements:
-		if self.verbose == True:
+		if self.verbose:
 			print_lst =  [(observers_tr, "X target"), (observers_te, "X test")]
 			print_lst += [(response_tr, "response train"), (response_te, "response test")]
 				
@@ -739,7 +751,7 @@ class EchoStateExperiment:
 		
 			if method != "freq":
 				print("observer_range: " + str(observer_range))
-				if response_idx == None:
+				if not response_idx:
 					print("target index: " + str(missing))
 				else:
 					print("response range: " + str(response_range))
@@ -831,11 +843,11 @@ class EchoStateExperiment:
 
 		#data assertions, cleanup
 		if self.model == "exp":
-			assert self.esn_cv.exp_weights == True
+			assert self.esn_cv.exp_weights# == True
 		elif self.model == "hybrid":
-			assert self.esn_cv.exp_weights == True
+			assert self.esn_cv.exp_weights# == True
 		elif self.model == "uniform":
-			assert self.esn_cv.exp_weights == False
+			assert not self.esn_cv.exp_weights# == False
 			args2export = ifdel(args2export, "llambda")
 			args2export = ifdel(args2export, "noise")
 
@@ -1050,7 +1062,7 @@ class EchoStateExperiment:
 	def rbf_add_point(self, point_tuple, test_set = False):
 
 		x, y = point_tuple
-		if test_set == True:
+		if test_set:
 			self.xs_unknown  += [x]
 			self.ys_unknown  += [y]
 		else:
@@ -1058,7 +1070,7 @@ class EchoStateExperiment:
 			self.ys_known += [y]
 			self.values   += [self.A[x,y]]
 
-	def runInterpolation(self, columnwise = False, show_prediction = False, method = "Rbf"):
+	def runInterpolation(self, columnwise = False, show_prediction = False):
 		#2D interpolation
 		#observer coordinates
 		
@@ -1070,7 +1082,7 @@ class EchoStateExperiment:
 		print(len(point_lst))
 		print(len(values))
 		"""
-		print("STARTING INTERPOLATION")
+		
 		
 		#Training points
 		resp_idx = self.resp_obs_idx_dict["resp_idx"]
@@ -1080,7 +1092,7 @@ class EchoStateExperiment:
 		total_zone_idx = resp_idx + obs_idx
 
 		#missing_ = 60
-		if method == "griddata":
+		if self.interpolation_method == "griddata-linear":
 			points_to_predict = []
 			
 			values = []
@@ -1121,19 +1133,20 @@ class EchoStateExperiment:
 			#ip2_resid = ip2_pred - self.xTe
 			#points we can see in the training set
 
-			if show_prediction == True:
+			if show_prediction:
 				plt.imshow(ip2_pred, aspect = 0.1)
 				plt.show()
 				
 				plt.imshow(self.xTe, aspect = 0.1)
-				plt.show()
+				plt.show() 
 
 			###plots:
 			self.ip_res = {"prediction": ip2_pred, 
 			               "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} 
 
 
-		elif method == "Rbf":
+		elif self.interpolation_method == "Rbf":
+			print("STARTING INTERPOLATION")
 
 			self.xs_known, self.ys_known, self.values, self.xs_unknown, self.ys_unknown  = [], [], [], [], []
 
@@ -1159,7 +1172,7 @@ class EchoStateExperiment:
 
 			print("RBF SET")
 
-			if ALL_POINTS_AT_ONCE == True:
+			if ALL_POINTS_AT_ONCE:
 
 				xi, yi = [np.array(i) for i in [self.xs_unknown, self.ys_unknown]]
 
@@ -1180,7 +1193,7 @@ class EchoStateExperiment:
 					print( i / LEN * 100)
 					yi = np.array(self.ys_unknown[i])
 					xi = np.array(xi)
-					di   = self.rbfi(xi, yi) 
+					di = self.rbfi(xi, yi) 
 
 					values_rbf_output +=[di]#[0]
 				values_rbf_output = np.array(values_rbf_output).reshape(self.xTe.shape)
@@ -1190,77 +1203,6 @@ class EchoStateExperiment:
 				                    "nrmse" : diR} 
 				print("FINISHED INTERPOLATION: R = " + str(diR))
 
-
-
-
-
-
-			               #"resid" : ip2_resid, 
-		#return(ip_res)
-#sns.distplot(esn_obs.weights)
-
-
-
-
-	""" #TODO Fix these data saving functions to work with the new file system. Some thoughts:
-	# this should be easy. get_new_filename can be eliminated, self.outfile serves the same purpose.
-	# The hard part will be to look at how to save the data. Perhaps save the entire experiment object? Thoughts.
-
-	def count_files(path, current):
-		count = 0
-		for path in pathlib.Path(path).iterdir():
-			if path.is_file():
-				count += 1
-		if current:
-			count = count - 1
-		return("_" + str(count))
-
-
-	def get_new_filename(exp, 
-						 obs = len(dat["obs_idx"]), 
-						 target_freq = "2k",
-						 ctr = key_freq_idxs[2000],
-						 spread = target_freq_["spread"],
-						 current = False
-						):
-		'''
-		ideally this function will serve two purposes: it will return a new filename and return 
-		a dict of data so that we can recreate the experiment. 
-		This should include 
-			1) The obs and resp indices, the "best_arguments" (the optimized hyper-parameters),
-			and the prediction.
-		'''
-		if exp:
-			prefix = 'exp_w'
-		else: 
-			prefix = 'non_exp_w'
-		obs, ctr, spread  = str(obs), str(ctr), str(spread)
-		
-		new_dir = "results/" + size + "/" + target_freq + "/"
-		count = count_files(new_dir, current = current)
-		new_filename =  prefix  + count + ".txt"
-		return(new_dir +  new_filename )
-
-	
-
-	
-			
-	def my_MSE(prediction, truth, verbose = True, label = ""):
-		mse_matrix = (prediction - truth)**2
-		mse = np.sum(mse_matrix)/(mse_matrix.shape[0]*mse_matrix.shape[1])
-		if verbose == True:
-			print(label + " MSE: " + str(mse))
-		return(mse)
-	"""
-
-	"""
-	def currTime():
-		now = datetime.now()
-
-		current_time = now.strftime("%H:%M:%S")
-		print("Current Time =", current_time)
-	currTime()
-	"""
 #TODO THIS NEEDS EDITING, is mostly useless.
 complex_dict = {
 "small" : { 
@@ -1309,3 +1251,11 @@ complex_dict = {
 }
 }
 
+	"""
+	def currTime():
+		now = datetime.now()
+
+		current_time = now.strftime("%H:%M:%S")
+		print("Current Time =", current_time)
+	currTime()
+	"""
