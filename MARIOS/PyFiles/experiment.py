@@ -1145,7 +1145,7 @@ class EchoStateExperiment:
 			               "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} 
 
 
-		elif self.interpolation_method == "Rbf":
+		elif self.interpolation_method == "rbf":
 			print("STARTING INTERPOLATION")
 
 			self.xs_known, self.ys_known, self.values, self.xs_unknown, self.ys_unknown  = [], [], [], [], []
