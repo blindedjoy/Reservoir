@@ -361,7 +361,7 @@ if __name__ == '__main__':
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification))
 
-  TEST = True
+  TEST = False
 
   
   start = timeit.default_timer()
