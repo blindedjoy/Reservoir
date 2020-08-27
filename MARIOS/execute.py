@@ -109,12 +109,12 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
       target_frequency_ = inputs["target_freq"]
       split_  = inputs["split"]
 
-      train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
-
+      
       
                                        #interpolation_method = "griddata-linear",
                                         
       if PREDICTION_TYPE == "column":
+        train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
         
         experiment = EchoStateExperiment(size = size, 
                                          target_frequency = target_frequency_, 
@@ -363,7 +363,6 @@ if __name__ == '__main__':
 
   TEST = False
 
-  
   start = timeit.default_timer()
   test(TEST = TEST)
   stop = timeit.default_timer()
