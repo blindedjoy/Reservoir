@@ -75,7 +75,7 @@ class EchoStateNetworkCV:
 
     def __init__(self, bounds, subsequence_length, model=EchoStateNetwork, eps=1e-8, initial_samples=50,
                  validate_fraction=0.2, steps_ahead=1, max_iterations=1000, batch_size=1, cv_samples=1,
-                 scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=100, acquisition_type='LCB',
+                 scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0):
         # Bookkeeping
@@ -501,6 +501,9 @@ class EchoStateNetworkCV:
         # Set viable sample range
         viable_start = self.esn_burn_in
         viable_stop = training_y.shape[0] - self.subsequence_length
+
+        print("VIABLE START: " + str(viable_start))
+        print("VIABLE STOP: " + str(viable_stop))
 
         # Get sample lengths
         self.validate_length = np.round(self.subsequence_length * self.validate_fraction).astype(int)

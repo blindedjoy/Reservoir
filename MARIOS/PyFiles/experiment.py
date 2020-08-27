@@ -76,11 +76,14 @@ class EchoStateExperiment:
 				 file_path = "spectogram_data/", 
 				 target_frequency = None,
 				 out_path = None,
-				 obs_hz = None,
-				 target_hz = None,
+				 obs_hz = None, 
+				 target_hz = None, 
+				 train_time_idx = None,
+				 test_time_idx = None,
 				 verbose = True,
 				 smooth_bool = False,
-				 interpolation_method = "griddata-linear"):
+				 interpolation_method = "griddata-linear",
+				 prediction_type = "block"):
 		# Parameters
 		assert target_frequency, "you must enter a target frequency"
 		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
@@ -94,17 +97,25 @@ class EchoStateExperiment:
 		self.target_frequency = target_frequency
 		self.smooth_bool = smooth_bool
 		self.interpolation_method = interpolation_method
-		
+
+		#column prediction variables
+		self.prediction_type = prediction_type
+		#these indices should be exact lists, not ranges.
+		if train_time_idx:
+			self.train_time_idx = train_time_idx
+		if test_time_idx:
+			self.test_time_idx  = test_time_idx
 		
 		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
 		self.out_path = out_path
 
 		self.json2be = {}
 		self.load_data()
-		if obs_hz and target_hz: #obs_hz != None and target_hz != None:
-			assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
-			assert is_numeric(target_hz), "you must enter a numeric target frequency range"
-			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
+		if self.prediction_type == "block":
+			if obs_hz and target_hz: #obs_hz != None and target_hz != None:
+				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
+				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
+				self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		
 		self.horiz_display()
 
@@ -640,25 +651,46 @@ class EchoStateExperiment:
 			This method is just like simple_block but upgraded to take in only frequencies by using the helper function hz2freq which must
 			be called first.
 			"""
-			obs_idx  = self.obs_idx
-			response_idx = self.resp_idx
-			assert obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
-			assert response_idx, "oops, your response index cannot be None"
-			response = dataset[ : , response_idx].reshape( -1, len( response_idx))
+			
+			if self.prediction_type == "block":
+				obs_idx  = self.obs_idx
+				response_idx = self.resp_idx
+				assert obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
+				assert response_idx, "oops, your response index cannot be None"
+				response = dataset[ : , response_idx].reshape( -1, len( response_idx))
+
+			elif self.prediction_type == "column":
+				obs_idx, response_idx  = [], range(self.A.shape[1])
+				train_time_idx  = self.train_time_idx
+				test_time_idx   = self.test_time_idx
+				self.target_kHz = "all"
+				self.obs_kHz    = 0.0
+
+
 
 
 
 		assert method in  ["freq", "exact"], "at this time only use the 'freq' method for cluster, \
 												  'exact' for analysis"
 				
-		
-		# PARTITION THE DATA
-		observers = dataset[ : , obs_idx]
+		if self.prediction_type != "column":
+			# PARTITION THE DATA
+			observers = dataset[ : , obs_idx]
 
-		observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
+			observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
 
-		response_tr, response_te = response[ :train_len, : ], response[ train_len: , : ]
-		
+			response_tr, response_te = response[ :train_len, : ], response[ train_len: , : ]
+		else:
+			#no observers so assign empty arrays
+			obs_arrs = [np.array([[]]) for i in [1, 2, 3]]
+			observers, observers_tr, observers_te = obs_arrs
+
+			response_tr  = dataset[ self.train_time_idx, : ]
+			response_te = dataset[ self.test_time_idx , : ]
+
+			train_len = len(self.train_time_idx)
+			test_len = len(self.test_time_idx)
+
 		### Visualize the train test split and the observers
 		if plot_split:
 			red, yellow, blue, black = [255, 0, 0], [255, 255, 0], [0, 255, 255], [0, 0, 0]
@@ -671,10 +703,15 @@ class EchoStateExperiment:
 			for i in obs_idx:
 				split_img[ : , i] = np.full(( 1, n_rows, 3), yellow)
 
-			# assign target area
-			for i in response_idx:
-				split_img[ :train_len, i] = np.full(( 1, train_len, 3), blue)
-				split_img[ train_len:, i] = np.full(( 1, test_len,  3), red)
+			if self.prediction_type != "column":
+				# assign target area
+				for i in response_idx:
+					split_img[ :train_len, i] = np.full(( 1, train_len, 3), blue)
+					split_img[ train_len:, i] = np.full(( 1, test_len,  3), red)
+			else:
+				for i in response_idx:
+					split_img[ train_time_idx, i ] = np.full(( 1, train_len, 3), blue)
+					split_img[ test_time_idx,  i ] = np.full(( 1, test_len,  3), red)
 
 			legend_elements = [Patch(facecolor='cyan', edgecolor='blue', label='Train'),
 						   	   Patch(facecolor='red', edgecolor='red', label='Test'),
@@ -684,7 +721,6 @@ class EchoStateExperiment:
 			# Create the figure
 			fig, ax = plt.subplots( 1, 2, figsize = ( 12, 6))
 			ax = ax.flatten()
-			
 			
 			solid_color_np =  np.transpose(split_img.T, axes = (1,2,0))
 			
@@ -729,14 +765,18 @@ class EchoStateExperiment:
 			##################################### END plots
 			
 		self.dat = {"obs_tr"  : observers_tr, 
-				"obs_te"  : observers_te,
-				"resp_tr" : response_tr,
-				"resp_te" : response_te,
-				"obs_idx" : obs_idx,
-				"resp_idx" : response_idx}
+				    "obs_te"  : observers_te,
+				    "resp_tr" : response_tr,
+				    "resp_te" : response_te,
+				    "obs_idx" : obs_idx,
+				    "resp_idx" : response_idx}
 		self.Train, self.Test = self.dat["obs_tr"], self.dat["obs_te"]
 		self.xTr, self.xTe = self.dat["resp_tr"], self.dat["resp_te"]
 		
+		if self.prediction_type == "column":
+			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
+
+
 		self.runInterpolation()
 
 		# print statements:
@@ -864,19 +904,6 @@ class EchoStateExperiment:
 		
 			
 
-		#Vestigal:
-		"""
-		try:
-			if exp == True:
-				self.exp_best_arguments
-			else:
-				self.unif_best_arguments
-		
-		except NameError:
-			 err_msg + "RC not yet trained"
-		else:
-			json2be["best_arguments"] = self.best_arguments
-		"""
 	
 	def RC_CV(self, cv_args, model, hybrid_llambda_bounds = (-5, 1)): #TODO: change exp to 
 		"""
@@ -915,16 +942,20 @@ class EchoStateExperiment:
 			self.exp = True
 			exp_w_ = {'exp_weights' : True}
 
-			
-
-		predetermined_args = {
-			'obs_index' : self.resp_obs_idx_dict['obs_idx'],
-			'target_index' : self.resp_obs_idx_dict["resp_idx"]
-		}
+		### hacky intervention:
+		if self.prediction_type != "column":
 		
-		input_dict = { **cv_args, 
-					   **predetermined_args,
-					   **exp_w_}
+			predetermined_args = {
+				'obs_index' : self.resp_obs_idx_dict['obs_idx'],
+				'target_index' : self.resp_obs_idx_dict["resp_idx"]
+			}
+			
+			input_dict = { **cv_args, 
+						   **predetermined_args,
+						   **exp_w_}
+		else:
+			input_dict = { **cv_args, 
+						   **exp_w_}
 
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
@@ -1083,52 +1114,61 @@ class EchoStateExperiment:
 		print(len(values))
 		"""
 		
+		if self.prediction_type == "block":
 		
-		#Training points
-		resp_idx = self.resp_obs_idx_dict["resp_idx"]
-			
-		obs_idx = self.resp_obs_idx_dict["obs_idx"]
+			#Training points
+			resp_idx = self.resp_obs_idx_dict["resp_idx"]	
+			obs_idx = self.resp_obs_idx_dict["obs_idx"]
 
-		total_zone_idx = resp_idx + obs_idx
+			total_zone_idx = resp_idx + obs_idx
 
 		#missing_ = 60
 		assert self.interpolation_method in ["griddata-linear", "rbf"]
 		if self.interpolation_method == "griddata-linear":
-			print("griddata-linear")
+			#print("griddata-linear")
 			points_to_predict = []
 			
 			values = []
 			#visible
 			point_lst = []
 			
+			if self.prediction_type == "block":
 			
-			#Train zone
-			for x in range(self.xTr.shape[0]):
-				# resonse points : train
-				for y in total_zone_idx:
-					point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
-					values	  += [self.A[x,y]]
-					
-			#Test zone
-			for x in range(self.xTr.shape[0], self.A.shape[0]):
-				# test set
-				for y in resp_idx:
-					points_to_predict += [(x,y)]
-					
-				# test set observers
-				for y in obs_idx:
-					point_lst += [(x,y)]
-					values    += [self.A[x,y]]
-				
-				
-				#just iterate through dat_idx
-			#print("point list length: " + str(len(point_lst)))
-			#print(xTe.shape)
-			#print(xTe.shape[0] * xTe.shape[1])
-			#observer points
-			#values += list(A[:Train.shape[0], column_idx].reshape(-1,))
-			
-			#nnpoints_to_predict = list(zip(list(range(Train.shape[0], A.shape[0])), [missing_]*xTe.shape[0]))
+				#Train zone
+				for x in range(self.xTr.shape[0]):
+					# resonse points : train
+					for y in total_zone_idx:
+						point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
+						values	  += [self.A[x,y]]
+						
+				#Test zone
+				for x in range(self.xTr.shape[0], self.A.shape[0]):
+					# test set
+					for y in resp_idx:
+						points_to_predict += [(x,y)]
+						
+					# test set observers
+					for y in obs_idx:
+						point_lst += [(x,y)]
+						values    += [self.A[x,y]]
+
+			elif self.prediction_type == "column":
+
+				total_zone_idx = range(self.A.shape[1])
+
+				#Train zone
+				for x in range(self.xTr.shape[0]):
+					# resonse points : train
+					for y in total_zone_idx:
+						point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
+						values	  += [self.A[x,y]]
+						
+				#Test zone
+				for x in range(self.xTr.shape[0], self.xTr.shape[0] + self.xTe.shape[0]):
+					# test set
+					for y in total_zone_idx:
+						points_to_predict += [(x,y)]
+						
 
 			ip2_pred = griddata(point_lst, values, points_to_predict, method = "linear", rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
 			ip2_pred = ip2_pred.reshape(self.xTe.shape)

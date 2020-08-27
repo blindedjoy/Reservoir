@@ -13,9 +13,13 @@ import sys
 import time
 import timeit
 
+PREDICTION_TYPE = "column"
+
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
+
+
 sys.path.append(os.getcwd()) 
 
 # get number of cpus available to job
@@ -33,7 +37,9 @@ accept_Specs = list(range(100))#[1, 2, 3, 4, 5, 100, 200, 300, 400, 500]
 
 assert experiment_specification in accept_Specs
 
-
+def liang_idx_convert(lb, ub):
+    idx_list = list(range(lb, ub + 1))
+    return idx_list
 
 
 ### Timing
@@ -82,19 +88,6 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
       }
 
       """
-      target_frequency_ = inputs["target_freq"]
-      split_, obs_hz_, target_hz_ = inputs["split"], inputs["obs_hz"], inputs["target_hz"]
-
-
-      experiment = EchoStateExperiment(size = size, 
-                                       target_frequency = target_frequency_, 
-                                       obs_hz = obs_hz_, 
-                                       target_hz = target_hz_, 
-                                       verbose = False,
-                                       interpolation_method = "rbf")
-
-      experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
-      
       #default arguments
       if size == "medium":
         default_presets = {
@@ -103,6 +96,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
           "eps" : 1e-5,
           'subsequence_length' : 250,
           "initial_samples" : 100}
+          
 
       elif size == "publish":
         default_presets = {
@@ -112,6 +106,38 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
           'subsequence_length' : 500,
           "initial_samples" : 200}
 
+      target_frequency_ = inputs["target_freq"]
+      split_  = inputs["split"]
+
+      train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
+
+      
+                                       #interpolation_method = "griddata-linear",
+                                        
+      if PREDICTION_TYPE == "column":
+        
+        experiment = EchoStateExperiment(size = size, 
+                                         target_frequency = target_frequency_, 
+                                         verbose = False,
+                                         prediction_type = PREDICTION_TYPE,
+                                         train_time_idx = train_time_idx,
+                                         test_time_idx = test_time_idx)
+
+        experiment.get_observers(method = "exact", split = split_, plot_split = False)
+        default_presets["subsequence_length"] = 5
+
+      elif  PREDICTION_TYPE == "block":
+        obs_hz_, target_hz_ = inputs["obs_hz"], inputs["target_hz"]
+        experiment = EchoStateExperiment(size = size, 
+                                         target_frequency = target_frequency_, 
+                                         obs_hz = obs_hz_, 
+                                         target_hz = target_hz_, 
+                                         verbose = False,
+                                         prediction_type = PREDICTION_TYPE)
+        experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
+      
+
+
       cv_args = {
           'bounds' : inputs["bounds"],
           'scoring_method' : 'tanh',
@@ -120,17 +146,31 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
           "plot" : False, 
           **default_presets
       }
+      models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"]
 
-      for model_ in ["exponential", "uniform"]: #hybrid
+      for model_ in models:#["exponential", "uniform"]: #hybrid
         experiment.RC_CV(cv_args = cv_args, model = model_)
 
 def test(TEST, multiprocessing = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
-      experiment_set = [
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
-             {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}]
+      if PREDICTION_TYPE == "block":
+        experiment_set = [
+               {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
+               {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}]
+      else:
+
+        test1 = liang_idx_convert(250, 259)
+        train1  = liang_idx_convert(240, 249)
+
+        test2 = liang_idx_convert(514, 523)
+        train2 = liang_idx_convert(504, 513)
+
+
+        experiment_set = [
+               {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
+               {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2}]
       """
       experiment_set = [
            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
@@ -270,13 +310,13 @@ def test(TEST, multiprocessing = False):
                         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 1750, 'target_hz': 2000},
                         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 2000, 'target_hz': 2000}
                         ]"""
-    experiment_set = [  #4k, 0.5 filling in some gaps:
+      experiment_set = [  #4k, 0.5 filling in some gaps:
 
-                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 550, 'target_hz': 500}, 
-                        {'target_freq': 2000, 'split': 0.9, 'obs_hz': 250, 'target_hz': 250} 
-                        
-                        
-                        ]
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 550, 'target_hz': 500}, 
+                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 250, 'target_hz': 250} 
+                          
+                          
+                          ]
       
     for experiment in experiment_set:
       experiment["bounds"] = bounds
@@ -302,7 +342,7 @@ if __name__ == '__main__':
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification))
 
-  TEST = False
+  TEST = True
 
   
   start = timeit.default_timer()
