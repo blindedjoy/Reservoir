@@ -5,7 +5,7 @@ cpus_per_task=12
 for x in {0..17} #..94}
 do
 	#echo $x
-	srun -t 9000 -n 1 -p shared --cpus-per-task=$cpus_per_task --mem-per-cpu=14gb  bash -c "python execute.py '$x' $cpus_per_task" & #-c 30 -N 1 
+	srun -t 9000 -n 1 -p shared --cpus-per-task=$cpus_per_task --mem-per-cpu=12gb  bash -c "python execute.py '$x' $cpus_per_task" & #-c 30 -N 1 
 done
 
 #srun  -t 5760  -n 16 -p shared --mem=64gb bash -c "python execute.py '$x'" & 
