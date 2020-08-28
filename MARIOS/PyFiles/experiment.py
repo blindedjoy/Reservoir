@@ -1123,9 +1123,10 @@ class EchoStateExperiment:
 			total_zone_idx = resp_idx + obs_idx
 
 		#missing_ = 60
-		assert self.interpolation_method in ["griddata-linear", "rbf"]
-		if self.interpolation_method == "griddata-linear":
-			#print("griddata-linear")
+		assert self.interpolation_method in ["griddata-linear", "rbf", "griddata-cubic"]
+
+		if self.interpolation_method     in ["griddata-linear", "griddata-cubic"]:
+			print(self.interpolation_method)
 			points_to_predict = []
 			
 			values = []
@@ -1170,7 +1171,9 @@ class EchoStateExperiment:
 						points_to_predict += [(x,y)]
 						
 
-			ip2_pred = griddata(point_lst, values, points_to_predict, method = "linear", rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
+			griddata_type = "linear" if self.interpolation_method == "griddata-linear" else "cubic"
+
+			ip2_pred = griddata(point_lst, values, points_to_predict, method = "linear")#, rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
 			ip2_pred = ip2_pred.reshape(self.xTe.shape)
 			#ip2_resid = ip2_pred - self.xTe
 			#points we can see in the training set
