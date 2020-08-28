@@ -311,56 +311,28 @@ def test(TEST, multiprocessing = False):
                         {'target_freq': 4000, 'split': 0.9, 'obs_hz': 2000, 'target_hz': 2000}
                         ]"""
       experiment_set = [  #4k, 0.5 filling in some gaps:
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  500},
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  750},
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 250, 'target_hz': 1000},
-
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz':  500},
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz':  750},
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 750, 'target_hz':  500},
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 750, 'target_hz':  750},
-                          {'target_freq': 2000, 'split': 0.5, 'obs_hz': 750, 'target_hz': 1000},
-
-
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 250, 'target_hz':  500},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 250, 'target_hz':  750},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 250, 'target_hz': 1000},
-
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz':  500},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz':  750},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},
-
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 750, 'target_hz':  500},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 750, 'target_hz':  750},
-                          {'target_freq': 2000, 'split': 0.9, 'obs_hz': 750, 'target_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  500},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  750},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz':  500},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz':  750},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 750, 'target_hz':  500},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 750, 'target_hz':  750},
+                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 750, 'target_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 250, 'target_hz':  500},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 250, 'target_hz':  750},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 250, 'target_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz':  500},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz':  750},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 750, 'target_hz':  500},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 750, 'target_hz':  750},
+                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 750, 'target_hz': 1000},
                           ]
 
 
-                          "2k/medium/split_0.5/targetKhz:_0.5__obskHz:_0.25.txt",
-                          "2k/medium/split_0.5/targetKhz:_0.75__obskHz:_0.25.txt",
-                          "2k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.25.txt",
-
-                          "2k/medium/split_0.5/targetKhz:_0.5__obskHz:_0.5.txt",
-                          "2k/medium/split_0.5/targetKhz:_0.75__obskHz:_0.5.txt",
-                          "2k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.5.txt",
-
-                          "2k/medium/split_0.5/targetKhz:_0.5__obskHz:_0.75.txt",
-                          "2k/medium/split_0.5/targetKhz:_0.75__obskHz:_0.75.txt",
-                          "2k/medium/split_0.5/targetKhz:_1.0__obskHz:_0.75.txt",
-
-                          "2k/medium/split_0.9/targetKhz:_0.5__obskHz:_0.25.txt",
-                          "2k/medium/split_0.9/targetKhz:_0.75__obskHz:_0.25.txt",
-                          "2k/medium/split_0.9/targetKhz:_1.0__obskHz:_0.25.txt",
-
-                          "2k/medium/split_0.9/targetKhz:_0.5__obskHz:_0.5.txt",
-                          "2k/medium/split_0.9/targetKhz:_0.75__obskHz:_0.5.txt",
-                          "2k/medium/split_0.9/targetKhz:_1.0__obskHz:_0.5.txt",
-
-                          "2k/medium/split_0.9/targetKhz:_0.5__obskHz:_0.75.txt",
-                          "2k/medium/split_0.9/targetKhz:_0.75__obskHz:_0.75.txt",
-                          "2k/medium/split_0.9/targetKhz:_1.0__obskHz:_0.75.txt",
+                          
 
 
 
