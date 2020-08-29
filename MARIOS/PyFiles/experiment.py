@@ -203,7 +203,7 @@ class EchoStateExperiment:
 		#from scipy.ndimage import gaussian_filter
 		self.A = gaussian_filter( self.A, sigma = 1)
 
-	def load_data(self, smooth = True):
+	def load_data(self, smooth = True, log = False):
 		
 
 		spect_files  = { "publish" : "_new", "small" : "_512" , "original" : "", "medium" : "_1024"}
@@ -227,16 +227,13 @@ class EchoStateExperiment:
 		if self.smooth_bool:
 			self.smooth()
 
-		# 
-		#
-		#A = (self.A - np.mean(self.A))/np.std(self.A)
-
-
 		self.A_orig = self.A.copy()
 		self.A_orig = np.rot90(self.A_orig, k = 1, axes = (0, 1))
 		
 
 		self.f = self.f['f'].reshape(-1,).tolist()
+		if log:
+			self.f = np.log(self.f)
 		self.max_freq = int(np.max(self.f))
 		self.Freq2idx(self.target_frequency, init = True)
 
@@ -249,7 +246,10 @@ class EchoStateExperiment:
 			print("maximum frequency: " + str(self.max_freq))
 			print("dataset shape: " + str(self.A.shape))
 
-		self.freq_idx = [int(i) for i in self.f]
+		if log:
+			self.freq_idx = [float(i) for i in self.f]
+		else:
+			self.freq_idx = [int(i) for i in self.f]
 			#plt.imshow(A_orig)
 
 		self.key_freq_idxs = {}
