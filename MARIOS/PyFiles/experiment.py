@@ -7,9 +7,9 @@ import pickle
 
 def save_pickle(path, transform):
 	self.getData2Save()
-    save_path = "pickle_files/" + path +".pickle"
-    with open(save_path, 'wb') as handle:
-        pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	save_path = "pickle_files/" + path + ".pickle"
+	with open(save_path, 'wb') as handle:
+		pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def Merge(dict1, dict2): 
