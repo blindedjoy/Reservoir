@@ -65,7 +65,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         super(MyPool, self).__init__(*args, **kwargs)
 
 def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "medium",
-                   interpolation_method = "rbf"):
+                   interpolation_method = "griddata-linear"):
       """
       4*4 = 16 + 
 
@@ -109,7 +109,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
       target_frequency_ = inputs["target_freq"]
       split_  = inputs["split"]
 
-      
+      obs_hz, target_hz = inputs["obs_hz"], inputs["target_hz"]
       
                                        #interpolation_method = "griddata-linear",
                                         
@@ -127,11 +127,11 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
         default_presets["subsequence_length"] = 5
 
       elif  PREDICTION_TYPE == "block":
-        obs_hz_, target_hz_ = inputs["obs_hz"], inputs["target_hz"]
+        #obs_hz_, target_hz_ = inputs["obs_hz"], inputs["target_hz"]
         experiment = EchoStateExperiment(size = size, 
                                          target_frequency = target_frequency_, 
-                                         obs_hz = obs_hz_, 
-                                         target_hz = target_hz_, 
+                                         obs_hz = obs_hz,#obs_hz_, 
+                                         target_hz = target_hz, #target_hz_, 
                                          verbose = False,
                                          prediction_type = PREDICTION_TYPE)
         experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
@@ -157,21 +157,22 @@ def test(TEST, multiprocessing = False):
       print("TEST")
       if PREDICTION_TYPE == "block":
         experiment_set = [
-               {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
-               {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20}]
-      else:
+               {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 150},
+               {'target_freq': 500, 'split': 0.5, 'obs_hz': 100, 'target_hz': 300}]
+      #else:
+        
 
-        test1 = liang_idx_convert(250, 259)
-        train1  = liang_idx_convert(240, 249)
+        #test1 = liang_idx_convert(250, 259)
+        #train1  = liang_idx_convert(240, 249)
 
-        test2 = liang_idx_convert(514, 523)
-        train2 = liang_idx_convert(504, 513)
+        #test2 = liang_idx_convert(514, 523)
+        #train2 = liang_idx_convert(504, 513)
 
 
-        experiment_set = [
-               {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
-               {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2}]
-      """
+        #experiment_set = [
+        #       {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
+        #       {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2}]
+      hi = """
       experiment_set = [
            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 20},
@@ -190,7 +191,8 @@ def test(TEST, multiprocessing = False):
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 10, 'target_hz': 20}, 
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 10}, 
            {'target_freq': 4000, 'split': 0.9, 'obs_hz': 20, 'target_hz': 20}]
-           print("Real Run")"""
+           print("Real Run")
+      """
       bounds = {
           #'noise' : (-2, -4),
           'llambda' : (-3, -1), 
@@ -351,7 +353,7 @@ def test(TEST, multiprocessing = False):
     #print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
 
     pool = MyPool(n_experiments)
-    pool.map(run_experiment, exper_)#work, [randint(1, 5) for x in range(5)])
+    pool.map(run_experiment, exper_)
     pool.close()
     pool.join()
 
@@ -361,7 +363,7 @@ if __name__ == '__main__':
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification))
 
-  TEST = False
+  TEST = True
 
   start = timeit.default_timer()
   test(TEST = TEST)

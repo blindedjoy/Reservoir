@@ -3,6 +3,12 @@
 from reservoir import *
 from PyFiles.imports import *
 from scipy.interpolate import Rbf
+import pickle
+
+def save_pickle(path, transform):
+    save_path = "pickle_files/" + path +".pickle"
+    with open(save_path, 'wb') as handle:
+        pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def Merge(dict1, dict2): 
@@ -11,24 +17,24 @@ def Merge(dict1, dict2):
 
 
 def nrmse(pred_, truth, columnwise = False):
-    """
-    inputs should be numpy arrays
-    variables:
-    pred_ : the prediction numpy matrix
-    truth : ground truth numpy matrix
-    columnwise: bool if set to true takes row-wise numpy array (assumes reader thinks of time as running left to right
-        while the code actually runs vertically.)
+	"""
+	inputs should be numpy arrays
+	variables:
+	pred_ : the prediction numpy matrix
+	truth : ground truth numpy matrix
+	columnwise: bool if set to true takes row-wise numpy array (assumes reader thinks of time as running left to right
+		while the code actually runs vertically.)
 
-    """
-    if columnwise:
-        rmse_ = np.sum((truth - pred_) ** 2, axis = 1).reshape(-1, )
-        denom_ = np.sum(truth ** 2) * (1/len(rmse_))#np.sum(truth ** 2, axis = 1).reshape(-1, )
-    else:
-        rmse_ = np.sum((truth - pred_) ** 2)
-        denom_ = np.sum(truth ** 2)
-    
-    nrmse_ = np.sqrt(rmse_ / denom_)
-    return(nrmse_)
+	"""
+	if columnwise:
+		rmse_ = np.sum((truth - pred_) ** 2, axis = 1).reshape(-1, )
+		denom_ = np.sum(truth ** 2) * (1/len(rmse_))#np.sum(truth ** 2, axis = 1).reshape(-1, )
+	else:
+		rmse_ = np.sum((truth - pred_) ** 2)
+		denom_ = np.sum(truth ** 2)
+	
+	nrmse_ = np.sqrt(rmse_ / denom_)
+	return(nrmse_)
 
 
 
@@ -37,9 +43,9 @@ def idx2Freq(val):
 	return(idx)
 
 def ifdel(dictt, key):
-    if key in list(dictt.keys()):
-        del dictt[key]
-    return(dictt)
+	if key in list(dictt.keys()):
+		del dictt[key]
+	return(dictt)
 
 
 
@@ -83,7 +89,10 @@ class EchoStateExperiment:
 				 verbose = True,
 				 smooth_bool = False,
 				 interpolation_method = "griddata-linear",
-				 prediction_type = "block"):
+				 prediction_type = "block",
+				 librosa = True,
+				 librosa_outfile = None,
+				 spectogram_path = None):
 		# Parameters
 		assert target_frequency, "you must enter a target frequency"
 		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
@@ -100,6 +109,9 @@ class EchoStateExperiment:
 
 		#column prediction variables
 		self.prediction_type = prediction_type
+		self.librosa = librosa
+		self.librosa_outfile = librosa_outfile
+		self.spectogram_path = spectogram_path
 		#these indices should be exact lists, not ranges.
 		if train_time_idx:
 			self.train_time_idx = train_time_idx
@@ -112,12 +124,14 @@ class EchoStateExperiment:
 		self.json2be = {}
 		self.load_data()
 		if self.prediction_type == "block":
+			"BONK"
 			if obs_hz and target_hz: #obs_hz != None and target_hz != None:
 				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
-				self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
+			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		
 		self.horiz_display()
+		#print("DONE")
 
 		
 
@@ -133,13 +147,6 @@ class EchoStateExperiment:
 		To do one frequency use Freq2idx.
 		"""
 
-		### START helper functions
-		def my_sort(lst):
-			return(list(np.sort(lst)))
-
-		def endpoints2list(lb, ub): # [lb, ub] stands for [lowerbound, upperbound]
-			return list(range(int(lb), int(ub + 1)))
-		### END helper functions
 
 		midpoint = self.target_frequency 
 		height   = self.freq_axis_len 
@@ -149,49 +156,156 @@ class EchoStateExperiment:
 
 		# spread vs total hz
 		obs_spread, target_spread = obs_hz / 2, target_hz / 2
+		### START helper functions
+		def my_sort(lst):
+			return(list(np.sort(lst)))
+		def drop_overlap(resp_lst, obs_lst): #obs_lst = drop_overlap(resp_lst, obs_lst)
+
+			intersection_set = set.intersection(set(resp_lst), set(obs_lst))
+			#find intersection of list1 and list2
+
+			intersection_list = list(intersection_set)
+
+			#print(intersection_list)
+			for i in intersection_list:
+				obs_lst.remove(i)
+			#print(obs_lst)
+			return(obs_lst)
+
+		def endpoints2list(lb, ub, obs = False, obs_spread = obs_spread, height = height): # [lb, ub] stands for [lowerbound, upperbound]
+
+			if self.librosa:
+				f = np.array(self.f)
+
+				def librosa_range(lb_, ub_):
+					"""
+					takes lower and upper bounds and returns the indices list. Potentially could make the else statement
+					below obselete.
+					"""
+					bounds = my_sort([lb_, ub_])
+					lb, ub = bounds
+					lb_bool_vec, ub_bool_vec = (f >= lb), (f <= ub)
+					and_vector = ub_bool_vec * lb_bool_vec
+
+					freqs = f[and_vector]			#frequencies between bounds
+					freq_idxs = np.where(and_vector)[0].tolist() #indices between bounds
+					return(freq_idxs)
+
+				
+				resp_range = librosa_range(lb, ub)
+				respLb, respUb = f[resp_range][0], f[resp_range][-1]
+				#print("respLb, respUb: " + str(respLb) + ", " +  str(respUb))
+				obs_hLb, obs_hUb = respUb, respUb + obs_spread 
+				#print("obs_hLb, obs_hUb : " + str(obs_hLb)  + ", " + str(obs_hUb))
+
+				obs_lLb, obs_lUb = respLb - obs_spread, respLb 
+				#print("obs_lLb, obs_lUb : " + str(obs_lLb)  + ", " + str(obs_lUb))
+				
+				obs_L, obs_H = librosa_range(obs_lLb, obs_lUb), librosa_range(obs_hLb, obs_hUb )
+				#print("Obs_H" + str(obs_H))
+				#print("resp_range" + str(resp_range))
+				#drop the lowest index of obs_H and the highest index of obs_L to avoid overlap with resp_idx
+				obs_H = drop_overlap(resp_lst = resp_range, obs_lst = obs_H)
+				obs_L = drop_overlap(resp_lst = resp_range, obs_lst = obs_L)
+				#print("Obs_H after haircut: " + str(obs_H))
+				
+
+				
+			else:
+				def make_range(lb_, ub_):
+					return list(range(int(lb), int(ub + 1)))
+				
+				# response ranges
+				respLb, respUb = self.Freq2idx(lb), self.Freq2idx(ub)
+				resp_range = make_range(respLb, respUb)
+
+				# observer ranges
+				obs_hUb, obs_hLb = respUb + self.Freq2idx(obs_spread) + 1, respUb + 1 ##uUB: high range upper bound
+				obs_lLb, obs_lUb = respLb - self.Freq2idx(obs_spread) - 1, respLb - 1
+				obs_L, obs_H = make_range(obs_lLb, obs_lUb), make_range(obs_hLb, obs_hUb )
+				
+			ranges = (resp_range, obs_L, obs_H ) 
+			#enforce integer type
+			final_ranges = []
+			for range_ in ranges:
+				range_ = [int(idx) for idx in range_]
+				range_ = [height - i for i in range_]
+				range_ = my_sort(range_)
+				final_ranges.append(range_)
+			#Inversion:
+
+			return(ranges)
+		### END helper functions
+
+		
+		
 		
 		# get the obs, response range endpoints
-		respLb, respUb = [self.Freq2idx(midpoint - target_spread), self.Freq2idx(midpoint + target_spread)]
+		resp_freq_Lb, resp_freq_Ub = [midpoint - target_spread, midpoint + target_spread]
+		
 
+		#This could be incorrect but I'm trying to protect the original block method.
+		#respLb, respUb = [self.Freq2idx(midpoint - target_spread), self.Freq2idx(midpoint + target_spread)]
 
-		obs_high_Ub, obs_high_lb =  respUb + self.Freq2idx(obs_spread) + 1, respUb + 1
-		obs_low_lb, obs_low_Ub = respLb - self.Freq2idx(obs_spread) - 1, respLb - 1
-	  
+		#print("frequencies: " + str([ round(x,1) for x in self.f]))
+		#print("bounds2convert: (" +str(midpoint - target_spread ) + ", " + str(midpoint + target_spread ) + str(")"))
+
+		#current_location
+
 		# Listify:
-		resp_idx_Lst = endpoints2list(respLb, respUb)
-		obs_idx_Lst1, obs_idx_Lst2 =  endpoints2list(obs_low_lb, obs_low_Ub), endpoints2list(obs_high_lb, obs_high_Ub)
+		resp_idx_Lst, obs_idx_Lst1, obs_idx_Lst2 = endpoints2list(resp_freq_Lb, resp_freq_Ub)
+
+		def get_frequencies(idx_lst):
+			freq_lst = [self.f[idx] for idx in idx_lst]
+			return freq_lst
+
+		for i, idx_lst in enumerate([resp_idx_Lst, obs_idx_Lst1, obs_idx_Lst2]):
+			if not i:
+				freq_lst = []
+			freq_lst += [get_frequencies(idx_lst)]
+
+		resp_freq_Lst, obs_freq_Lst1, obs_freq_Lst2 = freq_lst
+
+		#print("resp_idx_lst: "+str(resp_idx_Lst))
+		#print("resp_freq_lst "+str(np.array(self.f)[resp_idx_Lst]))
+		#print("obs_idx_Lst1 "+str(np.array(self.f)[obs_idx_Lst1]))
+		#print("obs_idx_Lst2 "+str(np.array(self.f)[obs_idx_Lst2]))
 
 		# collect frequencies:
-		resp_Freq_Lst = [self.f[i] for i in resp_idx_Lst]
-		obs_Freq_Lst1, obs_Freq_Lst2 = [self.f[i] for i in obs_idx_Lst1], [self.f[i] for i in obs_idx_Lst2]
+		#resp_Freq_Lst = [self.f[i] for i in resp_idx_Lst] ### COULD BE CORRECT!!!
+		
+		#resp_Freq_Lst = [self.Freq2idx(i) for i in resp_idx_Lst]
+		 
+		#obs_Freq_Lst1, obs_Freq_Lst2 = [int(i) for i in obs_idx_Lst1], [int(i) for i in obs_idx_Lst2]
 		
 		#INVERSION
-		resp_idx_Lst = [height - i for i in resp_idx_Lst]
-		obs_idx_Lst1, obs_idx_Lst2 = [height - i for i in obs_idx_Lst1 ], [height - i for i in obs_idx_Lst2 ]
+		#resp_idx_Lst = [height - i for i in resp_idx_Lst]
+		#obs_idx_Lst1, obs_idx_Lst2 = [height - i for i in obs_idx_Lst1 ], [height - i for i in obs_idx_Lst2 ]
 		
 		#SORT
-		obs_idx_Lst1, obs_idx_Lst2, resp_idx_Lst = my_sort(obs_idx_Lst1), my_sort(obs_idx_Lst2), my_sort(resp_idx_Lst)
+		#obs_idx_Lst1, obs_idx_Lst2, resp_idx_Lst = my_sort(obs_idx_Lst1), my_sort(obs_idx_Lst2), my_sort(resp_idx_Lst)
 		
 		
 		if not silent:
 			print("resp_indexes : " + str(resp_idx_Lst))
-			print("observer frequencies upper domain: " + str(resp_Freq_Lst) + 
-				  " , range: "+ str(abs(resp_Freq_Lst[0] - resp_Freq_Lst[-1])) +" Hz\n")
+			print("observer frequencies upper domain: " + str(resp_freq_Lst) + 
+				  " , range: "+ str(abs(resp_Freq_Lst[0] - resp_freq_Lst[-1])) +" Hz\n")
 
 			print("observer indexes lower domain: " + str(obs_idx_Lst1))
-			print("observer frequencies lower domain: " + str(obs_Freq_Lst1) + 
-				  " , range: "+ str(abs(obs_Freq_Lst1[0] - obs_Freq_Lst1[-1])) +" Hz\n")
+			print("observer frequencies lower domain: " + str(obs_freq_Lst1) + 
+				  " , range: "+ str(abs(obs_Freq_Lst1[0] - obs_freq_Lst1[-1])) +" Hz\n")
 
 			print("observer indexes upper domain: " + str(obs_idx_Lst2))
-			print("observer frequencies upper domain: " + str(obs_Freq_Lst2) + 
-				  " , range: "+ str(abs(obs_Freq_Lst2[0] - obs_Freq_Lst2[-1])) +" Hz\n")
-
-		assert obs_idx_Lst2 + resp_idx_Lst + obs_idx_Lst1 == list(range(obs_idx_Lst2[ 0 ], obs_idx_Lst1[ -1] + 1))
+			print("observer frequencies upper domain: " + str(obs_freq_Lst2) + 
+				  " , range: "+ str(abs(obs_Freq_Lst2[0] - obs_freq_Lst2[-1])) +" Hz\n")
+		
+		if not self.librosa:
+			assert obs_idx_Lst2 + resp_idx_Lst + obs_idx_Lst1 == list(range(obs_idx_Lst2[ 0 ], obs_idx_Lst1[ -1] + 1))
 
 		dict2Return = {"obs_idx": obs_idx_Lst2 + obs_idx_Lst1, 
 					   "resp_idx": resp_idx_Lst,
-					   "obs_freq" : obs_Freq_Lst1 + obs_Freq_Lst2,
-					   "resp_freq" : resp_Freq_Lst}
+					   "obs_freq" : obs_freq_Lst1 + obs_freq_Lst2,
+					   "resp_freq" : resp_freq_Lst}
 
 		self.resp_obs_idx_dict = dict2Return
 		self.obs_idx  = [int(i) for i in dict2Return["obs_idx"]]
@@ -203,24 +317,44 @@ class EchoStateExperiment:
 		#from scipy.ndimage import gaussian_filter
 		self.A = gaussian_filter( self.A, sigma = 1)
 
-	def load_data(self, smooth = True, log = False):
-		
+	def load_data(self, 
+				  smooth = True, 
+				  log = False, 
+				  method = ("librosa", "power")):
+		assert method[0] == "librosa"
+		if method[0] == "librosa":
+			spectogram_path = "./spectogram_files/" + self.spectogram_path + ".pickle"
+			with open(self.spectogram_path, 'rb') as handle:
 
-		spect_files  = { "publish" : "_new", "small" : "_512" , "original" : "", "medium" : "_1024"}
+				pickle_obj = pickle.load(handle)
 
-		files2import = [self.file_path  + i + spect_files[self.size] for i in ("T", "f", "Intensity") ]
-		
-		data_lst = []
-		for i in files2import:
-			data_lst.append(loadmat(i))
+			self.f = pickle_obj["transform"]["f"].reshape(-1,).tolist()
 
-		self.T, self.f, self.A = data_lst #TODO rename T, f and A (A should be 'spectogram' or 'dataset')
+			if method[1] == "power":
+				self.A_unnormalized = pickle_obj["transform"]["Xpow"]
+			else:
+				self.A_unnormalized = pickle_obj["transform"]["Xdb"]
+		else:
+			spect_files  = { "publish" : "_new", "small" : "_512" , "original" : "", "medium" : "_1024"}
 
+			files2import = [self.file_path  + i + spect_files[self.size] for i in ("T", "f", "Intensity") ]
+			
+			data_lst = []
+			for i in files2import:
+				data_lst.append(loadmat(i))
 
+			self.T, self.f, self.A = data_lst #TODO rename T, f and A (A should be 'spectogram' or 'dataset')
 
-		#preprocessing
-		self.T, self.A = self.T['T'], self.A['M']
-		self.T, self.A = np.transpose(self.T), (self.A - np.mean(self.A)) / np.std(self.A)
+			self.A_unnormalized = self.A['M'].copy()
+
+			#preprocessing
+			self.T = self.T['T']
+			self.T = np.transpose(self.T)
+			self.f = self.f['f'].reshape(-1,).tolist()
+
+		self.A =  self.A_unnormalized.copy()
+		#print("A_shape":self.A.shape)
+		self.A =  (self.A - np.mean(self.A)) / np.std(self.A)
 
 		self.A_orig = self.A.copy()
 
@@ -231,7 +365,7 @@ class EchoStateExperiment:
 		self.A_orig = np.rot90(self.A_orig, k = 1, axes = (0, 1))
 		
 
-		self.f = self.f['f'].reshape(-1,).tolist()
+		
 		if log:
 			self.f = np.log(self.f)
 		self.max_freq = int(np.max(self.f))
@@ -257,6 +391,7 @@ class EchoStateExperiment:
 			height = self.A.shape[0]
 			self.Freq2idx(i)
 			self.key_freq_idxs[i] = height - self.targetIdx
+
 
 	def olab_display(self, axis, return_index = False):
 		"""
@@ -664,7 +799,7 @@ class EchoStateExperiment:
 				train_time_idx  = self.train_time_idx
 				test_time_idx   = self.test_time_idx
 				self.target_kHz = "all"
-				self.obs_kHz    = 0.0
+				self.obs_kHz	= 0.0
 
 
 
@@ -675,6 +810,7 @@ class EchoStateExperiment:
 				
 		if self.prediction_type != "column":
 			# PARTITION THE DATA
+			print(obs_idx)
 			observers = dataset[ : , obs_idx]
 
 			observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
@@ -749,7 +885,7 @@ class EchoStateExperiment:
 			### fixing labels on plot 0, involved!
 			# label axes, legend
 			ax[0].set_ylabel('Frequency (Hz)'); ax[0].set_xlabel('time')
-			ax[0].legend(handles=legend_elements, loc='lowerright')
+			ax[0].legend(handles=legend_elements, loc='lower right')
 			
 			#now calculate the new positions
 			max_idx = solid_color_np.shape[0]
@@ -765,11 +901,11 @@ class EchoStateExperiment:
 			##################################### END plots
 			
 		self.dat = {"obs_tr"  : observers_tr, 
-				    "obs_te"  : observers_te,
-				    "resp_tr" : response_tr,
-				    "resp_te" : response_te,
-				    "obs_idx" : obs_idx,
-				    "resp_idx" : response_idx}
+					"obs_te"  : observers_te,
+					"resp_tr" : response_tr,
+					"resp_te" : response_te,
+					"obs_idx" : obs_idx,
+					"resp_idx" : response_idx}
 		self.Train, self.Test = self.dat["obs_tr"], self.dat["obs_te"]
 		self.xTr, self.xTe = self.dat["resp_tr"], self.dat["resp_te"]
 		
@@ -821,7 +957,7 @@ class EchoStateExperiment:
 
 		if self.json2be == {}:
 			print("initialiazing json2be")
-			#self.runInterpolation()
+			#self.runInterpolation() 
 			ip_pred = {"interpolation" : self.ip_res["prediction"].tolist()}
 			ip_nrmse = {"interpolation" : self.ip_res["nrmse"]}
 			jsonMerge({"prediction" : ip_pred})
@@ -841,7 +977,7 @@ class EchoStateExperiment:
 		self.json2be["experiment_inputs"] = {
 			 "size" : self.size, 
 			 "target_frequency" : int(self.target_frequency),
-			 "obs_hz" :    float(self.obs_kHz)    * 1000,
+			 "obs_hz" :	float(self.obs_kHz)	* 1000,
 			 "target_hz" : float(self.target_kHz) * 1000,
 			 "verbose" : self.verbose,
 			 }
@@ -1077,18 +1213,22 @@ class EchoStateExperiment:
 	def save_json(self):
 		
 		self.getData2Save()
-		new_file = self.outfile
+		if not self.librosa:
+			new_file = self.outfile
 
-		"""
-		if self.exp == True:
-			model_ = "_exp"
+			"""
+			if self.exp == True:
+				model_ = "_exp"
+			else:
+				model_ = "_unif"
+			"""
+			new_file += ".txt"
+
+			with open(new_file, "w") as outfile:
+				data = json.dump(self.json2be, outfile)
 		else:
-			model_ = "_unif"
-		"""
-		new_file += ".txt"
+			save_pickle(path = self.librosa_outfile, transform = self.json2be)
 
-		with open(new_file, "w") as outfile:
-			data = json.dump(self.json2be, outfile)
 
 	def rbf_add_point(self, point_tuple, test_set = False):
 
@@ -1125,7 +1265,7 @@ class EchoStateExperiment:
 		#missing_ = 60
 		assert self.interpolation_method in ["griddata-linear", "rbf", "griddata-cubic"]
 
-		if self.interpolation_method     in ["griddata-linear", "griddata-cubic"]:
+		if self.interpolation_method	 in ["griddata-linear", "griddata-cubic"]:
 			print(self.interpolation_method)
 			points_to_predict = []
 			
@@ -1151,7 +1291,7 @@ class EchoStateExperiment:
 					# test set observers
 					for y in obs_idx:
 						point_lst += [(x,y)]
-						values    += [self.A[x,y]]
+						values	+= [self.A[x,y]]
 
 			elif self.prediction_type == "column":
 
@@ -1187,7 +1327,7 @@ class EchoStateExperiment:
 
 			###plots:
 			self.ip_res = {"prediction": ip2_pred, 
-			               "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} 
+						   "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} 
 
 
 		elif self.interpolation_method == "rbf":
@@ -1227,7 +1367,7 @@ class EchoStateExperiment:
 				diR  = nrmse(pred_ = di, truth = self.xTe, columnwise = columnwise)
 
 				self.ip_res = {"prediction" : di, 
-				                    "nrmse" : diR} 
+									"nrmse" : diR} 
 				print("FINISHED INTERPOLATION: R = " + str(diR))
 
 			else:
@@ -1245,7 +1385,7 @@ class EchoStateExperiment:
 				diR  = nrmse(pred_ = di, truth = self.xTe, columnwise = columnwise)
 
 				self.ip_res = {"prediction" : di, 
-				                    "nrmse" : diR} 
+									"nrmse" : diR} 
 				print("FINISHED INTERPOLATION: R = " + str(diR))
 """
 #TODO THIS NEEDS EDITING, is mostly useless.
