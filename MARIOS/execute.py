@@ -89,6 +89,14 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
 
       """
       #default arguments
+      if size == "librosa":
+        default_presets = {
+          "cv_samples" : 8,
+          "max_iterations" : 3000,
+          "eps" : 1e-5,
+          'subsequence_length' : 250,
+          "initial_samples" : 100}
+
       if size == "medium":
         default_presets = {
           "cv_samples" : 5,
@@ -156,9 +164,15 @@ def test(TEST, multiprocessing = False):
     if TEST == True:
       print("TEST")
       if PREDICTION_TYPE == "block":
+        librosa_args = {"librosa": True, "spectogram_path" : "", "librosa_outfile" : ""}
         experiment_set = [
                {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 150},
+
+      
+
                {'target_freq': 500, 'split': 0.5, 'obs_hz': 100, 'target_hz': 300}]
+
+
       #else:
         
 
