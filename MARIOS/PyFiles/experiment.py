@@ -92,9 +92,11 @@ class EchoStateExperiment:
 				 prediction_type = "block",
 				 librosa = True,
 				 librosa_outfile = None,
-				 spectogram_path = None):
+				 spectogram_path = None,
+				 flat = False):
 		# Parameters
 		self.size = size
+		self.flat = flat
 
 		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
 		self.esn_cv_spec = class_copy(EchoStateNetworkCV)
@@ -322,14 +324,17 @@ class EchoStateExperiment:
 				  method = ("librosa", "db")):
 		assert method[0] == "librosa"
 		if method[0] == "librosa":
-			spectogram_path = "./pickle_files/spectogram_files/" + self.spectogram_path + ".pickle"
+			spectogram_path = "./pickle_files/results/" + self.spectogram_path + ".pickle"
 			with open(spectogram_path, 'rb') as handle:
 
 				pickle_obj = pickle.load(handle)
 
 			self.f = pickle_obj["transform"]["f"].reshape(-1,).tolist()
 
-			if method[1] == "power":
+			self.spectogram_type = method[1]
+			assert self.spectogram_type in ["power", "db"]
+
+			if self.spectogram_type == "power":
 				self.A_unnormalized = pickle_obj["transform"]["Xpow"]
 			else:
 				self.A_unnormalized = pickle_obj["transform"]["Xdb"]
@@ -1226,9 +1231,20 @@ class EchoStateExperiment:
 			with open(new_file, "w") as outfile:
 				data = json.dump(self.json2be, outfile)
 		else:
+			#spectogram
 			librosa_outfile = "./pickle_files/" + self.spectogram_path +"/" 
+			# spectogram type
+			librosa_outfile += self.spectogram_type + "/"
+
+			# flat or NOT
+			#TODO
+			flat_str = "untouched" if not self.flat else "flat"
+			librosa_outfile += flat_str
+
+			#split
+			librosa_outfile += "split_"  + str(self.split) + "/"
+
 			librosa_outfile += "tf_" + str(self.target_frequency)
-			librosa_outfile += "split_"  + str(self.split)
 			librosa_outfile += "obsHz_"  + str(self.obs_kHz)
 			librosa_outfile += "targHz_" + str(self.target_kHz) + ".pickle"
 
