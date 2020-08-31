@@ -324,7 +324,7 @@ class EchoStateExperiment:
 				  method = ("librosa", "db")):
 		assert method[0] == "librosa"
 		if method[0] == "librosa":
-			spectogram_path = "./pickle_files/results/" + self.spectogram_path + ".pickle"
+			spectogram_path = "./pickle_files/spectogram_files/" + self.spectogram_path + ".pickle"
 			with open(spectogram_path, 'rb') as handle:
 
 				pickle_obj = pickle.load(handle)
