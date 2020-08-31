@@ -6,6 +6,7 @@ from scipy.interpolate import Rbf
 import pickle
 
 def save_pickle(path, transform):
+	self.getData2Save()
     save_path = "pickle_files/" + path +".pickle"
     with open(save_path, 'wb') as handle:
         pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -1210,7 +1211,7 @@ class EchoStateExperiment:
 
 		self.unif_best_arguments = self.unif_esn_cv.optimize(x = self.Train, y = self.xTr) 
 
-		self.save_json(exp = False)
+		self.save_json(exp = Falsepi)
 		print("uniform rc cv data saved")
 	"""
 
