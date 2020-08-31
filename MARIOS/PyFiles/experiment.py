@@ -1247,7 +1247,7 @@ class EchoStateExperiment:
 			librosa_outfile += "tf_" + str(self.target_frequency)
 			librosa_outfile += "obsHz_"  + str(self.obs_kHz)
 			librosa_outfile += "targHz_" + str(self.target_kHz) + ".pickle"
-
+			print("outfile: " + str(librosa_outfile))
 			save_pickle(path = self.librosa_outfile, transform = self.json2be)
 
 
