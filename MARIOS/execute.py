@@ -64,7 +64,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "medium",
+def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "librosa",
                    interpolation_method = "griddata-linear"):
       """
       4*4 = 16 + 
@@ -123,7 +123,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
 
       obs_hz, target_hz = inputs["obs_hz"], inputs["target_hz"]
       
-                                       #interpolation_method = "griddata-linear",
+      print(librosa_args)
                                         
       if PREDICTION_TYPE == "column":
         train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
@@ -133,7 +133,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
                                          verbose = False,
                                          prediction_type = PREDICTION_TYPE,
                                          train_time_idx = train_time_idx,
-                                         test_time_idx = test_time_idx)
+                                         test_time_idx = test_time_idx,
+                                         **librosa_args)
 
         experiment.get_observers(method = "exact", split = split_, plot_split = False)
         default_presets["subsequence_length"] = 5
@@ -172,8 +173,8 @@ def test(TEST, multiprocessing = False):
         librosa_args = {"spectogram_path" : "cqt_high_pitch",
                         "librosa": True}
         experiment_set = [
-               {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 150},
-               {'target_freq': 500, 'split': 0.5, 'obs_hz': 100, 'target_hz': 300}]
+               {'target_freq': 250, 'split': 0.5, 'obs_hz': 50, 'target_hz': 50},
+               {'target_freq': 500, 'split': 0.5, 'obs_hz': 50, 'target_hz': 25}]
 
         experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
 
@@ -352,12 +353,6 @@ def test(TEST, multiprocessing = False):
                           {'target_freq': 4000, 'split': 0.9, 'obs_hz': 750, 'target_hz': 1000},
                           ]
 
-
-
-
-
-
-      
     for experiment in experiment_set:
       experiment["bounds"] = bounds
 

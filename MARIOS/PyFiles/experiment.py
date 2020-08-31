@@ -94,48 +94,48 @@ class EchoStateExperiment:
 				 librosa_outfile = None,
 				 spectogram_path = None):
 		# Parameters
-		assert target_frequency, "you must enter a target frequency"
-		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
-		assert size in ["small", "medium", "publish"], "Please choose a size from ['small', 'medium', 'publish']"
-		assert type(verbose) == bool, "verbose must be a boolean"
+		self.size = size
+
+		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
 		self.esn_cv_spec = class_copy(EchoStateNetworkCV)
 		self.esn_spec	= class_copy(EchoStateNetwork)
-		self.verbose = verbose
-		self.size = size
 		self.file_path = file_path + self.size + "/"
-		self.target_frequency = target_frequency
-		self.smooth_bool = smooth_bool
 		self.interpolation_method = interpolation_method
-
-		#column prediction variables
-		self.prediction_type = prediction_type
+		self.json2be = {}
 		self.librosa = librosa
 		self.librosa_outfile = librosa_outfile
+		self.out_path = out_path
+		self.prediction_type = prediction_type
+		self.smooth_bool = smooth_bool
 		self.spectogram_path = spectogram_path
+		self.target_frequency = target_frequency
+		self.verbose = verbose
+		
 		#these indices should be exact lists, not ranges.
 		if train_time_idx:
 			self.train_time_idx = train_time_idx
 		if test_time_idx:
 			self.test_time_idx  = test_time_idx
-		
-		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
-		self.out_path = out_path
 
-		self.json2be = {}
+
+
+		assert target_frequency, "you must enter a target frequency"
+		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
+		assert size in ["small", "medium", "publish", "librosa"], "Please choose a size from ['small', 'medium', 'publish']"
+		assert type(verbose) == bool, "verbose must be a boolean"
+		
+		#order dependent attributes:
 		self.load_data()
 		if self.prediction_type == "block":
 			"BONK"
-			if obs_hz and target_hz: #obs_hz != None and target_hz != None:
+			if obs_hz and target_hz:
 				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
 			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		
 		self.horiz_display()
-		#print("DONE")
 
 		
-
-
 	def hz2idx(self, 
 		   	   obs_hz = None, 
 		   	   target_hz = None, 
@@ -146,7 +146,6 @@ class EchoStateExperiment:
 		
 		To do one frequency use Freq2idx.
 		"""
-
 
 		midpoint = self.target_frequency 
 		height   = self.freq_axis_len 
@@ -320,11 +319,11 @@ class EchoStateExperiment:
 	def load_data(self, 
 				  smooth = True, 
 				  log = False, 
-				  method = ("librosa", "power")):
+				  method = ("librosa", "db")):
 		assert method[0] == "librosa"
 		if method[0] == "librosa":
-			spectogram_path = "./spectogram_files/" + self.spectogram_path + ".pickle"
-			with open(self.spectogram_path, 'rb') as handle:
+			spectogram_path = "./pickle_files/spectogram_files/" + self.spectogram_path + ".pickle"
+			with open(spectogram_path, 'rb') as handle:
 
 				pickle_obj = pickle.load(handle)
 
