@@ -1227,10 +1227,10 @@ class EchoStateExperiment:
 				data = json.dump(self.json2be, outfile)
 		else:
 			librosa_outfile = "./pickle_files/" + self.spectogram_path +"/" 
-			librosa_outfile += "tf_" + self.target_frequency
-			librosa_outfile += "split_"  + self.split
-			librosa_outfile += "obsHz_"  + self.obs_kHz
-			librosa_outfile += "targHz_" + self.targ_kHz + ".pickle"
+			librosa_outfile += "tf_" + str(self.target_frequency)
+			librosa_outfile += "split_"  + str(self.split)
+			librosa_outfile += "obsHz_"  + str(self.obs_kHz)
+			librosa_outfile += "targHz_" + str(self.targ_kHz) + ".pickle"
 
 			save_pickle(path = self.librosa_outfile, transform = self.json2be)
 
