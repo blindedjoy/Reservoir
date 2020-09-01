@@ -135,7 +135,7 @@ class EchoStateExperiment:
 
 	def save_pickle(self, path, transform):
 		self.getData2Save()
-		save_path = "pickle_files/" + path + ".pickle"
+		save_path = path + ".pickle"
 		with open(save_path, 'wb') as handle:
 			pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	def hz2idx(self, 
@@ -1232,7 +1232,7 @@ class EchoStateExperiment:
 				data = json.dump(self.json2be, outfile)
 		else:
 			#spectogram
-			librosa_outfile = "./pickle_files/" + self.spectogram_path +"/" 
+			librosa_outfile = "./pickle_files/results/" + self.spectogram_path +"/" 
 			# spectogram type
 			librosa_outfile += self.spectogram_type + "/"
 
@@ -1245,8 +1245,8 @@ class EchoStateExperiment:
 			librosa_outfile += "split_"  + str(self.split) + "/"
 
 			librosa_outfile += "tf_" + str(self.target_frequency)
-			librosa_outfile += "obsHz_"  + str(self.obs_kHz)
-			librosa_outfile += "targHz_" + str(self.target_kHz) + ".pickle"
+			librosa_outfile += "__obsHz_"  + str(self.obs_kHz)
+			librosa_outfile += "__targHz_" + str(self.target_kHz) + ".pickle"
 			print("outfile: " + str(librosa_outfile))
 			self.save_pickle(path = librosa_outfile, transform = self.json2be)
 
