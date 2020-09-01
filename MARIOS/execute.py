@@ -170,7 +170,7 @@ def test(TEST, multiprocessing = False):
     if TEST == True:
       print("TEST")
       if PREDICTION_TYPE == "block":
-        librosa_args = {"spectrogram_path" : "cqt_high_pitch",
+        librosa_args = {"spectrogram_path" : "18th_cqt_high",
                         "librosa": True}
         experiment_set = [
                {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
