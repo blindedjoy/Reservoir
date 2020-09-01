@@ -88,7 +88,6 @@ class EchoStateExperiment:
 				 interpolation_method = "griddata-linear",
 				 prediction_type = "block",
 				 librosa = True,
-				 librosa_outfile = None,
 				 spectogram_path = None,
 				 flat = False):
 		# Parameters
@@ -102,7 +101,7 @@ class EchoStateExperiment:
 		self.interpolation_method = interpolation_method
 		self.json2be = {}
 		self.librosa = librosa
-		self.librosa_outfile = librosa_outfile
+
 		self.out_path = out_path
 		self.prediction_type = prediction_type
 		self.smooth_bool = smooth_bool
@@ -1249,7 +1248,7 @@ class EchoStateExperiment:
 			librosa_outfile += "obsHz_"  + str(self.obs_kHz)
 			librosa_outfile += "targHz_" + str(self.target_kHz) + ".pickle"
 			print("outfile: " + str(librosa_outfile))
-			self.save_pickle(path = self.librosa_outfile, transform = self.json2be)
+			self.save_pickle(path = librosa_outfile, transform = self.json2be)
 
 
 	def rbf_add_point(self, point_tuple, test_set = False):
