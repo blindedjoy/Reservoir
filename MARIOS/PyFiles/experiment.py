@@ -76,7 +76,7 @@ class EchoStateExperiment:
 	"""
 	def __init__(self, 
 				 size, 
-				 file_path = "spectogram_data/", 
+				 file_path = "spectrogram_data/", 
 				 target_frequency = None,
 				 out_path = None,
 				 obs_hz = None, 
@@ -88,7 +88,7 @@ class EchoStateExperiment:
 				 interpolation_method = "griddata-linear",
 				 prediction_type = "block",
 				 librosa = True,
-				 spectogram_path = None,
+				 spectrogram_path = None,
 				 flat = False):
 		# Parameters
 		self.size = size
@@ -105,7 +105,7 @@ class EchoStateExperiment:
 		self.out_path = out_path
 		self.prediction_type = prediction_type
 		self.smooth_bool = smooth_bool
-		self.spectogram_path = spectogram_path
+		self.spectrogram_path = spectrogram_path
 		self.target_frequency = target_frequency
 		self.verbose = verbose
 		
@@ -307,17 +307,17 @@ class EchoStateExperiment:
 				  method = ("librosa", "db")):
 		assert method[0] == "librosa"
 		if method[0] == "librosa":
-			spectogram_path = "./pickle_files/spectogram_files/" + self.spectogram_path + ".pickle"
-			with open(spectogram_path, 'rb') as handle:
+			spectrogram_path = "./pickle_files/spectrogram_files/" + self.spectrogram_path + ".pickle"
+			with open(spectrogram_path, 'rb') as handle:
 
 				pickle_obj = pickle.load(handle)
 
 			self.f = pickle_obj["transform"]["f"].reshape(-1,).tolist()
 
-			self.spectogram_type = method[1]
-			assert self.spectogram_type in ["power", "db"]
+			self.spectrogram_type = method[1]
+			assert self.spectrogram_type in ["power", "db"]
 
-			if self.spectogram_type == "power":
+			if self.spectrogram_type == "power":
 				self.A_unnormalized = pickle_obj["transform"]["Xpow"]
 			else:
 				self.A_unnormalized = pickle_obj["transform"]["Xdb"]
@@ -330,7 +330,7 @@ class EchoStateExperiment:
 			for i in files2import:
 				data_lst.append(loadmat(i))
 
-			self.T, self.f, self.A = data_lst #TODO rename T, f and A (A should be 'spectogram' or 'dataset')
+			self.T, self.f, self.A = data_lst #TODO rename T, f and A (A should be 'spectrogram' or 'dataset')
 
 			self.A_unnormalized = self.A['M'].copy()
 
@@ -688,7 +688,7 @@ class EchoStateExperiment:
 					# I think this will show that you don't really need every line of the data to get similar accuracy
 			
 			missing: either 
-				(+) any integer:  (standing for column of the spectogram) or 
+				(+) any integer:  (standing for column of the spectrogram) or 
 				(+) "all" : which stands for all of the remaining target series.
 			num_observers: the number of observers that you want if you choose the "random" method.
 			observer_range: if you select the "block" opion
@@ -857,7 +857,7 @@ class EchoStateExperiment:
 			
 			#++++++++++++++++++++++++++++++++++++ plot 1: sns heatmap on the right
 			self.olab_display(ax[1])
-			ax[1].set_title("Spectogram Data")
+			ax[1].set_title("spectrogram Data")
 			
 			# retrieve labels to share with plot 0
 			# We need to retrieve the labels now.
@@ -1214,10 +1214,10 @@ class EchoStateExperiment:
 			with open(new_file, "w") as outfile:
 				data = json.dump(self.json2be, outfile)
 		else:
-			#spectogram
-			librosa_outfile = "./pickle_files/results/" + self.spectogram_path +"/" 
-			# spectogram type
-			librosa_outfile += self.spectogram_type + "/"
+			#spectrogram
+			librosa_outfile = "./pickle_files/results/" + self.spectrogram_path +"/" 
+			# spectrogram type
+			librosa_outfile += self.spectrogram_type + "/"
 
 			# flat or NOT
 			#TODO

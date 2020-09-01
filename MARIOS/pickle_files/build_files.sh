@@ -12,28 +12,28 @@ ifdir()
 	done 
 }
 
-# spectogram/ (ft means fourier transform, cqt is constant-Q transform)
+# spectrogram/ (ft means fourier transform, cqt is constant-Q transform)
 #	type/ power, amplitude, log-normalized ect.
 #		target_size/ (0.5 to 1 kilohertz)
 #			{model}_{n_obs}.txt ([exp, unif], [0.5 kh to 1 kh])
-spectograms=("18th_ft_high" "18th_cqt_high" "18th_ft_low" "18th_cqt_low" "free_ft" "free_cqt")
+spectrograms=("18th_ft_high" "18th_cqt_high" "18th_ft_low" "18th_cqt_low" "free_ft" "free_cqt")
 
 build_all="T" 
 ### currently in use:
 if [ "$build_all" == "T" ];
 then
 	curr_directory="results";  ifdir "${curr_directory}"
-	for spectogram in ${spectograms[@]}; do
-		ifdir "${curr_directory}/${spectogram}/"
+	for spectrogram in ${spectrograms[@]}; do
+		ifdir "${curr_directory}/${spectrogram}/"
 
 		for type in "power" "db"; do
-			ifdir "${curr_directory}/${spectogram}/${type}"
+			ifdir "${curr_directory}/${spectrogram}/${type}"
 
 			for flat in "flat" "untouched"; do
-				ifdir "${curr_directory}/${spectogram}/${type}/${flat}"
+				ifdir "${curr_directory}/${spectrogram}/${type}/${flat}"
 
 				for split in "0.5" "0.9"; do
-					ifdir "${curr_directory}/${spectogram}/${type}/${flat}/split_${split}"
+					ifdir "${curr_directory}/${spectrogram}/${type}/${flat}/split_${split}"
 				done
 			done
 		done
