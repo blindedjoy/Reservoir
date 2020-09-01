@@ -135,7 +135,7 @@ class EchoStateExperiment:
 
 	def save_pickle(self, path, transform):
 		self.getData2Save()
-		save_path = path + ".pickle"
+		save_path = path # + ".pickle"
 		with open(save_path, 'wb') as handle:
 			pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	def hz2idx(self, 
