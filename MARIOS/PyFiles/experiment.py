@@ -1239,7 +1239,7 @@ class EchoStateExperiment:
 
 			# flat or NOT
 			#TODO
-			flat_str = "untouched" if not self.flat else "flat"
+			flat_str = "untouched" if not self.flat else "flat" +"/"
 			librosa_outfile += str(flat_str)
 
 			#split
