@@ -5,11 +5,7 @@ from PyFiles.imports import *
 from scipy.interpolate import Rbf
 import pickle
 
-def save_pickle(path, transform):
-	self.getData2Save()
-	save_path = "pickle_files/" + path + ".pickle"
-	with open(save_path, 'wb') as handle:
-		pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 
 def Merge(dict1, dict2): 
@@ -138,7 +134,11 @@ class EchoStateExperiment:
 		
 		self.horiz_display()
 
-		
+	def save_pickle(self, path, transform):
+		self.getData2Save()
+		save_path = "pickle_files/" + path + ".pickle"
+		with open(save_path, 'wb') as handle:
+			pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
 	def hz2idx(self, 
 		   	   obs_hz = None, 
 		   	   target_hz = None, 
