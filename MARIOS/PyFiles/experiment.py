@@ -148,6 +148,7 @@ class EchoStateExperiment:
 		
 		To do one frequency use Freq2idx.
 		"""
+		print("RUNNING HZ2IDX")
 
 		midpoint = self.target_frequency 
 		height   = self.freq_axis_len 
@@ -267,25 +268,7 @@ class EchoStateExperiment:
 
 		resp_freq_Lst, obs_freq_Lst1, obs_freq_Lst2 = freq_lst
 
-		#print("resp_idx_lst: "+str(resp_idx_Lst))
-		#print("resp_freq_lst "+str(np.array(self.f)[resp_idx_Lst]))
-		#print("obs_idx_Lst1 "+str(np.array(self.f)[obs_idx_Lst1]))
-		#print("obs_idx_Lst2 "+str(np.array(self.f)[obs_idx_Lst2]))
-
-		# collect frequencies:
-		#resp_Freq_Lst = [self.f[i] for i in resp_idx_Lst] ### COULD BE CORRECT!!!
-		
-		#resp_Freq_Lst = [self.Freq2idx(i) for i in resp_idx_Lst]
-		 
-		#obs_Freq_Lst1, obs_Freq_Lst2 = [int(i) for i in obs_idx_Lst1], [int(i) for i in obs_idx_Lst2]
-		
-		#INVERSION
-		#resp_idx_Lst = [height - i for i in resp_idx_Lst]
-		#obs_idx_Lst1, obs_idx_Lst2 = [height - i for i in obs_idx_Lst1 ], [height - i for i in obs_idx_Lst2 ]
-		
-		#SORT
-		#obs_idx_Lst1, obs_idx_Lst2, resp_idx_Lst = my_sort(obs_idx_Lst1), my_sort(obs_idx_Lst2), my_sort(resp_idx_Lst)
-		
+		print(freq_lst)
 		
 		if not silent:
 			print("resp_indexes : " + str(resp_idx_Lst))

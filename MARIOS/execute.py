@@ -173,7 +173,8 @@ def test(TEST, multiprocessing = False):
         librosa_args = {"spectogram_path" : "cqt_high_pitch",
                         "librosa": True}
         experiment_set = [
-               {'target_freq': 250, 'split': 0.5, 'obs_hz': 50, 'target_hz': 50},
+               {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
+               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
                {'target_freq': 500, 'split': 0.5, 'obs_hz': 50, 'target_hz': 25}]
 
         experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
