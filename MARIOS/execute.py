@@ -96,7 +96,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
           "eps" : 1e-5,
           'subsequence_length' : 250,
           "initial_samples" : 100}
-        librosa_args = { "spectogram_path": inputs["spectogram_path"],#"cqt_high_pitch",
+        librosa_args = { "spectrogram_path": inputs["spectrogram_path"],#"cqt_high_pitch",
                          "librosa": inputs["librosa"]}
       else:
         librosa_args = {}
@@ -170,7 +170,7 @@ def test(TEST, multiprocessing = False):
     if TEST == True:
       print("TEST")
       if PREDICTION_TYPE == "block":
-        librosa_args = {"spectogram_path" : "cqt_high_pitch",
+        librosa_args = {"spectrogram_path" : "cqt_high_pitch",
                         "librosa": True}
         experiment_set = [
                {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
