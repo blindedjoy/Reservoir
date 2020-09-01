@@ -16,7 +16,7 @@ ifdir()
 #	type/ power, amplitude, log-normalized ect.
 #		target_size/ (0.5 to 1 kilohertz)
 #			{model}_{n_obs}.txt ([exp, unif], [0.5 kh to 1 kh])
-spectograms=("18th_ft" "18th_cqt" "free_ft" "free_cqt")
+spectograms=("18th_ft_high" "18th_cqt_high" "18th_ft_low" "18th_cqt_low" "free_ft" "free_cqt")
 
 build_all="T" 
 ### currently in use:
