@@ -13,7 +13,7 @@ import sys
 import time
 import timeit
 
-PREDICTION_TYPE = "block"
+PREDICTION_TYPE = "column"
 
 
 # necessary to add cwd to path when script run 
@@ -37,7 +37,10 @@ accept_Specs = list(range(100))#[1, 2, 3, 4, 5, 100, 200, 300, 400, 500]
 
 assert experiment_specification in accept_Specs
 
-def liang_idx_convert(lb, ub):
+def liang_idx_convert(lb, ub, small = True):
+    if small:
+      lb = lb // 2
+      ub = ub // 2
     idx_list = list(range(lb, ub + 1))
     return idx_list
 
@@ -64,7 +67,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "librosa",
+def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "small",
                    interpolation_method = "griddata-linear"):
       """
       4*4 = 16 + 
@@ -92,7 +95,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
 
 
 
-      if size == "librosa":
+      if inputs["librosa"]:
         default_presets = {
           "cv_samples" : 8,
           "max_iterations" : 3000,
@@ -106,26 +109,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
       else:
         librosa_args = {}
 
-      if size == "medium":
-        default_presets = {
-          "cv_samples" : 5,
-          "max_iterations" : 4000,
-          "eps" : 1e-5,
-          'subsequence_length' : 250,
-          "initial_samples" : 100}
-          
-
-      elif size == "publish":
-        default_presets = {
-          "cv_samples" : 5,
-          "max_iterations" : 2000,
-          "eps" : 1e-4,
-          'subsequence_length' : 500,
-          "initial_samples" : 200}
-
-      EchoArgs = {
-          "size" : size, 
-          "verbose": False}
+      EchoArgs = { "size"    : size, 
+                   "verbose" : False}
 
       if "obs_freqs" in inputs:
         AddEchoArgs = {"obs_freqs" : inputs["obs_freqs"],
@@ -153,6 +138,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
                                          prediction_type = PREDICTION_TYPE,
                                          train_time_idx = train_time_idx,
                                          test_time_idx = test_time_idx,
+                                         esn_feedback  = True,
                                          **librosa_args)
         print("INITIALIZED")
         experiment.get_observers(method = "exact", split = split_, plot_split = False)
@@ -166,6 +152,29 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
         else:
           experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
       
+
+
+      if size == "small":
+        default_presets = {
+          "cv_samples" : 6,
+          "max_iterations" : 1000,
+          "eps" : 1e-5,
+          'subsequence_length' : 180,
+          "initial_samples" : 100}
+      elif size == "medium":
+        default_presets = {
+          "cv_samples" : 5,
+          "max_iterations" : 4000,
+          "eps" : 1e-5,
+          'subsequence_length' : 250,
+          "initial_samples" : 100}
+      elif size == "publish":
+        default_presets = {
+          "cv_samples" : 5,
+          "max_iterations" : 2000,
+          "eps" : 1e-4,
+          'subsequence_length' : 500,
+          "initial_samples" : 200}
 
 
       cv_args = {
@@ -192,7 +201,6 @@ def test(TEST, multiprocessing = False):
         """
         if trial == 1:
             lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
-
         elif trial == 2:
             lb_targ, ub_targ, obs_hz  = 340, 640, 280
         elif trial == 3:
@@ -202,6 +210,7 @@ def test(TEST, multiprocessing = False):
         obs_list = list(range(lb_targ-obs_hz, lb_targ, 10))
         obs_list += list(range(ub_targ, ub_targ + obs_hz, 10))
         resp_list = list(range(lb_targ, ub_targ, 10))
+
         return obs_list, resp_list
 
       obs_freqs, resp_freqs = get_frequencies(1)
@@ -235,19 +244,22 @@ def test(TEST, multiprocessing = False):
         experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
 
 
-      #else:
+      else:
         
 
-        #test1 = liang_idx_convert(250, 259)
-        #train1  = liang_idx_convert(240, 249)
+        test1 = liang_idx_convert(250, 259)
+        train1  = liang_idx_convert(240, 249)
 
-        #test2 = liang_idx_convert(514, 523)
-        #train2 = liang_idx_convert(504, 513)
+        test2 = liang_idx_convert(514, 523)
+        train2 = liang_idx_convert(504, 513)
 
 
-        #experiment_set = [
-        #       {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
-        #       {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2}]
+        experiment_set = [
+                          {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
+                          {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2},
+                          {'target_freq': 2000, 'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1},
+                          {'target_freq': 2000, 'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2}
+                          ]
       hi = """
       experiment_set = [
            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
