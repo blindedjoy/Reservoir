@@ -994,7 +994,7 @@ class EchoStateExperiment:
 				 "size" : self.size, 
 				 "target_frequency" : int(self.target_frequency),
 				 "obs_idx" : self.obs_idx,
-				 "target_idx" : float(self.resp_idx) * 1000,
+				 "target_idx" : self.resp_idx,
 				 "verbose" : self.verbose,
 				 }
 		self.json2be["get_observer_inputs"] = {
