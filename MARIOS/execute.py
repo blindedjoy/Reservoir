@@ -223,10 +223,10 @@ def test(TEST, multiprocessing = False):
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
                {'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs}]
 
-        experiment_set = [
-              { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
-               {'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3}]
+        #experiment_set = [
+        #      { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+        #       #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
+        #       {'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3}]
               
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
