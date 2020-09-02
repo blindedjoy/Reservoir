@@ -38,10 +38,11 @@ accept_Specs = list(range(100))#[1, 2, 3, 4, 5, 100, 200, 300, 400, 500]
 
 assert experiment_specification in accept_Specs
 
-def liang_idx_convert(lb, ub, small = True):
+def liang_idx_convert(lb, ub, k = None, small = True):
     if small:
       lb = lb // 2
       ub = ub // 2
+    
     idx_list = list(range(lb, ub + 1))
     return idx_list
 
@@ -113,9 +114,15 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
       EchoArgs = { "size"    : size, 
                    "verbose" : False}
 
-     
-
       split_  = inputs["split"]
+
+      obs_inputs = {"split" : split_,
+                      "aspect": 0.9,
+                      "plot_split": False}
+
+      if "k" in inputs:
+        obs_inputs["k"] = inputs["k"]
+      print(obs_inputs)
 
       if PREDICTION_TYPE == "column":
         train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
@@ -128,7 +135,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
                                          test_time_idx = test_time_idx,
                                          **librosa_args)
         print("INITIALIZED")
-        experiment.get_observers(method = "exact", split = split_, plot_split = False)
+        experiment.get_observers(method = "exact", **obs_inputs)
         #default_presets["subsequence_length"] = 5
       
       elif PREDICTION_TYPE == "block":
@@ -152,10 +159,16 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
         
         #obs_hz_, target_hz_ = inputs["obs_hz"], inputs["target_hz"]
         experiment = EchoStateExperiment( **EchoArgs, **librosa_args)
+
+
+        ### NOW GET OBSERVERS
+
+
+
         if "obs_freqs" in inputs:
-          experiment.get_observers(method = "exact", split = split_, aspect = 0.9, plot_split = False)
+          experiment.get_observers(method = "exact", **obs_inputs)
         else:
-          experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
+          experiment.get_observers(method = "freq", **obs_inputs)
       
 
 
@@ -183,6 +196,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
 
       if PREDICTION_TYPE == "column":
         default_presets['subsequence_length'] = 75
+
 
 
 
@@ -261,19 +275,22 @@ def test(TEST, multiprocessing = False):
 
       else:
         
+        gap_start = 250
+        train_width = 200
+        test1 = liang_idx_convert(gap_start, gap_start + 9)
+        train1  = liang_idx_convert(gap_start - train_width, gap_start -1, k = 20)
 
-        test1 = liang_idx_convert(250, 259)
-        train1  = liang_idx_convert(0, 249)
+        gap_start2 = 514
+
         print("train1: " + str(train1))
-        test2 = liang_idx_convert(514, 523)
-        train2 = liang_idx_convert(0, 513)
-
+        test2 = liang_idx_convert(gap_start2, gap_start2 + 9)
+        train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1, k = 30)
 
         experiment_set = [
-                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
-                          {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2},
-                          {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1},
-                          {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2}
+                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 20},
+                          {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 30},
+                          {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 35},
+                          {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 40}
                           ]
       hi = """
       experiment_set = [

@@ -687,7 +687,8 @@ class EchoStateExperiment:
 					  observer_range = None,
 					  plot_split = False,
 					  response_range = None,
-					  split = 0.2
+					  split = 0.2,
+					  k = None
 					  ): 
 		"""
 		arguments:
@@ -818,11 +819,27 @@ class EchoStateExperiment:
 			#no observers so assign empty arrays
 			obs_arrs = [np.array([[]]) for i in [1, 2, 3]]
 			observers, observers_tr, observers_te = obs_arrs
+			A_shape_0 = self.A.shape[0]
+			if not k:
+				response_tr  = dataset[ self.train_time_idx, : ]
+				#print("train_time_idx: " + str(self.train_time_idx))
+				#print("response_tr shape: " + str(response_tr.shape))
+				response_te = dataset[ self.test_time_idx , : ]
+				self.obs_idx = range(A_shape_0 )
+			else:
+				
+				# calculating 1 in k observers:
+				n_obs = A_shape_0 // k
+				rand_start = np.random.randint(k)
+				obs_idx = list(range(rand_start, A_shape_0, k))
+				self.obs_idx = obs_idx
+				print("K!" + str(self.train_time_idx))
+				response_tr  = dataset[ self.train_time_idx, :]
+				response_tr  = response_tr[:, self.obs_idx]
 
-			response_tr  = dataset[ self.train_time_idx, : ]
-			#print("train_time_idx: " + str(self.train_time_idx))
-			#print("response_tr shape: " + str(response_tr.shape))
-			response_te = dataset[ self.test_time_idx , : ]
+				#print("REsponse TR!" + str(response_tr.shape))
+				response_te = dataset[ self.test_time_idx , : ]
+
 			#print("response_te shape: " + str(response_te.shape))
 			train_len = len(self.train_time_idx)
 			test_len = len(self.test_time_idx)
@@ -1112,7 +1129,7 @@ class EchoStateExperiment:
 				print(self.model + "rc cv set, ready to train")
 		else:
 			print("training hybrid part one: finding unif parameters")
-		print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
+		print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr))
 		self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		
 
@@ -1329,20 +1346,29 @@ class EchoStateExperiment:
 
 			elif self.prediction_type == "column":
 
+				seen_idx = self.obs_idx
+
 				total_zone_idx = range(self.A.shape[1])
 
 				#Train zone
 				for x in range(self.xTr.shape[0]):
 					# resonse points : train
 					for y in total_zone_idx:
-						point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
-						values	  += [self.A[x,y]]
+						if y in seen_idx:
+							point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
+							values	  += [self.A[x,y]]
 						
 				#Test zone
 				for x in range(self.xTr.shape[0], self.xTr.shape[0] + self.xTe.shape[0]):
 					# test set
 					for y in total_zone_idx:
 						points_to_predict += [(x,y)]
+
+					if len(self.obs_idx) != len(total_zone_idx):
+						# test set observers
+						for y in self.obs_idx:
+							point_lst += [(x,y)]
+							values	+= [self.A[x,y]]
 						
 
 			griddata_type = "linear" if self.interpolation_method == "griddata-linear" else "cubic"
