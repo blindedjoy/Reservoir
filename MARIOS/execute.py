@@ -128,7 +128,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
                                          **librosa_args)
         print("INITIALIZED")
         experiment.get_observers(method = "exact", split = split_, plot_split = False)
-        default_presets["subsequence_length"] = 5
+        #default_presets["subsequence_length"] = 5
       
       elif PREDICTION_TYPE == "block":
         
