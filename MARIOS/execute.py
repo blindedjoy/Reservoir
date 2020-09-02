@@ -210,10 +210,7 @@ def test(TEST, multiprocessing = False):
       if PREDICTION_TYPE == "block":
         librosa_args = {"spectrogram_path" : "18th_cqt_high",
                         "librosa": True}
-        experiment_set = [
-               {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
-               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
-               {'target_freq': 500, 'split': 0.5, 'obs_hz': 50, 'target_hz': 25}]
+        
 
         experiment_set = [
                { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
@@ -221,6 +218,14 @@ def test(TEST, multiprocessing = False):
                { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
                {'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs}]
+
+        experiment_set = [
+              {'split': 0.5, "obs_freqs": [3000, 4000], "target_freqs": [3500, 3600]},
+              {'split': 0.9, "obs_freqs": [3000, 4000], "target_freqs": [3500, 3600]}]
+              
+               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
+               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
+               #{'target_freq': 500, 'split': 0.5, 'obs_hz': 50, 'target_hz': 25}]
 
         experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
 
