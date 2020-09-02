@@ -333,7 +333,8 @@ class EchoStateExperiment:
 
 				pickle_obj = pickle.load(handle)
 
-			self.f = pickle_obj["transform"]["f"].reshape(-1,).tolist()
+			self.f = np.array(pickle_obj["transform"]["f"])
+			self.f = self.f.reshape(-1,).tolist()
 
 			#self.spectrogram_type = method[1]
 			assert self.spectrogram_type in ["power", "db"]
