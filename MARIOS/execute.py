@@ -129,9 +129,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
         print("INITIALIZED")
         experiment.get_observers(method = "exact", split = split_, plot_split = False)
         default_presets["subsequence_length"] = 5
-
+      split_  = inputs["split"]
       elif  PREDICTION_TYPE == "block":
-        split_  = inputs["split"]
+        
 
         if "obs_freqs" in inputs:
           AddEchoArgs = {"obs_freqs" : inputs["obs_freqs"],
