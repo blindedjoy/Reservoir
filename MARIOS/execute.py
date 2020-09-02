@@ -123,27 +123,22 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
 
       EchoArgs = {
           "size" : size, 
-          "verbose"
-
-      }
+          "verbose": False}
 
       if "obs_freqs" in inputs:
         AddEchoArgs = {"obs_freqs" : inputs["obs_freqs"],
-                       "resp_freqs" : inputs["resp_freqs"],
+                       "target_freqs" : inputs["target_freqs"],
                        "prediction_type" : PREDICTION_TYPE
                       }
         EchoArgs = Merge(EchoArgs, AddEchoArgs)
       else:
         AddEchoArgs = {
-                      "target_frequency" : inputs["target_freq"]
-                      "obs_hz" : inputs["obs_hz"]
+                      "target_frequency" : inputs["target_freq"],
+                      "obs_hz" : inputs["obs_hz"],
                       "target_hz" : inputs["target_hz"]
                       }
         EchoArgs = Merge(EchoArgs, AddEchoArgs)
         
-      split_  = inputs["split"]
-
-
       split_  = inputs["split"]
 
                                         
@@ -157,14 +152,17 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
                                          train_time_idx = train_time_idx,
                                          test_time_idx = test_time_idx,
                                          **librosa_args)
-
+        print("INITIALIZED")
         experiment.get_observers(method = "exact", split = split_, plot_split = False)
         default_presets["subsequence_length"] = 5
 
       elif  PREDICTION_TYPE == "block":
         #obs_hz_, target_hz_ = inputs["obs_hz"], inputs["target_hz"]
         experiment = EchoStateExperiment( **EchoArgs, **librosa_args)
-        experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
+        if "obs_freqs" in inputs:
+          experiment.get_observers(method = "exact", split = split_, aspect = 0.9, plot_split = False)
+        else:
+          experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
       
 
 
@@ -206,6 +204,7 @@ def test(TEST, multiprocessing = False):
 
       obs_freqs, resp_freqs = get_frequencies(1)
       obs_freqs2, resp_freqs2 = get_frequencies(2)
+      print(obs_freqs)
 
 
       if PREDICTION_TYPE == "block":

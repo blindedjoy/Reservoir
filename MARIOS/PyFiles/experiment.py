@@ -87,9 +87,12 @@ class EchoStateExperiment:
 				 smooth_bool = False,
 				 interpolation_method = "griddata-linear",
 				 prediction_type = "block",
-				 librosa = True,
+				 librosa = False,
 				 spectrogram_path = None,
-				 flat = False):
+				 flat = False,
+				 obs_freqs  = None,
+				 target_freqs = None
+				 ):
 		# Parameters
 		self.size = size
 		self.flat = flat
@@ -106,9 +109,16 @@ class EchoStateExperiment:
 		self.prediction_type = prediction_type
 		self.smooth_bool = smooth_bool
 		self.spectrogram_path = spectrogram_path
-		self.target_frequency = target_frequency
+		
 		self.verbose = verbose
 		
+
+		if obs_freqs:
+			self.target_frequency =  float(np.mean(target_freqs))
+		else:
+			self.target_frequency = target_frequency
+		
+
 		#these indices should be exact lists, not ranges.
 		if train_time_idx:
 			self.train_time_idx = train_time_idx
@@ -117,8 +127,9 @@ class EchoStateExperiment:
 
 
 
-		assert target_frequency, "you must enter a target frequency"
-		assert is_numeric(target_frequency), "you must enter a numeric target frequency"
+
+		assert self.target_frequency, "you must enter a target frequency"
+		assert is_numeric(self.target_frequency), "you must enter a numeric target frequency"
 		assert size in ["small", "medium", "publish", "librosa"], "Please choose a size from ['small', 'medium', 'publish']"
 		assert type(verbose) == bool, "verbose must be a boolean"
 		
@@ -126,10 +137,14 @@ class EchoStateExperiment:
 		self.load_data()
 		if self.prediction_type == "block":
 			"BONK"
+			if obs_freqs:
+				self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
+				self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
 			if obs_hz and target_hz:
 				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
-			self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
+			if not target_freqs:
+				self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		
 		self.horiz_display()
 
@@ -138,6 +153,7 @@ class EchoStateExperiment:
 		save_path = path # + ".pickle"
 		with open(save_path, 'wb') as handle:
 			pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 	def hz2idx(self, 
 		   	   obs_hz = None, 
 		   	   target_hz = None, 
@@ -148,7 +164,7 @@ class EchoStateExperiment:
 		
 		To do one frequency use Freq2idx.
 		"""
-		print("RUNNING HZ2IDX")
+		#print("RUNNING HZ2IDX")
 
 		midpoint = self.target_frequency 
 		height   = self.freq_axis_len 
@@ -176,55 +192,59 @@ class EchoStateExperiment:
 
 		def endpoints2list(lb, ub, obs = False, obs_spread = obs_spread, height = height): # [lb, ub] stands for [lowerbound, upperbound]
 
-			if self.librosa:
-				f = np.array(self.f)
+			#if self.librosa:
+			f = np.array(self.f)
 
-				def librosa_range(lb_, ub_):
-					"""
-					takes lower and upper bounds and returns the indices list. Potentially could make the else statement
-					below obselete.
-					"""
-					bounds = my_sort([lb_, ub_])
-					lb, ub = bounds
-					lb_bool_vec, ub_bool_vec = (f >= lb), (f <= ub)
-					and_vector = ub_bool_vec * lb_bool_vec
+			def librosa_range(lb_, ub_):
+				"""
+				takes lower and upper bounds and returns the indices list. Potentially could make the else statement
+				below obselete.
+				"""
+				bounds = my_sort([lb_, ub_])
+				lb, ub = bounds
+				lb_bool_vec, ub_bool_vec = (f >= lb), (f <= ub)
+				and_vector = ub_bool_vec * lb_bool_vec
 
-					freqs = f[and_vector]			#frequencies between bounds
-					freq_idxs = np.where(and_vector)[0].tolist() #indices between bounds
-					return(freq_idxs)
+				freqs = f[and_vector]			#frequencies between bounds
+				freq_idxs = np.where(and_vector)[0].tolist() #indices between bounds
+				return(freq_idxs)
 
-				
-				resp_range = librosa_range(lb, ub)
-				respLb, respUb = f[resp_range][0], f[resp_range][-1]
-				#print("respLb, respUb: " + str(respLb) + ", " +  str(respUb))
-				obs_hLb, obs_hUb = respUb, respUb + obs_spread 
-				#print("obs_hLb, obs_hUb : " + str(obs_hLb)  + ", " + str(obs_hUb))
+			
+			resp_range = librosa_range(lb, ub)
+			respLb, respUb = f[resp_range][0], f[resp_range][-1]
+			#print("respLb, respUb: " + str(respLb) + ", " +  str(respUb))
+			obs_hLb, obs_hUb = respUb, respUb + obs_spread 
+			#print("obs_hLb, obs_hUb : " + str(obs_hLb)  + ", " + str(obs_hUb))
 
-				obs_lLb, obs_lUb = respLb - obs_spread, respLb 
-				#print("obs_lLb, obs_lUb : " + str(obs_lLb)  + ", " + str(obs_lUb))
-				
-				obs_L, obs_H = librosa_range(obs_lLb, obs_lUb), librosa_range(obs_hLb, obs_hUb )
-				#print("Obs_H" + str(obs_H))
-				#print("resp_range" + str(resp_range))
-				#drop the lowest index of obs_H and the highest index of obs_L to avoid overlap with resp_idx
-				obs_H = drop_overlap(resp_lst = resp_range, obs_lst = obs_H)
-				obs_L = drop_overlap(resp_lst = resp_range, obs_lst = obs_L)
+			obs_lLb, obs_lUb = respLb - obs_spread, respLb 
+			#print("obs_lLb, obs_lUb : " + str(obs_lLb)  + ", " + str(obs_lUb))
+			
+			obs_L, obs_H = librosa_range(obs_lLb, obs_lUb), librosa_range(obs_hLb, obs_hUb )
+			#print("Obs_H" + str(obs_H))
+			#print("resp_range" + str(resp_range))
+			#drop the lowest index of obs_H and the highest index of obs_L to avoid overlap with resp_idx
+			obs_H = drop_overlap(resp_lst = resp_range, obs_lst = obs_H)
+			obs_L = drop_overlap(resp_lst = resp_range, obs_lst = obs_L)
 				#print("Obs_H after haircut: " + str(obs_H))
 				
 
-				
+			"""	
 			else:
 				def make_range(lb_, ub_):
 					return list(range(int(lb), int(ub + 1)))
 				
 				# response ranges
-				respLb, respUb = self.Freq2idx(lb), self.Freq2idx(ub)
-				resp_range = make_range(respLb, respUb)
+				lb, ub = self.Freq2idx(lb), self.Freq2idx(ub)
+				resp_idx_range = make_range(lb, ub)
+				print(resp_idx_)
+				resp_freq_range = [self.f[idx] for idx in resp_idx_range]
+				
 
 				# observer ranges
 				obs_hUb, obs_hLb = respUb + self.Freq2idx(obs_spread) + 1, respUb + 1 ##uUB: high range upper bound
 				obs_lLb, obs_lUb = respLb - self.Freq2idx(obs_spread) - 1, respLb - 1
 				obs_L, obs_H = make_range(obs_lLb, obs_lUb), make_range(obs_hLb, obs_hUb )
+			"""
 				
 			ranges = (resp_range, obs_L, obs_H ) 
 			#enforce integer type
@@ -268,7 +288,6 @@ class EchoStateExperiment:
 
 		resp_freq_Lst, obs_freq_Lst1, obs_freq_Lst2 = freq_lst
 
-		print(freq_lst)
 		
 		if not silent:
 			print("resp_indexes : " + str(resp_idx_Lst))
@@ -283,8 +302,8 @@ class EchoStateExperiment:
 			print("observer frequencies upper domain: " + str(obs_freq_Lst2) + 
 				  " , range: "+ str(abs(obs_Freq_Lst2[0] - obs_freq_Lst2[-1])) +" Hz\n")
 		
-		if not self.librosa:
-			assert obs_idx_Lst2 + resp_idx_Lst + obs_idx_Lst1 == list(range(obs_idx_Lst2[ 0 ], obs_idx_Lst1[ -1] + 1))
+		#if not self.librosa:
+		#	assert obs_idx_Lst2 + resp_idx_Lst + obs_idx_Lst1 == list(range(obs_idx_Lst2[ 0 ], obs_idx_Lst1[ -1] + 1))
 
 		dict2Return = {"obs_idx": obs_idx_Lst2 + obs_idx_Lst1, 
 					   "resp_idx": resp_idx_Lst,
@@ -305,8 +324,8 @@ class EchoStateExperiment:
 				  smooth = True, 
 				  log = False, 
 				  method = ("librosa", "db")):
-		assert method[0] == "librosa"
-		if method[0] == "librosa":
+		
+		if self.librosa:
 			spectrogram_path = "./pickle_files/spectrogram_files/" + self.spectrogram_path + ".pickle"
 			with open(spectrogram_path, 'rb') as handle:
 
@@ -789,15 +808,12 @@ class EchoStateExperiment:
 				self.obs_kHz	= 0.0
 
 
-
-
-
 		assert method in  ["freq", "exact"], "at this time only use the 'freq' method for cluster, \
 												  'exact' for analysis"
 				
 		if self.prediction_type != "column":
 			# PARTITION THE DATA
-			print(obs_idx)
+			#print(obs_idx)
 			observers = dataset[ : , obs_idx]
 
 			observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
@@ -923,10 +939,10 @@ class EchoStateExperiment:
 		#assert self.xTr.shape[1] == self.xTe.shape[1], "something is broken, xTr and xTe should have the same column dimension"
 		
 		
-		self.outfile = "experiment_results/" + str(int(self.target_frequency / 1000)) + "k/" + self.size
-		self.outfile += "/split_" + str(split)  +"/" + "targetKhz:_" + str(self.target_kHz) + "__obskHz:_"
+		#self.outfile = "experiment_results/" + str(int(self.target_frequency / 1000)) + "k/" + self.size
+		#self.outfile += "/split_" + str(split)  +"/" + "targetKhz:_" + str(self.target_kHz) + "__obskHz:_"
 
-		self.outfile += str(self.obs_kHz)
+		#self.outfile += str(self.obs_kHz)
 
 
 
@@ -1069,8 +1085,8 @@ class EchoStateExperiment:
 		if self.prediction_type != "column":
 		
 			predetermined_args = {
-				'obs_index' : self.resp_obs_idx_dict['obs_idx'],
-				'target_index' : self.resp_obs_idx_dict["resp_idx"]
+				'obs_index' : self.obs_idx,
+				'target_index' : self.resp_idx
 			}
 			
 			input_dict = { **cv_args, 
@@ -1261,8 +1277,9 @@ class EchoStateExperiment:
 		if self.prediction_type == "block":
 		
 			#Training points
-			resp_idx = self.resp_obs_idx_dict["resp_idx"]	
-			obs_idx = self.resp_obs_idx_dict["obs_idx"]
+
+			resp_idx = self.resp_idx
+			obs_idx  = self.obs_idx
 
 			total_zone_idx = resp_idx + obs_idx
 
@@ -1270,7 +1287,7 @@ class EchoStateExperiment:
 		assert self.interpolation_method in ["griddata-linear", "rbf", "griddata-cubic"]
 
 		if self.interpolation_method	 in ["griddata-linear", "griddata-cubic"]:
-			print(self.interpolation_method)
+			#print(self.interpolation_method)
 			points_to_predict = []
 			
 			values = []
