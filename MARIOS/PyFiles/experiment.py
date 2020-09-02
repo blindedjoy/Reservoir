@@ -92,7 +92,9 @@ class EchoStateExperiment:
 				 flat = False,
 				 obs_freqs  = None,
 				 target_freqs = None,
-				 spectrogram_type = None
+				 spectrogram_type = None,
+				 #obs_idx = None,
+				 #targ_
 				 ):
 		# Parameters
 		self.size = size

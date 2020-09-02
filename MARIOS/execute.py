@@ -212,7 +212,7 @@ def test(TEST, multiprocessing = False):
 
       if PREDICTION_TYPE == "block":
         librosa_args = {"spectrogram_path" : "custom",
-                        "spectrogram_type"  : "db",
+                        "spectrogram_type"  : "power",#"db", #power
                         "librosa": True}
         
 
