@@ -502,6 +502,10 @@ class EchoStateNetworkCV:
         viable_start = self.esn_burn_in
         viable_stop = training_y.shape[0] - self.subsequence_length
 
+
+        print("n_series: " + str(self.n_series))
+        print("burn in: "  + str(self.esn_burn_in))
+        print("subsequence_length: "  + str(self.subsequence_length))
         print("VIABLE START: " + str(viable_start))
         print("VIABLE STOP: " + str(viable_stop))
 

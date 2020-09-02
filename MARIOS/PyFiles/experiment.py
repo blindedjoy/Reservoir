@@ -820,8 +820,10 @@ class EchoStateExperiment:
 			observers, observers_tr, observers_te = obs_arrs
 
 			response_tr  = dataset[ self.train_time_idx, : ]
+			#print("train_time_idx: " + str(self.train_time_idx))
+			#print("response_tr shape: " + str(response_tr.shape))
 			response_te = dataset[ self.test_time_idx , : ]
-
+			#print("response_te shape: " + str(response_te.shape))
 			train_len = len(self.train_time_idx)
 			test_len = len(self.test_time_idx)
 
@@ -904,8 +906,9 @@ class EchoStateExperiment:
 					"resp_te" : response_te,
 					"obs_idx" : obs_idx,
 					"resp_idx" : response_idx}
-		self.Train, self.Test = self.dat["obs_tr"], self.dat["obs_te"]
-		self.xTr, self.xTe = self.dat["resp_tr"], self.dat["resp_te"]
+
+		self.Train, self.Test = observers_tr, observers_te
+		self.xTr, self.xTe = response_tr, response_te
 		
 		if self.prediction_type == "column":
 			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
@@ -1109,7 +1112,7 @@ class EchoStateExperiment:
 				print(self.model + "rc cv set, ready to train")
 		else:
 			print("training hybrid part one: finding unif parameters")
-		
+		print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
 		self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		
 
@@ -1155,7 +1158,7 @@ class EchoStateExperiment:
 		self.esn = self.esn_spec(**self.best_arguments,
 								 obs_idx  = predetermined_args['obs_index'],
 								 resp_idx = predetermined_args['target_index'])
-		
+
 		self.esn.train(x = self.Train, y = self.xTr)
 
 		def my_predict(test, n_steps = None):

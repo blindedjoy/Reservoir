@@ -182,7 +182,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           "initial_samples" : 200}
 
       if PREDICTION_TYPE == "column":
-        default_presets['subsequence_length'] : 50
+        default_presets['subsequence_length'] = 100
 
 
 
@@ -264,7 +264,7 @@ def test(TEST, multiprocessing = False):
 
         test1 = liang_idx_convert(250, 259)
         train1  = liang_idx_convert(0, 249)
-
+        print("train1: " + str(train1))
         test2 = liang_idx_convert(514, 523)
         train2 = liang_idx_convert(0, 513)
 
