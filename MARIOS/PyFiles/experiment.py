@@ -797,6 +797,7 @@ class EchoStateExperiment:
 			This method is just like simple_block but upgraded to take in only frequencies by using the helper function hz2freq which must
 			be called first.
 			"""
+			self.exact = True
 			
 			if self.prediction_type == "block":
 				obs_idx  = self.obs_idx
@@ -1259,8 +1260,13 @@ class EchoStateExperiment:
 			librosa_outfile += "split_"  + str(self.split) + "/"
 
 			librosa_outfile += "tf_" + str(self.target_frequency)
-			librosa_outfile += "__obsHz_"  + str(self.obs_kHz)
-			librosa_outfile += "__targHz_" + str(self.target_kHz) + ".pickle"
+			if self.exact:
+				librosa_outfile += "__obsNIdx_"  + str(len(self.obs_idx))
+				librosa_outfile += "__targNIdx_"  + str(len(self.resp_idx))
+			else:
+				librosa_outfile += "__obsHz_"  + str(self.obs_kHz)
+				librosa_outfile += "__targHz_" + str(self.target_kHz)
+			librosa_outfile += ".pickle"
 			print("outfile: " + str(librosa_outfile))
 			self.save_pickle(path = librosa_outfile, transform = self.json2be)
 
