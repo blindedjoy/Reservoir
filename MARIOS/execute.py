@@ -98,7 +98,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
 
       if "librosa" in inputs:
         default_presets = {
-          "cv_samples" : 8,
+          "cv_samples" : 4,
           "max_iterations" : 3000,
           "eps" : 1e-8,
           'subsequence_length' : 250,
@@ -133,7 +133,6 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
       
       elif PREDICTION_TYPE == "block":
         
-
         if "obs_freqs" in inputs:
           AddEchoArgs = {"obs_freqs" : inputs["obs_freqs"],
                          "target_freqs" : inputs["target_freqs"],
@@ -183,7 +182,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           "initial_samples" : 200}
 
       if PREDICTION_TYPE == "column":
-        default_presets['subsequence_length'] : 100
+        default_presets['subsequence_length'] : 50
 
 
 
@@ -202,6 +201,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
       models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"]
 
       for model_ in models:#["exponential", "uniform"]: #hybrid
+        print("Train shape: " + str(experiment.Train.shape))
+        print("Test shape: " +  str(experiment.Test.shape))
         experiment.RC_CV(cv_args = cv_args, model = model_)
 
 def test(TEST, multiprocessing = False):

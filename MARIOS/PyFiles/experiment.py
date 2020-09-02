@@ -713,7 +713,7 @@ class EchoStateExperiment:
 		test_len =  n_rows - train_len
 		col_idx = list(range(n_cols))
 
-		self.split = split
+		self.split  = split
 		self.method = method
 		self.aspect = aspect
 		
@@ -1155,7 +1155,7 @@ class EchoStateExperiment:
 		self.esn = self.esn_spec(**self.best_arguments,
 								 obs_idx  = predetermined_args['obs_index'],
 								 resp_idx = predetermined_args['target_index'])
-
+		
 		self.esn.train(x = self.Train, y = self.xTr)
 
 		def my_predict(test, n_steps = None):
