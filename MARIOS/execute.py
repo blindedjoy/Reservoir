@@ -263,17 +263,17 @@ def test(TEST, multiprocessing = False):
         
 
         test1 = liang_idx_convert(250, 259)
-        train1  = liang_idx_convert(240, 249)
+        train1  = liang_idx_convert(0, 249)
 
         test2 = liang_idx_convert(514, 523)
-        train2 = liang_idx_convert(504, 513)
+        train2 = liang_idx_convert(0, 513)
 
 
         experiment_set = [
-                          {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
-                          {'target_freq': 2000, 'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2},
-                          {'target_freq': 2000, 'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1},
-                          {'target_freq': 2000, 'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2}
+                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},
+                          {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2},
+                          {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1},
+                          {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2}
                           ]
       hi = """
       experiment_set = [
