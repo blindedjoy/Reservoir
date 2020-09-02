@@ -196,7 +196,7 @@ def test(TEST, multiprocessing = False):
         elif trial == 2:
             lb_targ, ub_targ, obs_hz  = 340, 640, 280
         elif trial == 3:
-            lb_targ, ub_targ, obs_hz  = 340, 350, 20
+            lb_targ, ub_targ, obs_hz  = 340, 350, 40
 
 
         obs_list = list(range(lb_targ-obs_hz, lb_targ, 10))
@@ -226,7 +226,7 @@ def test(TEST, multiprocessing = False):
         experiment_set = [
               { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
-               {'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs}]
+               {'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3}]
               
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
