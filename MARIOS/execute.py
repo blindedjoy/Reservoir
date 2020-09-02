@@ -206,6 +206,7 @@ def test(TEST, multiprocessing = False):
 
       obs_freqs, resp_freqs = get_frequencies(1)
       obs_freqs2, resp_freqs2 = get_frequencies(2)
+      obs_freqs3, resp_freqs3 = get_frequencies(3)
       print(obs_freqs)
 
 
@@ -217,14 +218,15 @@ def test(TEST, multiprocessing = False):
 
         experiment_set = [
                { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-               { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+               { 'split': 0.9, "obs_freqs": obs_freqs, "target_freqs": resp_freqs},
                { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
                {'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs}]
 
         experiment_set = [
-              {'split': 0.5, "obs_freqs": [3000, 4000], "target_freqs": [3500, 3600]},
-              {'split': 0.9, "obs_freqs": [3000, 4000], "target_freqs": [3500, 3600]}]
+              { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
+               {'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs}]
               
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
