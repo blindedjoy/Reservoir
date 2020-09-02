@@ -182,7 +182,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           'subsequence_length' : 500,
           "initial_samples" : 200}
 
-      
+      if PREDICTION_TYPE == "column":
+        default_presets['subsequence_length'] : 100
 
 
 
