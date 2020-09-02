@@ -195,8 +195,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           **default_presets
       }
       if TEACHER_FORCING:
-        cv_args = Merge(cv_args, "esn_feedback" : True)
-      
+        cv_args = Merge(cv_args, {"esn_feedback" : True})
+
       models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"]
 
       for model_ in models:#["exponential", "uniform"]: #hybrid
