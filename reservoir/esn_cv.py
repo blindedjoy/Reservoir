@@ -502,8 +502,8 @@ class EchoStateNetworkCV:
         viable_start = self.esn_burn_in
         viable_stop = training_y.shape[0] - self.subsequence_length
 
-        #print("VIABLE START: " + str(viable_start))
-        #print("VIABLE STOP: " + str(viable_stop))
+        print("VIABLE START: " + str(viable_start))
+        print("VIABLE STOP: " + str(viable_stop))
 
         # Get sample lengths
         self.validate_length = np.round(self.subsequence_length * self.validate_fraction).astype(int)
