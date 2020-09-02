@@ -980,15 +980,23 @@ class EchoStateExperiment:
 
 		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
 
-		
-		# 1) Here stored are the inputs to 
-		self.json2be["experiment_inputs"] = {
-			 "size" : self.size, 
-			 "target_frequency" : int(self.target_frequency),
-			 "obs_hz" :	float(self.obs_kHz)	* 1000,
-			 "target_hz" : float(self.target_kHz) * 1000,
-			 "verbose" : self.verbose,
-			 }
+		if not self.librosa:
+			# 1) Here stored are the inputs to 
+			self.json2be["experiment_inputs"] = {
+				 "size" : self.size, 
+				 "target_frequency" : int(self.target_frequency),
+				 "obs_hz" :	float(self.obs_kHz)	* 1000,
+				 "target_hz" : float(self.target_kHz) * 1000,
+				 "verbose" : self.verbose,
+				 }
+		else:
+			self.json2be["experiment_inputs"] = {
+				 "size" : self.size, 
+				 "target_frequency" : int(self.target_frequency),
+				 "obs_idx" : self.obs_idx,
+				 "target_idx" : float(self.resp_idx) * 1000,
+				 "verbose" : self.verbose,
+				 }
 		self.json2be["get_observer_inputs"] = {
 				"method" : self.method,
 				"split" : self.split,
