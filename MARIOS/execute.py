@@ -14,6 +14,7 @@ import time
 import timeit
 
 PREDICTION_TYPE = "column"
+TEACHER_FORCING = True
 
 
 # necessary to add cwd to path when script run 
