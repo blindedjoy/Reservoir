@@ -95,7 +95,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
 
 
 
-      if inputs["librosa"]:
+      if "librosa" in inputs:
         default_presets = {
           "cv_samples" : 8,
           "max_iterations" : 3000,
