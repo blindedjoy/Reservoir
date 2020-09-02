@@ -277,6 +277,7 @@ class EchoStateExperiment:
 		# Listify:
 		resp_idx_Lst, obs_idx_Lst1, obs_idx_Lst2 = endpoints2list(resp_freq_Lb, resp_freq_Ub)
 
+
 		def get_frequencies(idx_lst):
 			freq_lst = [self.f[idx] for idx in idx_lst]
 			return freq_lst
@@ -1070,6 +1071,8 @@ class EchoStateExperiment:
 		}
 		#esn_cv_spec equivalent: EchoStateNetworkCV
 		"""
+		#print(self.resp_idx)
+		#print(self.obs_idx)
 		self.model = model
 		assert self.model in ["uniform", "exponential", "hybrid"], self.model + " model not yet implimented"
 
