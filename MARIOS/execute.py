@@ -89,6 +89,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
 
       """
       #default arguments
+
+
+
       if size == "librosa":
         default_presets = {
           "cv_samples" : 8,
@@ -96,7 +99,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
           "eps" : 1e-5,
           'subsequence_length' : 250,
           "initial_samples" : 100}
-        librosa_args = { "spectrogram_path": inputs["spectrogram_path"],#"cqt_high_pitch",
+        librosa_args = { "spectrogram_path": inputs["spectrogram_path"],
                          "librosa": inputs["librosa"]}
       else:
         librosa_args = {}
@@ -118,12 +121,31 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
           'subsequence_length' : 500,
           "initial_samples" : 200}
 
-      target_frequency_ = inputs["target_freq"]
+      EchoArgs = {
+          "size" : size, 
+          "verbose"
+
+      }
+
+      if "obs_freqs" in inputs:
+        AddEchoArgs = {"obs_freqs" : inputs["obs_freqs"],
+                       "resp_freqs" : inputs["resp_freqs"],
+                       "prediction_type" : PREDICTION_TYPE
+                      }
+        EchoArgs = Merge(EchoArgs, AddEchoArgs)
+      else:
+        AddEchoArgs = {
+                      "target_frequency" : inputs["target_freq"]
+                      "obs_hz" : inputs["obs_hz"]
+                      "target_hz" : inputs["target_hz"]
+                      }
+        EchoArgs = Merge(EchoArgs, AddEchoArgs)
+        
       split_  = inputs["split"]
 
-      obs_hz, target_hz = inputs["obs_hz"], inputs["target_hz"]
-      
-      print(librosa_args)
+
+      split_  = inputs["split"]
+
                                         
       if PREDICTION_TYPE == "column":
         train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
@@ -141,13 +163,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
 
       elif  PREDICTION_TYPE == "block":
         #obs_hz_, target_hz_ = inputs["obs_hz"], inputs["target_hz"]
-        experiment = EchoStateExperiment(size = size, 
-                                         target_frequency = target_frequency_, 
-                                         obs_hz = obs_hz,#obs_hz_, 
-                                         target_hz = target_hz, #target_hz_, 
-                                         verbose = False,
-                                         prediction_type = PREDICTION_TYPE,
-                                         **librosa_args)
+        experiment = EchoStateExperiment( **EchoArgs, **librosa_args)
         experiment.get_observers(method = "freq", split = split_, aspect = 0.9, plot_split = False)
       
 
@@ -169,6 +185,29 @@ def test(TEST, multiprocessing = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
+
+      def get_frequencies(trial = 1):
+        """
+        get frequency lists
+        """
+        if trial == 1:
+            lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
+
+        elif trial == 2:
+            lb_targ, ub_targ, obs_hz  = 340, 640, 280
+        elif trial == 3:
+            lb_targ, ub_targ, obs_hz  = 340, 350, 20
+
+
+        obs_list = list(range(lb_targ-obs_hz, lb_targ, 10))
+        obs_list += list(range(ub_targ, ub_targ + obs_hz, 10))
+        resp_list = list(range(lb_targ, ub_targ, 10))
+        return obs_list, resp_list
+
+      obs_freqs, resp_freqs = get_frequencies(1)
+      obs_freqs2, resp_freqs2 = get_frequencies(2)
+
+
       if PREDICTION_TYPE == "block":
         librosa_args = {"spectrogram_path" : "18th_cqt_high",
                         "librosa": True}
@@ -176,6 +215,13 @@ def test(TEST, multiprocessing = False):
                {'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
                #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
                {'target_freq': 500, 'split': 0.5, 'obs_hz': 50, 'target_hz': 25}]
+
+        experiment_set = [
+               { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+               { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+               { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
+               {'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs}]
 
         experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
 
