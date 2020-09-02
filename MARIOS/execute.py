@@ -96,9 +96,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
         default_presets = {
           "cv_samples" : 8,
           "max_iterations" : 3000,
-          "eps" : 1e-5,
+          "eps" : 1e-8,
           'subsequence_length' : 250,
-          "initial_samples" : 100}
+          "initial_samples" : 1000}
         librosa_args = { "spectrogram_path": inputs["spectrogram_path"],
                          "librosa": inputs["librosa"],
                          "spectrogram_type": inputs["spectrogram_type"]
