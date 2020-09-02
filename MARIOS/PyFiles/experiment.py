@@ -130,7 +130,8 @@ class EchoStateExperiment:
 			self.test_time_idx  = test_time_idx
 
 
-
+		if self.prediction_type == "column":
+			self.target_frequency = 100
 
 		assert self.target_frequency, "you must enter a target frequency"
 		assert is_numeric(self.target_frequency), "you must enter a numeric target frequency"

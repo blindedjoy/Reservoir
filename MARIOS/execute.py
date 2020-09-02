@@ -120,7 +120,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
         train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
         
         experiment = EchoStateExperiment(size = size, 
-                                         target_frequency = target_frequency_, 
+                                         target_frequency = None,#target_frequency_, 
                                          verbose = False,
                                          prediction_type = PREDICTION_TYPE,
                                          train_time_idx = train_time_idx,
@@ -147,7 +147,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
                       "obs_hz" : inputs["obs_hz"],
                       "target_hz" : inputs["target_hz"]
                       }
-                      
+
           EchoArgs = Merge(EchoArgs, AddEchoArgs)
         
         
