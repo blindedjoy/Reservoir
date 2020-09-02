@@ -208,7 +208,8 @@ def test(TEST, multiprocessing = False):
 
 
       if PREDICTION_TYPE == "block":
-        librosa_args = {"spectrogram_path" : "18th_cqt_high",
+        librosa_args = {"spectrogram_path" : "custom",
+                        "spectogram_type"  : "power",
                         "librosa": True}
         
 

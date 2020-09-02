@@ -91,11 +91,13 @@ class EchoStateExperiment:
 				 spectrogram_path = None,
 				 flat = False,
 				 obs_freqs  = None,
-				 target_freqs = None
+				 target_freqs = None,
+				 spectrogram_type = None
 				 ):
 		# Parameters
 		self.size = size
 		self.flat = flat
+		self.spectrogram_type = spectrogram_type
 
 		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
 		self.esn_cv_spec = class_copy(EchoStateNetworkCV)
@@ -323,8 +325,7 @@ class EchoStateExperiment:
 
 	def load_data(self, 
 				  smooth = True, 
-				  log = False, 
-				  method = ("librosa", "db")):
+				  log = False):
 		
 		if self.librosa:
 			spectrogram_path = "./pickle_files/spectrogram_files/" + self.spectrogram_path + ".pickle"
@@ -334,7 +335,7 @@ class EchoStateExperiment:
 
 			self.f = pickle_obj["transform"]["f"].reshape(-1,).tolist()
 
-			self.spectrogram_type = method[1]
+			#self.spectrogram_type = method[1]
 			assert self.spectrogram_type in ["power", "db"]
 
 			if self.spectrogram_type == "power":
