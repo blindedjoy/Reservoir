@@ -112,23 +112,10 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
       EchoArgs = { "size"    : size, 
                    "verbose" : False}
 
-      if "obs_freqs" in inputs:
-        AddEchoArgs = {"obs_freqs" : inputs["obs_freqs"],
-                       "target_freqs" : inputs["target_freqs"],
-                       "prediction_type" : PREDICTION_TYPE
-                      }
-        EchoArgs = Merge(EchoArgs, AddEchoArgs)
-      else:
-        AddEchoArgs = {
-                      "target_frequency" : inputs["target_freq"],
-                      "obs_hz" : inputs["obs_hz"],
-                      "target_hz" : inputs["target_hz"]
-                      }
-        EchoArgs = Merge(EchoArgs, AddEchoArgs)
-        
-      split_  = inputs["split"]
+     
 
-                                        
+      
+
       if PREDICTION_TYPE == "column":
         train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
         
@@ -145,6 +132,25 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
         default_presets["subsequence_length"] = 5
 
       elif  PREDICTION_TYPE == "block":
+        split_  = inputs["split"]
+
+        if "obs_freqs" in inputs:
+          AddEchoArgs = {"obs_freqs" : inputs["obs_freqs"],
+                         "target_freqs" : inputs["target_freqs"],
+                         "prediction_type" : PREDICTION_TYPE
+                        }
+          EchoArgs = Merge(EchoArgs, AddEchoArgs)
+
+        else:
+          AddEchoArgs = {
+                      "target_frequency" : inputs["target_freq"],
+                      "obs_hz" : inputs["obs_hz"],
+                      "target_hz" : inputs["target_hz"]
+                      }
+                      
+          EchoArgs = Merge(EchoArgs, AddEchoArgs)
+        
+        
         #obs_hz_, target_hz_ = inputs["obs_hz"], inputs["target_hz"]
         experiment = EchoStateExperiment( **EchoArgs, **librosa_args)
         if "obs_freqs" in inputs:
