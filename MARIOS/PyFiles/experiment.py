@@ -113,7 +113,7 @@ class EchoStateExperiment:
 		self.spectrogram_path = spectrogram_path
 		
 		self.verbose = verbose
-		
+		print(self.spectrogram_type)
 
 		if obs_freqs:
 			self.target_frequency =  float(np.mean(target_freqs))
@@ -142,6 +142,8 @@ class EchoStateExperiment:
 			if obs_freqs:
 				self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
 				self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
+				print("obs_idx: " + str(self.obs_idx))
+				print("resp_idx: " + str(self.resp_idx))
 			if obs_hz and target_hz:
 				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 				assert is_numeric(target_hz), "you must enter a numeric target frequency range"

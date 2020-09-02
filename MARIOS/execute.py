@@ -100,7 +100,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "l
           'subsequence_length' : 250,
           "initial_samples" : 100}
         librosa_args = { "spectrogram_path": inputs["spectrogram_path"],
-                         "librosa": inputs["librosa"]}
+                         "librosa": inputs["librosa"],
+                         "spectrogram_type": inputs["spectrogram_type"]
+                         }
       else:
         librosa_args = {}
 
@@ -209,7 +211,7 @@ def test(TEST, multiprocessing = False):
 
       if PREDICTION_TYPE == "block":
         librosa_args = {"spectrogram_path" : "custom",
-                        "spectogram_type"  : "power",
+                        "spectrogram_type"  : "power",
                         "librosa": True}
         
 
