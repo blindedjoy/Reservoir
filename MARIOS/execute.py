@@ -125,7 +125,6 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
                                          prediction_type = PREDICTION_TYPE,
                                          train_time_idx = train_time_idx,
                                          test_time_idx = test_time_idx,
-                                         esn_feedback  = True,
                                          **librosa_args)
         print("INITIALIZED")
         experiment.get_observers(method = "exact", split = split_, plot_split = False)
@@ -182,6 +181,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           'subsequence_length' : 500,
           "initial_samples" : 200}
 
+      
+
+
 
       cv_args = {
           'bounds' : inputs["bounds"],
@@ -189,8 +191,12 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           "n_jobs" : n_cores,
           "verbose" : True,
           "plot" : False, 
+
           **default_presets
       }
+      if TEACHER_FORCING:
+        cv_args = Merge(cv_args, "esn_feedback" : True)
+      
       models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"]
 
       for model_ in models:#["exponential", "uniform"]: #hybrid

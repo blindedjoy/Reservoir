@@ -74,25 +74,11 @@ class EchoStateExperiment:
 	target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
 	"""
-	def __init__(self, 
-				 size, 
-				 file_path = "spectrogram_data/", 
-				 target_frequency = None,
-				 out_path = None,
-				 obs_hz = None, 
-				 target_hz = None, 
-				 train_time_idx = None,
-				 test_time_idx = None,
-				 verbose = True,
-				 smooth_bool = False,
-				 interpolation_method = "griddata-linear",
-				 prediction_type = "block",
-				 librosa = False,
-				 spectrogram_path = None,
-				 flat = False,
-				 obs_freqs  = None,
-				 target_freqs = None,
-				 spectrogram_type = None,
+	def __init__(self, size, file_path = "spectrogram_data/", target_frequency = None, out_path = None, obs_hz = None, 
+				 target_hz = None, train_time_idx = None, test_time_idx = None, verbose = True,
+				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
+				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
+				 target_freqs = None, spectrogram_type = None
 				 #obs_idx = None,
 				 #targ_
 				 ):
