@@ -1239,7 +1239,36 @@ class EchoStateExperiment:
 	def save_json(self):
 		
 		self.getData2Save()
-		if not self.librosa:
+		if self.librosa or self.prediction_type == "column":
+			librosa_outfile = "./pickle_files/results/" + self.spectrogram_path +"/" 
+			# spectrogram type
+			librosa_outfile += self.spectrogram_type + "/"
+
+			# flat or NOT
+			#TODO
+			flat_str = "untouched" if not self.flat else "flat"
+			librosa_outfile += str(flat_str) + "/"
+
+			#split
+			librosa_outfile += "split_"  + str(self.split) + "/"
+			librosa_outfile += "type_" + str(self.prediction_type)
+
+			librosa_outfile += "tf_" + str(self.target_frequency)
+			if self.exact:
+				librosa_outfile += "__obsNIdx_"  + str(len(self.obs_idx))
+				librosa_outfile += "__targNIdx_" + str(len(self.resp_idx))
+			else:
+				librosa_outfile += "__obsHz_"  + str(self.obs_kHz)
+				librosa_outfile += "__targHz_" + str(self.target_kHz)
+			
+			librosa_outfile += ".pickle"
+			self.save_pickle(path = librosa_outfile, transform = self.json2be)
+			print("outfile: " + str(librosa_outfile))
+
+		else:
+			#spectrogram
+			
+
 			new_file = self.outfile
 
 			"""
@@ -1252,31 +1281,6 @@ class EchoStateExperiment:
 
 			with open(new_file, "w") as outfile:
 				data = json.dump(self.json2be, outfile)
-		else:
-			#spectrogram
-			librosa_outfile = "./pickle_files/results/" + self.spectrogram_path +"/" 
-			# spectrogram type
-			librosa_outfile += self.spectrogram_type + "/"
-
-			# flat or NOT
-			#TODO
-			flat_str = "untouched" if not self.flat else "flat"
-			librosa_outfile += str(flat_str)  +"/"
-
-			#split
-			librosa_outfile += "split_"  + str(self.split) + "/"
-
-			librosa_outfile += "tf_" + str(self.target_frequency)
-			if self.exact:
-				librosa_outfile += "__obsNIdx_"  + str(len(self.obs_idx))
-				librosa_outfile += "__targNIdx_"  + str(len(self.resp_idx))
-			else:
-				librosa_outfile += "__obsHz_"  + str(self.obs_kHz)
-				librosa_outfile += "__targHz_" + str(self.target_kHz)
-			
-			librosa_outfile += ".pickle"
-			self.save_pickle(path = librosa_outfile, transform = self.json2be)
-			print("outfile: " + str(librosa_outfile))
 
 	def rbf_add_point(self, point_tuple, test_set = False):
 

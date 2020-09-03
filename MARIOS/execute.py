@@ -105,7 +105,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
         librosa_args = { "spectrogram_path": inputs["spectrogram_path"],
                          "librosa": inputs["librosa"],
                          "spectrogram_type": inputs["spectrogram_type"]
-                         }
+                        }
+
       else:
         librosa_args = {}
 
@@ -160,9 +161,6 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
 
 
         ### NOW GET OBSERVERS
-
-
-
         if "obs_freqs" in inputs:
           experiment.get_observers(method = "exact", **obs_inputs)
         else:
@@ -177,6 +175,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           "eps" : 1e-5,
           'subsequence_length' : 180,
           "initial_samples" : 100}
+
       elif size == "medium":
         default_presets = {
           "cv_samples" : 5,
@@ -184,6 +183,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           "eps" : 1e-5,
           'subsequence_length' : 250,
           "initial_samples" : 100}
+
       elif size == "publish":
         default_presets = {
           "cv_samples" : 5,
@@ -197,9 +197,6 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           default_presets['subsequence_length'] = inputs["subseq_len"]
         else:
           default_presets['subsequence_length'] = 75
-
-
-
 
       cv_args = {
           'bounds' : inputs["bounds"],
@@ -231,35 +228,38 @@ def test(TEST, multiprocessing = False):
         """
         if trial == 1:
             lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
+
         elif trial == 2:
             lb_targ, ub_targ, obs_hz  = 340, 640, 280
+
         elif trial == 3:
             lb_targ, ub_targ, obs_hz  = 340, 350, 40
 
-
-        obs_list = list(range(lb_targ-obs_hz, lb_targ, 10))
-        obs_list += list(range(ub_targ, ub_targ + obs_hz, 10))
-        resp_list = list(range(lb_targ, ub_targ, 10))
+        obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
+        obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
+        resp_list = list( range( lb_targ, ub_targ, 10))
 
         return obs_list, resp_list
 
-      obs_freqs, resp_freqs = get_frequencies(1)
+      obs_freqs, resp_freqs   = get_frequencies(1)
       obs_freqs2, resp_freqs2 = get_frequencies(2)
       obs_freqs3, resp_freqs3 = get_frequencies(3)
+
       print(obs_freqs)
 
+      PREDICTION_TYPE = "column"
 
       if PREDICTION_TYPE == "block":
-        librosa_args = {"spectrogram_path" : "custom",
+        librosa_args = {"spectrogram_path" : "18th_cqt_low",
                         "spectrogram_type"  : "power",#"db", #power
                         "librosa": True}
         
 
         experiment_set = [
-               { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2},
-               { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs},
-               { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2},
-               { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs}]
+               { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+               { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+               { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+               { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  }]
 
         #experiment_set = [
         #      { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
@@ -274,9 +274,13 @@ def test(TEST, multiprocessing = False):
 
 
       else:
+
+        librosa_args = {"spectrogram_path" : "18th_cqt_low",
+                        "spectrogram_type"  : "power",#"db", #power
+                        "librosa": True}
         
         gap_start = 250
-        train_width = 25
+        train_width = 100
         test1 = liang_idx_convert(gap_start, gap_start + 9)
         train1  = liang_idx_convert(gap_start - train_width, gap_start - 1, k = 20)
 
@@ -287,14 +291,19 @@ def test(TEST, multiprocessing = False):
         test2 = liang_idx_convert(gap_start2, gap_start2 + 9)
         train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1, k = 30)
 
-        set_specific_args = {"prediction_type": column}
+        set_specific_args = {"prediction_type": "column", "subseq_len" : subseq_len}
         experiment_set = [
                           {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 100},
                           {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 30},
                           {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 35},
                           {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 40}
                          ]
+
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
+        if librosa_args["spectrogram_path"] == "18th_cqt_low":
+
+          experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
+        
       hi = """
       experiment_set = [
            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
