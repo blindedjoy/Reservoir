@@ -44,8 +44,6 @@ def ifdel(dictt, key):
 		del dictt[key]
 	return(dictt)
 
-
-
 def pp(variable, label):
 	"""
 	custom print function
@@ -931,7 +929,7 @@ class EchoStateExperiment:
 			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
 
 
-		self.runInterpolation()
+		#self.runInterpolation()
 
 		# print statements:
 		if self.verbose:
@@ -1129,7 +1127,7 @@ class EchoStateExperiment:
 				print(self.model + "rc cv set, ready to train")
 		else:
 			print("training hybrid part one: finding unif parameters")
-		print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr))
+		print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
 		self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		
 
@@ -1275,10 +1273,10 @@ class EchoStateExperiment:
 			else:
 				librosa_outfile += "__obsHz_"  + str(self.obs_kHz)
 				librosa_outfile += "__targHz_" + str(self.target_kHz)
+			
 			librosa_outfile += ".pickle"
-			print("outfile: " + str(librosa_outfile))
 			self.save_pickle(path = librosa_outfile, transform = self.json2be)
-
+			print("outfile: " + str(librosa_outfile))
 
 	def rbf_add_point(self, point_tuple, test_set = False):
 

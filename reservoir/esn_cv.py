@@ -503,11 +503,11 @@ class EchoStateNetworkCV:
         viable_stop = training_y.shape[0] - self.subsequence_length
 
 
-        print("n_series: " + str(self.n_series))
-        print("burn in: "  + str(self.esn_burn_in))
-        print("subsequence_length: "  + str(self.subsequence_length))
-        print("VIABLE START: " + str(viable_start))
-        print("VIABLE STOP: " + str(viable_stop))
+        #print("n_series: " + str(self.n_series))
+        #print("burn in: "  + str(self.esn_burn_in))
+        #print("subsequence_length: "  + str(self.subsequence_length))
+        #print("VIABLE START: " + str(viable_start))
+        #print("VIABLE STOP: " + str(viable_stop))
 
         # Get sample lengths
         self.validate_length = np.round(self.subsequence_length * self.validate_fraction).astype(int)
@@ -539,7 +539,7 @@ class EchoStateNetworkCV:
         mean_score = self.scores.mean()
         #mean_score = mean_score/n_series
 
-
+        print('Score:', mean_score)
         # Inform user
         if self.verbose:
             #print(parameters)
