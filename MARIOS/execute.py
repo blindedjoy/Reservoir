@@ -13,13 +13,11 @@ import sys
 import time
 import timeit
 
-PREDICTION_TYPE = "column"
 TEACHER_FORCING = True
 
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
-
 
 sys.path.append(os.getcwd()) 
 
@@ -96,7 +94,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
       #default arguments
 
 
-
+      PREDICTION_TYPE = inputs["prediction_type"]
       if "librosa" in inputs:
         default_presets = {
           "cv_samples" : 4,
@@ -195,7 +193,10 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
           "initial_samples" : 200}
 
       if PREDICTION_TYPE == "column":
-        default_presets['subsequence_length'] = 75
+        if "subseq_len" in inputs:
+          default_presets['subsequence_length'] = inputs["subseq_len"]
+        else:
+          default_presets['subsequence_length'] = 75
 
 
 
@@ -255,11 +256,10 @@ def test(TEST, multiprocessing = False):
         
 
         experiment_set = [
-               { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-               { 'split': 0.9, "obs_freqs": obs_freqs, "target_freqs": resp_freqs},
-               { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-               #{'target_freq': 250, 'split': 0.5, 'obs_hz': 25, 'target_hz': 50},
-               {'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs}]
+               { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2},
+               { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs},
+               { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2},
+               { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs}]
 
         #experiment_set = [
         #      { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
@@ -276,22 +276,25 @@ def test(TEST, multiprocessing = False):
       else:
         
         gap_start = 250
-        train_width = 200
+        train_width = 25
         test1 = liang_idx_convert(gap_start, gap_start + 9)
-        train1  = liang_idx_convert(gap_start - train_width, gap_start -1, k = 20)
+        train1  = liang_idx_convert(gap_start - train_width, gap_start - 1, k = 20)
 
+        subseq_len = int(np.array(train1).shape[0] * 0.5)
         gap_start2 = 514
 
         print("train1: " + str(train1))
         test2 = liang_idx_convert(gap_start2, gap_start2 + 9)
         train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1, k = 30)
 
+        set_specific_args = {"prediction_type": column}
         experiment_set = [
-                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 20},
+                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 100},
                           {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 30},
                           {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 35},
                           {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 40}
-                          ]
+                         ]
+        experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
       hi = """
       experiment_set = [
            {'target_freq': 2000, 'split': 0.5, 'obs_hz': 10, 'target_hz': 10},
