@@ -38,8 +38,8 @@ assert experiment_specification in accept_Specs
 
 def liang_idx_convert(lb, ub, k = None, small = True):
     if small:
-      lb = lb // 2
-      ub = ub // 2
+      lb = lb #// 2
+      ub = ub # // 2
     
     idx_list = list(range(lb, ub + 1))
     return idx_list
@@ -67,7 +67,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "small",
+def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "medium",
                    interpolation_method = "griddata-linear"):
       """
       4*4 = 16 + 
@@ -95,6 +95,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
 
 
       PREDICTION_TYPE = inputs["prediction_type"]
+      print( PREDICTION_TYPE)
       if "librosa" in inputs:
         default_presets = {
           "cv_samples" : 4,
@@ -121,20 +122,28 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "s
 
       if "k" in inputs:
         obs_inputs["k"] = inputs["k"]
-      print(obs_inputs)
+      #print(obs_inputs)
 
       if PREDICTION_TYPE == "column":
         train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
-        
-        experiment = EchoStateExperiment(size = size, 
-                                         target_frequency = None,#target_frequency_, 
-                                         verbose = False,
-                                         prediction_type = PREDICTION_TYPE,
-                                         train_time_idx = train_time_idx,
-                                         test_time_idx = test_time_idx,
-                                         **librosa_args)
+
+        experiment_inputs = { "size" : size,
+                              "target_frequency" : None,
+                              "verbose" : False,
+                              "prediction_type" : PREDICTION_TYPE,
+                              "train_time_idx" : train_time_idx,
+                              "test_time_idx" : test_time_idx,
+                              **librosa_args
+                            }
+
+        print("experiment_inputs: " + str(experiment_inputs))
+        experiment = EchoStateExperiment(**experiment_inputs)
         print("INITIALIZED")
-        experiment.get_observers(method = "exact", **obs_inputs)
+        
+        obs_inputs = Merge(obs_inputs, {"method" : "exact"})
+        print("obs_inputs: " + str(obs_inputs))
+
+        experiment.get_observers(**obs_inputs)
         #default_presets["subsequence_length"] = 5
       
       elif PREDICTION_TYPE == "block":
@@ -275,28 +284,28 @@ def test(TEST, multiprocessing = False):
 
       else:
 
-        librosa_args = {"spectrogram_path" : "18th_cqt_low",
+        librosa_args = {"spectrogram_path" : "publish",#18th_cqt_low",
                         "spectrogram_type"  : "power",#"db", #power
                         "librosa": True}
         
         gap_start = 250
-        train_width = 100
+        train_width = gap_start#100
         test1 = liang_idx_convert(gap_start, gap_start + 9)
-        train1  = liang_idx_convert(gap_start - train_width, gap_start - 1, k = 20)
+        train1  = liang_idx_convert(gap_start - train_width, gap_start - 1)#, k = 20)
 
         subseq_len = int(np.array(train1).shape[0] * 0.5)
         gap_start2 = 514
 
-        print("train1: " + str(train1))
+        #print("train1: " + str(train1))
         test2 = liang_idx_convert(gap_start2, gap_start2 + 9)
-        train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1, k = 30)
+        train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1)#, k = 30)
 
         set_specific_args = {"prediction_type": "column", "subseq_len" : subseq_len}
         experiment_set = [
-                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 100},
-                          {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 30},
-                          {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1, "k" : 35},
-                          {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2, "k" : 40}
+                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},#, "k" : 100},
+                          {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2},#, "k" : 30},
+                          {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1}, #, "k" : 35},
+                          {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2}#, "k" : 40}
                          ]
 
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
