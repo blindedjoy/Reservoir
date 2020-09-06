@@ -775,9 +775,10 @@ class EchoStateExperiment:
 			#assert type(obs_idx) != type(None), "oops, your observer index cannot be None, first run hz2idx helper function"
 			#assert type(response_idx) != type(None), "oops, your response index cannot be None"
 			assert self.obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
-			assert self.resp, "oops, your response index cannot be None"
+			assert self.resp_idx, "oops, your response index cannot be None"
 
 			response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
+			#response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
 
 		elif method == "exact":
 			"""
@@ -789,8 +790,8 @@ class EchoStateExperiment:
 			self.exact = True
 			
 			if self.prediction_type == "block":
-				assert obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
-				assert response_idx, "oops, your response index cannot be None"
+				assert self.obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
+				assert self.resp_idx, "oops, your response index cannot be None"
 				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
 
 			elif self.prediction_type == "column":
@@ -1316,7 +1317,7 @@ class EchoStateExperiment:
 			obs_idx  = self.obs_idx
 
 			total_zone_idx = resp_idx + obs_idx
-			print("TZONE: " + str(total_zone_idx))
+			#print("TZONE: " + str(total_zone_idx))
 		#missing_ = 60
 		assert self.interpolation_method in ["griddata-linear", "rbf", "griddata-cubic"]
 
