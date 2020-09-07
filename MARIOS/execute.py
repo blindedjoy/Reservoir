@@ -194,7 +194,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
         print("Test shape: " +  str(experiment.Test.shape))
         experiment.RC_CV(cv_args = cv_args, model = model_)
 
-def test(TEST, multiprocessing = False, gap = True):
+def test(TEST, multiprocessing = False, gap = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
