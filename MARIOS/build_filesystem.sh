@@ -21,20 +21,18 @@ build_all="T"
 if [ "$build_all" == "T" ];
 then
 	curr_directory="experiment_results";  ifdir "${curr_directory}"
-	
-	for freq in "1k" "2k" "4k"
+	#for freq in "1k" "2k" "4k"
+	#do
+	curr_directory="experiment_results/$freq"; ifdir "${curr_directory}"
+	for size in "small" "medium" "publish"
 	do
-		curr_directory="experiment_results/$freq"; ifdir "${curr_directory}"
-		for size in "small" "medium" "publish"
-		do
-			ifdir "${curr_directory}/${size}/"
-				for split in "0.5" "0.9"
-				do
-					ifdir "${curr_directory}/${size}/split_${split}"
-					
-				done
-		done
+		ifdir "${curr_directory}/${size}/"
+			for split in "0.5" "0.9"
+			do
+				ifdir "${curr_directory}/${size}/split_${split}"		
+			done
 	done
+	#done
 
 else
 	ifdir "experiment_results" "experiment_results/0.5" "experiment_results/0.9"

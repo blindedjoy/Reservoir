@@ -1,12 +1,9 @@
 #Herein we shall create a new file, similar to esn.py 
 #where we transform the notebook into an object oriented approach worthy of Reinier's library.
 from reservoir import *
+import pickle
 from PyFiles.imports import *
 from scipy.interpolate import Rbf
-import pickle
-
-
-
 
 def Merge(dict1, dict2): 
 	res = {**dict1, **dict2} 
@@ -46,8 +43,6 @@ def build_file_path(message, *values):
 	else:
 		return message.join(str(x) + "/"  for x in values)
 
-
-
 def idx2Freq(val):
 	idx = min(range(len(f)), key=lambda i: abs(f[i]-val))
 	return(idx)
@@ -62,6 +57,7 @@ def pp(variable, label):
 	custom print function
 	"""
 	print(label +": " + str(variable))
+
 def Shape(lst):
 	npObj, label = lst; print(label + " shape: " +  str(npObj.shape))
 
@@ -317,7 +313,10 @@ class EchoStateExperiment:
 
 		self.resp_obs_idx_dict = dict2Return
 		self.obs_idx  = [int(i) for i in dict2Return["obs_idx"]]
+		print("OBS IDX: " + str(self.obs_idx))
 		self.resp_idx = [int(i) for i in dict2Return["resp_idx"]]
+
+		print("Resp IDX: " + str(self.resp_idx))
 
 
 	def smooth(self):
@@ -818,7 +817,6 @@ class EchoStateExperiment:
 				
 		if self.prediction_type != "column":
 			# PARTITION THE DATA
-			#print(obs_idx)
 			observers = dataset[ : , self.obs_idx]
 
 			observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
@@ -967,10 +965,12 @@ class EchoStateExperiment:
 		
 		self.outfile = "experiment_results/" + self.size
 		self.outfile += "/split_" + str(split)  +"/"
+		
 		if self.method == "freq":
+			ctr = int(np.mean([int(self.f[idx]) for idx in self.resp_idx]))
+			self.outfile += "targetHz_ctr:_" + str(ctr)
 			self.outfile += "targetKhz:_" + str(self.target_kHz) + "__obskHz:_"
 		elif self.method == "exact":
-			self.outfile += "targetIdx_ctr:_" + str(np.mean(self.resp_idx))
 			self.outfile += "N_Targidx_" + str(len(self.resp_idx)) 
 			self.outfile += "N_Obsidx_" + str(len(self.obs_idx))
 

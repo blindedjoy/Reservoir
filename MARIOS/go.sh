@@ -1,11 +1,11 @@
 #!/bin/bash
 
 module load Anaconda3/2019.10; 
-cpus_per_task=8
-for x in {0} #..94}
+cpus_per_task=10
+for x in {0..4} #..94}
 do
 	#echo $x -p shared
-	srun -t 3000 -n 1 --cpus-per-task=$cpus_per_task --mem-per-cpu=8gb  bash -c "python execute.py '$x' $cpus_per_task" & #-c 30 -N 1 
+	srun -t 6000 -n 1 -p shared --cpus-per-task=$cpus_per_task --mem-per-cpu=13gb  bash -c "python execute.py '$x' $cpus_per_task" & #-c 30 -N 1 
 done
 
 #srun  -t 5760  -n 16 -p shared --mem=64gb bash -c "python execute.py '$x'" & 

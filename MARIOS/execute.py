@@ -140,11 +140,12 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "p
                           "obs_hz" : inputs["obs_hz"],
                           "target_hz" : inputs["target_hz"]
                         }
-          EchoArgs = Merge(EchoArgs, AddEchoArgs)
-        
-        experiment = EchoStateExperiment( **EchoArgs, **librosa_args)
+          EchoArgs = Merge( Merge(EchoArgs, AddEchoArgs), librosa_args)
+        print(EchoArgs)
+        experiment = EchoStateExperiment( **EchoArgs)
         ### NOW GET OBSERVERS
         method = "exact" if "obs_freqs" in inputs else "freq"
+
         experiment.get_observers(method = method, **obs_inputs)
       
       if size == "small":
@@ -187,7 +188,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "p
       if TEACHER_FORCING:
         cv_args = Merge(cv_args, {"esn_feedback" : True})
 
-      models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"]
+      models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"] #
       for model_ in models:
         print("Train shape: " + str(experiment.Train.shape))
         print("Test shape: " +  str(experiment.Test.shape))
@@ -229,10 +230,20 @@ def test(TEST, multiprocessing = False, gap = False):
                  { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  }]
         else:
           experiment_set = [
-                { 'target_freq': 250, 'split': 0.5, 'obs_hz': 10,  'target_hz': 10},
-                { 'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
-                { 'target_freq': 250, 'split': 0.5, 'obs_hz': 25,  'target_hz': 50},
-                { 'target_freq': 500, 'split': 0.5, 'obs_hz': 10,  'target_hz': 10}]
+                {'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                {'target_frequency': 1000, 'obs_hz': 500.0,  'target_hz': 500.0},
+                {'target_frequency': 1000, 'obs_hz': 250.0,  'target_hz': 100.0},
+                {'target_frequency': 1000, 'obs_hz': 100.0,  'target_hz': 100.0}]
+          #{ 'target_freq': 500, 'split': 0.5, 'obs_hz': 20,  'target_hz': 10}]
+          #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 20,  'target_hz': 10}]
+          #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
+          #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 25,  'target_hz': 50},
+          #
+          #NEXTUP:
+          #[{'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 500.0},
+          #            {'target_frequency': 1000, 'obs_hz': 500.0,  'target_hz': 500.0},
+          #            {'target_frequency': 1000, 'obs_hz': 250.0,  'target_hz': 100.0},
+          #            {'target_frequency': 1000, 'obs_hz': 100.0,  'target_hz': 100.0}]
 
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
           set_specific_args = {"prediction_type": "block"}
@@ -329,11 +340,13 @@ def test(TEST, multiprocessing = False, gap = False):
     exper_ = [experiment_set[experiment_specification]]
 
     #print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
-
-    pool = MyPool(n_experiments)
-    pool.map(run_experiment, exper_)
-    pool.close()
-    pool.join()
+    if n_experiments > 1:
+      pool = MyPool(n_experiments)
+      pool.map(run_experiment, exper_)
+      pool.close()
+      pool.join()
+    else:
+      run_experiment(exper_[0])
 
 
 if __name__ == '__main__':
