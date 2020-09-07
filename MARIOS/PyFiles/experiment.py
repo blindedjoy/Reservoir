@@ -331,8 +331,8 @@ class EchoStateExperiment:
 		
 		if self.librosa:
 			spectrogram_path = "./pickle_files/spectrogram_files/" + self.spectrogram_path + ".pickle"
+			
 			with open(spectrogram_path, 'rb') as handle:
-
 				pickle_obj = pickle.load(handle)
 
 			self.f = np.array(pickle_obj["transform"]["f"])
@@ -356,9 +356,7 @@ class EchoStateExperiment:
 
 			self.T, self.f, self.A = data_lst #TODO rename T, f and A (A should be 'spectrogram' or 'dataset')
 
-			self.A_unnormalized = self.A['M'].copy()
-
-			self.A_unnormalized = np.flip(self.A_unnormalized, axis = 1)
+			self.A_unnormalized = self.A['M'].T.copy()
 
 			#preprocessing
 			self.T = self.T['T']
@@ -371,15 +369,11 @@ class EchoStateExperiment:
 		#normalize the matrix
 		self.A = (self.A - np.mean(self.A)) / np.std(self.A)
 
-		#redundant
-		self.A_orig = self.A.copy()
 
 		#gaussian smoothing
 		if self.smooth_bool:
 			self.smooth()
 
-		self.A_orig = np.rot90(self.A_orig, k = 1, axes = (0, 1))
-		
 		if log:
 			self.f = np.log(self.f)
 
@@ -399,7 +393,6 @@ class EchoStateExperiment:
 			self.freq_idx = [ float(i) for i in self.f]
 		else:
 			self.freq_idx = [ int(i) for i in self.f]
-			#plt.imshow(A_orig)
 
 		self.key_freq_idxs = {}
 		for i in (2000, 4000, 8000):
@@ -413,9 +406,7 @@ class EchoStateExperiment:
 		#TODO reconsider renaming vert_display
 		Plot a version of the data where time is along the x axis, designed to show RPI lab
 		"""
-		print("hawabunga")
-		AOrig = self.A_orig
-		oA = np.rot90(AOrig, k = 3)#3, axes = (0, 1))
+		oA = np.rot90(self.A.copy(), k = 3)#3, axes = (0, 1))
 		#oA stands for other lab A
 		oA = pd.DataFrame(oA).copy()
 		
@@ -487,7 +478,7 @@ class EchoStateExperiment:
 	#TODO: horizontal display
 	def horiz_display(self, plot = False):
 		assert type(plot) == bool, "plot must be a bool"
-		A_pd = pd.DataFrame(self.A_orig)
+		A_pd = pd.DataFrame(self.A)
 		A_pd.columns = self.freq_idx
 		if plot:
 			fig, ax = plt.subplots(1,1, figsize = (6,4))
