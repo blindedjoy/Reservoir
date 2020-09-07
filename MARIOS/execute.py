@@ -194,7 +194,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
         print("Test shape: " +  str(experiment.Test.shape))
         experiment.RC_CV(cv_args = cv_args, model = model_)
 
-def test(TEST, multiprocessing = False, gap = False):
+def test(TEST, multiprocessing = False, gap = True):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
@@ -230,10 +230,20 @@ def test(TEST, multiprocessing = False, gap = False):
                  { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  }]
         else:
           experiment_set = [
-                {'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                {'target_frequency': 1000, 'obs_hz': 500.0,  'target_hz': 500.0},
-                {'target_frequency': 1000, 'obs_hz': 250.0,  'target_hz': 100.0},
-                {'target_frequency': 1000, 'obs_hz': 100.0,  'target_hz': 100.0}]
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
+
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
+                ]
           #{ 'target_freq': 500, 'split': 0.5, 'obs_hz': 20,  'target_hz': 10}]
           #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 20,  'target_hz': 10}]
           #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
