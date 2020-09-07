@@ -58,7 +58,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "publish",
+def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "medium",
                    interpolation_method = "griddata-linear"):
       """
       4*4 = 16 + 
