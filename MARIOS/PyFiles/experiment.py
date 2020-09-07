@@ -33,6 +33,19 @@ def nrmse(pred_, truth, columnwise = False):
 	nrmse_ = np.sqrt(rmse_ / denom_)
 	return(nrmse_)
 
+# From  Item 22 in Efective Python: "variable positional arguments"
+def build_string(message, *values):
+	if not values:
+		return message
+	else:
+		return message.join(str(x)  for x in values)
+
+def build_file_path(message, *values):
+	if not values:
+		return message
+	else:
+		return message.join(str(x) + "/"  for x in values)
+
 
 
 def idx2Freq(val):
@@ -345,27 +358,31 @@ class EchoStateExperiment:
 
 			self.A_unnormalized = self.A['M'].copy()
 
+			self.A_unnormalized = np.flip(self.A_unnormalized, axis = 1)
+
 			#preprocessing
 			self.T = self.T['T']
 			self.T = np.transpose(self.T)
 			self.f = self.f['f'].reshape(-1,).tolist()
 
-		self.A =  self.A_unnormalized.copy()
-		#print("A_shape":self.A.shape)
-		self.A =  (self.A - np.mean(self.A)) / np.std(self.A)
+		#copy the matrix
+		self.A = self.A_unnormalized.copy()
 
+		#normalize the matrix
+		self.A = (self.A - np.mean(self.A)) / np.std(self.A)
+
+		#redundant
 		self.A_orig = self.A.copy()
 
+		#gaussian smoothing
 		if self.smooth_bool:
 			self.smooth()
 
-		self.A_orig = self.A.copy()
 		self.A_orig = np.rot90(self.A_orig, k = 1, axes = (0, 1))
-		
-
 		
 		if log:
 			self.f = np.log(self.f)
+
 		self.max_freq = int(np.max(self.f))
 		self.Freq2idx(self.target_frequency, init = True)
 
@@ -379,9 +396,9 @@ class EchoStateExperiment:
 			print("dataset shape: " + str(self.A.shape))
 
 		if log:
-			self.freq_idx = [float(i) for i in self.f]
+			self.freq_idx = [ float(i) for i in self.f]
 		else:
-			self.freq_idx = [int(i) for i in self.f]
+			self.freq_idx = [ int(i) for i in self.f]
 			#plt.imshow(A_orig)
 
 		self.key_freq_idxs = {}
@@ -396,8 +413,9 @@ class EchoStateExperiment:
 		#TODO reconsider renaming vert_display
 		Plot a version of the data where time is along the x axis, designed to show RPI lab
 		"""
+		print("hawabunga")
 		AOrig = self.A_orig
-		oA = np.rot90(AOrig, k = 3, axes = (0, 1))
+		oA = np.rot90(AOrig, k = 3)#3, axes = (0, 1))
 		#oA stands for other lab A
 		oA = pd.DataFrame(oA).copy()
 		
@@ -409,6 +427,7 @@ class EchoStateExperiment:
 		axis.set_ylabel('Frequency (Hz)')#,rotation=0)
 		axis.set_xlabel('time')
 		my_heat.invert_yaxis()
+		my_heat.invert_xaxis()
 		plt.yticks(rotation=0)
 		if return_index:
 			return(freq_idx)
@@ -799,8 +818,6 @@ class EchoStateExperiment:
 					self.obs_idx, self.resp_idx  = [], range(self.A.shape[1])
 				else:
 					self.obs_idx, self.resp_idx  = [], range(self.A.shape[1])
-				train_time_idx  = self.train_time_idx
-				test_time_idx   = self.test_time_idx
 				self.target_kHz = "all"
 				self.obs_kHz	= 0.0
 
@@ -823,8 +840,7 @@ class EchoStateExperiment:
 			A_shape_0 = self.A.shape[0]
 			if not k:
 				response_tr  = dataset[ self.train_time_idx, : ]
-				#print("train_time_idx: " + str(self.train_time_idx))
-				#print("response_tr shape: " + str(response_tr.shape))
+
 				response_te = dataset[ self.test_time_idx , : ]
 				self.obs_idx = []#range(A_shape_0 )
 			else:
@@ -864,8 +880,8 @@ class EchoStateExperiment:
 					split_img[ train_len:, i] = np.full(( 1, test_len,  3), red)
 			else:
 				for i in self.resp_idx:
-					split_img[ train_time_idx, i ] = np.full(( 1, train_len, 3), blue)
-					split_img[ test_time_idx,  i ] = np.full(( 1, test_len,  3), red)
+					split_img[ self.train_time_idx, i ] = np.full(( 1, train_len, 3), blue)
+					split_img[ self.test_time_idx,  i ] = np.full(( 1, test_len,  3), red)
 
 			legend_elements = [Patch(facecolor='cyan', edgecolor='blue', label='Train'),
 						   	   Patch(facecolor='red', edgecolor='red', label='Test'),
@@ -876,7 +892,10 @@ class EchoStateExperiment:
 			fig, ax = plt.subplots( 1, 2, figsize = ( 12, 6))
 			ax = ax.flatten()
 			
-			solid_color_np =  np.transpose(split_img.T, axes = (1,2,0))
+			solid_color_np =  np.rot90(split_img, k = 1, axes = (0, 1))
+			#np.transpose(split_img, axes = (1,2,0))
+
+			
 			
 			#solid_color_pd.index = freq_idx
 			
@@ -955,10 +974,17 @@ class EchoStateExperiment:
 		#assert self.xTr.shape[1] == self.xTe.shape[1], "something is broken, xTr and xTe should have the same column dimension"
 		
 		
-		#self.outfile = "experiment_results/" + str(int(self.target_frequency / 1000)) + "k/" + self.size
-		#self.outfile += "/split_" + str(split)  +"/" + "targetKhz:_" + str(self.target_kHz) + "__obskHz:_"
+		self.outfile = "experiment_results/" + self.size
+		self.outfile += "/split_" + str(split)  +"/"
+		if self.method == "freq":
+			self.outfile += "targetKhz:_" + str(self.target_kHz) + "__obskHz:_"
+		elif self.method == "exact":
+			self.outfile += "targetIdx_ctr:_" + str(np.mean(self.resp_idx))
+			self.outfile += "N_Targidx_" + str(len(self.resp_idx)) 
+			self.outfile += "N_Obsidx_" + str(len(self.obs_idx))
 
-		#self.outfile += str(self.obs_kHz)
+
+		self.outfile += str(self.obs_kHz)
 
 
 
@@ -1243,6 +1269,21 @@ class EchoStateExperiment:
 		
 		self.getData2Save()
 		if self.librosa or self.prediction_type == "column":
+
+			#build_string_lst = [self.spectrogram_path,"/",self.spectrogram_type,"/"
+
+			# flat or NOT
+			#TODO
+			flat_str = "untouched" if not self.flat else "flat"
+			librosa_outfile += str(flat_str) + "/"
+
+			#split
+			librosa_outfile += "split_"  + str(self.split) + "/"
+			librosa_outfile += "type_" + str(self.prediction_type)
+
+			librosa_outfile += "tf_" + str(self.target_frequency)
+
+			#librosa_outfile = build_string("./pickle_files/results/", build_string_lst)
 			librosa_outfile = "./pickle_files/results/" + self.spectrogram_path +"/" 
 			# spectrogram type
 			librosa_outfile += self.spectrogram_type + "/"

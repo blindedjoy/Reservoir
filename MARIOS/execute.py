@@ -232,7 +232,7 @@ def test(TEST, multiprocessing = False, gap = False):
                 { 'target_freq': 250, 'split': 0.5, 'obs_hz': 25,  'target_hz': 50},
                 { 'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
                 { 'target_freq': 250, 'split': 0.5, 'obs_hz': 25,  'target_hz': 50},
-                { 'target_freq': 500, 'split': 0.5, 'obs_hz': 50,  'target_hz': 25}]
+                { 'target_freq': 500, 'split': 0.5, 'obs_hz': 10,  'target_hz': 10}]
 
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
           set_specific_args = {"prediction_type": "block"}
