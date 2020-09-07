@@ -215,9 +215,9 @@ def test(TEST, multiprocessing = False, gap = True):
             resp_list = list( range( lb_targ, ub_targ, 10))
             return obs_list, resp_list
 
-          librosa_args = {"spectrogram_path" : "19th_century_male_stft",
-                          "spectrogram_type" : "db",#"db", #power
-                          "librosa": True}
+          #librosa_args = {"spectrogram_path" : "19th_century_male_stft",
+          #                "spectrogram_type" : "db",#"db", #power
+          #                "librosa": True}
         
           obs_freqs, resp_freqs   = get_frequencies(1)
           obs_freqs2, resp_freqs2 = get_frequencies(2)
@@ -227,7 +227,8 @@ def test(TEST, multiprocessing = False, gap = True):
                  { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
                  { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
                  { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-                 { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  }]
+                 { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+                 { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  }]
         else:
           experiment_set = [
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
