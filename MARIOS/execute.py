@@ -136,7 +136,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
                         }
           EchoArgs = Merge(EchoArgs, AddEchoArgs)
         else:
-          AddEchoArgs = { "target_frequency" : inputs["target_freq"],
+          AddEchoArgs = { "target_frequency" : inputs["target_frequency"],
                           "obs_hz" : inputs["obs_hz"],
                           "target_hz" : inputs["target_hz"]
                         }
@@ -194,7 +194,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
         print("Test shape: " +  str(experiment.Test.shape))
         experiment.RC_CV(cv_args = cv_args, model = model_)
 
-def test(TEST, multiprocessing = False, gap = True):
+def test(TEST, multiprocessing = False, gap = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
@@ -256,8 +256,8 @@ def test(TEST, multiprocessing = False, gap = True):
           #            {'target_frequency': 1000, 'obs_hz': 100.0,  'target_hz': 100.0}]
 
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
-          set_specific_args = {"prediction_type": "block"}
-          experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
+        set_specific_args = {"prediction_type": "block"}
+        experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
 
       elif PREDICTION_TYPE == "column":
 

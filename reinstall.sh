@@ -1,3 +1,3 @@
 #!/bin/bash
 pip uninstall --yes reservoir
-yes | pip install .
+yes | python -m pip install .

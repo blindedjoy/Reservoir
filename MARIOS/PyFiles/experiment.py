@@ -9,20 +9,18 @@ def Merge(dict1, dict2):
 	res = {**dict1, **dict2} 
 	return res 
 
-
-def nrmse(pred_, truth, columnwise = False):
-	"""
-	inputs should be numpy arrays
-	variables:
-	pred_ : the prediction numpy matrix
-	truth : ground truth numpy matrix
-	columnwise: bool if set to true takes row-wise numpy array (assumes reader thinks of time as running left to right
-		while the code actually runs vertically.)
-
+def nrmse(pred_, truth, *, columnwise = False):
+	"""Calculate NRMSE (R) from numpy arrays
+	
+	Args:
+		pred_ : the prediction numpy array
+		truth : the ground truth numpy array
+		columnwise: bool if set to true takes row-wise numpy array 
+		(assumes reader thinks of time as running left to right while the code actually runs vertically.)
 	"""
 	if columnwise:
-		rmse_ = np.sum((truth - pred_) ** 2, axis = 1).reshape(-1, )
-		denom_ = np.sum(truth ** 2) * (1/len(rmse_))#np.sum(truth ** 2, axis = 1).reshape(-1, )
+		rmse_ = np.sum((truth - pred_) ** 2, axis = 1).reshape(-1, ) #takes column-wise mean.
+		denom_ = np.sum(truth ** 2) * (1/len(rmse_))
 	else:
 		rmse_ = np.sum((truth - pred_) ** 2)
 		denom_ = np.sum(truth ** 2)
@@ -31,28 +29,41 @@ def nrmse(pred_, truth, columnwise = False):
 	return(nrmse_)
 
 # From  Item 22 in Efective Python: "variable positional arguments"
-def build_string(message, *values):
+def build_string(message, *values,  sep = ""):
+	""" build a string with arbitrary arguments.
+
+	Positional Args:
+		message: original string to build on.
+		values: individual arguments to be added to the string.
+	Keyword only Args:
+		sep: how to divide the parts of the string if you want. (ie. ',' or "/")
+	"""
 	if not values:
 		return message
 	else:
 		return message.join(str(x)  for x in values)
 
-def build_file_path(message, *values):
-	if not values:
-		return message
-	else:
-		return message.join(str(x) + "/"  for x in values)
 
-def idx2Freq(val):
-	idx = min(range(len(f)), key=lambda i: abs(f[i]-val))
+
+def idx2Freq(freq):
+	""" Takes an frequency and returns the closest index to that frequency.
+
+	Args:
+		freq: the desired Frequency to be found in the index of the experiment object.
+	# TODO: decide whether or not to build this into the experiment class.
+	"""
+	idx = min(range(len(f)), key=lambda i: abs( f[i] - freq))
 	return(idx)
 
 def ifdel(dictt, key):
-	if key in list(dictt.keys()):
-		del dictt[key]
-	return(dictt)
+    """ If a key is in a dictionary delete it. Return [modified] dictionary.
+    """
+    try:
+        del dictt[key]
+    except:
+        return(dictt)
 
-def pp(variable, label):
+def pp(variable, label): #TODO replace with wrappers.
 	"""
 	custom print function
 	"""
@@ -72,22 +83,23 @@ def class_copy(class_spec):
 
 
 class EchoStateExperiment:
-	"""
-	#TODO description
-	bounds:
-	size: a string in ["small", "medium", "publish"] that refer to different dataset sizes.
-	file_path: a string that describes the directory where the data is located. (load from)
-	out_path: where to save the data
-	target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
+	""" #Spectrogram class for training, testing, and splitting data for submission to reservoir nueral network code.
+	
+	Args: #TODO Incomplete
+		bounds:
+		size: a string in ["small", "medium", "publish"] that refer to different dataset sizes.
+		file_path: a string that describes the directory where the data is located. (load from)
+		out_path: where to save the data
+		target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
 	"""
-	def __init__(self, size, file_path = "spectrogram_data/", target_frequency = None, out_path = None, obs_hz = None, 
+	def __init__(self, size, *, #End positional arguments
+				 file_path = "spectrogram_data/", target_frequency = None, out_path = None, obs_hz = None, 
 				 target_hz = None, train_time_idx = None, test_time_idx = None, verbose = True,
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
 				 target_freqs = None, spectrogram_type = None
 				 #obs_idx = None,
-				 #targ_
 				 ):
 		# Parameters
 		self.size = size
@@ -158,11 +170,15 @@ class EchoStateExperiment:
 		   	   obs_hz = None, 
 		   	   target_hz = None, 
 		   	   silent = True):
-		"""
-		This function acts as a helper function to simple_block and get_observers
+		""" This function acts as a helper function to simple_block and get_observers
 		and is thus designed. It takes a desired hz amount and translates that to indices of the data.
 		
 		To do one frequency use Freq2idx.
+
+		Args:
+			obs_hz: the number of requested observer hertz
+			target_hz: the number of requested target hertz
+			silent: if False prints general information
 		"""
 		#print("RUNNING HZ2IDX")
 
@@ -174,25 +190,32 @@ class EchoStateExperiment:
 
 		# spread vs total hz
 		obs_spread, target_spread = obs_hz / 2, target_hz / 2
-		### START helper functions
-		def my_sort(lst):
-			return(list(np.sort(lst)))
-		def drop_overlap(resp_lst, obs_lst): #obs_lst = drop_overlap(resp_lst, obs_lst)
 
-			intersection_set = set.intersection(set(resp_lst), set(obs_lst))
-			#find intersection of list1 and list2
+		### START hz2idx helper functions
+		def my_sort(lst): #sorts a list,
+			try:
+				lst.sort()
+				return(lst)
+			except:
+				return(lst)
+			#list(np.sort(lst)))
 
-			intersection_list = list(intersection_set)
-
-			#print(intersection_list)
+		def drop_overlap(resp_lst, obs_lst):
+			""" # helper function for hz2idx. drops overlap from observers.
+			"""
+			intersection_list = list(set.intersection(set(resp_lst), set(obs_lst)))
 			for i in intersection_list:
 				obs_lst.remove(i)
-			#print(obs_lst)
+
 			return(obs_lst)
 
-		def endpoints2list(lb, ub, obs = False, obs_spread = obs_spread, height = height): # [lb, ub] stands for [lowerbound, upperbound]
+		def endpoints2list(lb, ub, *, obs_spread = obs_spread, height = height): # obs = False, 
+			"""
+			Args:
+				[lb, ub] stand for [lowerbound, upperbound]
+				obs_spread: how much the observer extends in each direction (frequency)
+			"""
 
-			#if self.librosa:
 			f = np.array(self.f)
 
 			def librosa_range(lb_, ub_):
@@ -209,9 +232,9 @@ class EchoStateExperiment:
 				freq_idxs = np.where(and_vector)[0].tolist() #indices between bounds
 				return(freq_idxs)
 
-			
 			resp_range = librosa_range(lb, ub)
 			respLb, respUb = f[resp_range][0], f[resp_range][-1]
+
 			#print("respLb, respUb: " + str(respLb) + ", " +  str(respUb))
 			obs_hLb, obs_hUb = respUb, respUb + obs_spread 
 			#print("obs_hLb, obs_hUb : " + str(obs_hLb)  + ", " + str(obs_hUb))
@@ -220,52 +243,25 @@ class EchoStateExperiment:
 			#print("obs_lLb, obs_lUb : " + str(obs_lLb)  + ", " + str(obs_lUb))
 			
 			obs_L, obs_H = librosa_range(obs_lLb, obs_lUb), librosa_range(obs_hLb, obs_hUb )
-			#print("Obs_H" + str(obs_H))
-			#print("resp_range" + str(resp_range))
+
 			#drop the lowest index of obs_H and the highest index of obs_L to avoid overlap with resp_idx
 			obs_H = drop_overlap(resp_lst = resp_range, obs_lst = obs_H)
 			obs_L = drop_overlap(resp_lst = resp_range, obs_lst = obs_L)
-				#print("Obs_H after haircut: " + str(obs_H))
-				
 
-			"""	
-			else:
-				def make_range(lb_, ub_):
-					return list(range(int(lb), int(ub + 1)))
-				
-				# response ranges
-				lb, ub = self.Freq2idx(lb), self.Freq2idx(ub)
-				resp_idx_range = make_range(lb, ub)
-				print(resp_idx_)
-				resp_freq_range = [self.f[idx] for idx in resp_idx_range]
-				
-
-				# observer ranges
-				obs_hUb, obs_hLb = respUb + self.Freq2idx(obs_spread) + 1, respUb + 1 ##uUB: high range upper bound
-				obs_lLb, obs_lUb = respLb - self.Freq2idx(obs_spread) - 1, respLb - 1
-				obs_L, obs_H = make_range(obs_lLb, obs_lUb), make_range(obs_hLb, obs_hUb )
-			"""
-				
 			ranges = (resp_range, obs_L, obs_H ) 
-			#enforce integer type
+
 			final_ranges = []
 			for range_ in ranges:
-				range_ = [int(idx) for idx in range_]
-				range_ = [height - i for i in range_]
+				range_ = [int(idx) for idx in range_] #enforce integer type
+				range_ = [height - i for i in range_] #Inversion
 				range_ = my_sort(range_)
 				final_ranges.append(range_)
-			#Inversion:
-
 			return(ranges)
 		### END helper functions
 
-		
-		
-		
 		# get the obs, response range endpoints
 		resp_freq_Lb, resp_freq_Ub = [midpoint - target_spread, midpoint + target_spread]
 		
-
 		#This could be incorrect but I'm trying to protect the original block method.
 		#respLb, respUb = [self.Freq2idx(midpoint - target_spread), self.Freq2idx(midpoint + target_spread)]
 
@@ -276,7 +272,6 @@ class EchoStateExperiment:
 
 		# Listify:
 		resp_idx_Lst, obs_idx_Lst1, obs_idx_Lst2 = endpoints2list(resp_freq_Lb, resp_freq_Ub)
-
 
 		def get_frequencies(idx_lst):
 			freq_lst = [self.f[idx] for idx in idx_lst]
@@ -289,7 +284,6 @@ class EchoStateExperiment:
 
 		resp_freq_Lst, obs_freq_Lst1, obs_freq_Lst2 = freq_lst
 
-		
 		if not silent:
 			print("resp_indexes : " + str(resp_idx_Lst))
 			print("observer frequencies upper domain: " + str(resp_freq_Lst) + 
@@ -312,21 +306,26 @@ class EchoStateExperiment:
 					   "resp_freq" : resp_freq_Lst}
 
 		self.resp_obs_idx_dict = dict2Return
+
 		self.obs_idx  = [int(i) for i in dict2Return["obs_idx"]]
 		print("OBS IDX: " + str(self.obs_idx))
-		self.resp_idx = [int(i) for i in dict2Return["resp_idx"]]
 
+		self.resp_idx = [int(i) for i in dict2Return["resp_idx"]]
 		print("Resp IDX: " + str(self.resp_idx))
 
 
-	def smooth(self):
+	def smooth(self, sigma = 1):
+		""" # gaussian smoothing
+		"""
 		from scipy.ndimage import gaussian_filter
 		#from scipy.ndimage import gaussian_filter
-		self.A = gaussian_filter( self.A, sigma = 1)
+		self.A = gaussian_filter( self.A, sigma = sigma)
 
 	def load_data(self, 
 				  smooth = True, 
 				  log = False):
+		"""Loads data.
+		"""
 		
 		if self.librosa:
 			spectrogram_path = "./pickle_files/spectrogram_files/" + self.spectrogram_path + ".pickle"
@@ -381,6 +380,7 @@ class EchoStateExperiment:
 
 		self.freq_axis_len = self.A.shape[0]
 		self.time_axis_len = self.A.shape[1]
+
 		str2print = ""
 		if self.verbose:
 			for file_name_ in files2import:
@@ -969,13 +969,13 @@ class EchoStateExperiment:
 		if self.method == "freq":
 			ctr = int(np.mean([int(self.f[idx]) for idx in self.resp_idx]))
 			self.outfile += "targetHz_ctr:_" + str(ctr)
-			self.outfile += "targetKhz:_" + str(self.target_kHz) + "__obskHz:_"
+			self.outfile += "targetKhz:_" + str(self.target_kHz) + "__obskHz:_" + str(self.obs_kHz)
 		elif self.method == "exact":
 			self.outfile += "N_Targidx_" + str(len(self.resp_idx)) 
 			self.outfile += "N_Obsidx_" + str(len(self.obs_idx))
 
 
-		self.outfile += str(self.obs_kHz)
+		
 
 
 
