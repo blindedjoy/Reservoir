@@ -312,12 +312,6 @@ def test(TEST, multiprocessing = False, gap = True):
                 "leaking_rate" :   (0.01, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
-      hi = """ experiment_set = [  #4k, 0.5 filling in some gaps:
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 750, 'target_hz': 1000} ,
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1250, 'target_hz': 1000},
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1500, 'target_hz': 1000},
-                        {'target_freq': 2000, 'split': 0.5, 'obs_hz': 1750, 'target_hz': 1000},
-                        ]"""
       experiment_set = [  #4k, 0.5 filling in some gaps:
                           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  500},
                           {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  750},

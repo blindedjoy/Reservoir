@@ -23,7 +23,6 @@ then
 	curr_directory="experiment_results";  ifdir "${curr_directory}"
 	#for freq in "1k" "2k" "4k"
 	#do
-	curr_directory="experiment_results/$freq"; ifdir "${curr_directory}"
 	for size in "small" "medium" "publish"
 	do
 		ifdir "${curr_directory}/${size}/"

@@ -127,13 +127,11 @@ class EchoStateExperiment:
 		else:
 			self.target_frequency = target_frequency
 		
-
 		#these indices should be exact lists, not ranges.
 		if train_time_idx:
 			self.train_time_idx = train_time_idx
 		if test_time_idx:
 			self.test_time_idx  = test_time_idx
-
 
 		if self.prediction_type == "column":
 			self.target_frequency = 100
@@ -975,11 +973,7 @@ class EchoStateExperiment:
 			self.outfile += "N_Obsidx_" + str(len(self.obs_idx))
 
 
-		
-
-
-
-		#"targetKhz:_{}__obskHz:_{}"
+		print("OUTFILE: " + str(self.outfile))
 
 
 	def getData2Save(self): 
