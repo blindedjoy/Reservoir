@@ -1,8 +1,8 @@
 #!/bin/bash
 
 module load Anaconda3/2019.10; 
-cpus_per_task=4
-srun -t 120 -n 1 -p serial_requeue --cpus-per-task=$cpus_per_task --mem-per-cpu=8gb  bash -c "python execute_test.py 0 $cpus_per_task" & #-c 30 -N 1 
+cpus_per_task=1
+srun -t 120 -n 1 -p serial_requeue --cpus-per-task=$cpus_per_task --mem-per-cpu=6gb  bash -c "python execute_test.py 0 $cpus_per_task" & #-c 30 -N 1 
 
 
 #srun  -t 5760  -n 16 -p shared --mem=64gb bash -c "python execute.py '$x'" & 
