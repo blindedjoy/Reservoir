@@ -12,6 +12,7 @@ from reservoir import *
 import sys
 import time
 import timeit
+import multiprocessing.pool 
 
 PREDICTION_TYPE = "block"
 
@@ -53,7 +54,8 @@ class NoDaemonContext(type(multiprocessing.get_context())):
 
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
-class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
+#class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
+class MyPool(multiprocessing.pool.Pool):
     def __init__(self, *args, **kwargs):
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)

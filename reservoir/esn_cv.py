@@ -539,7 +539,7 @@ class EchoStateNetworkCV:
         mean_score = self.scores.mean()
         #mean_score = mean_score/n_series
 
-        print('Score:', mean_score)
+        #print('Score:', mean_score)
         # Inform user
         if self.verbose:
             #print(parameters)
