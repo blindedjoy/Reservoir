@@ -59,7 +59,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "medium",
+def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "publish",
                    interpolation_method = "griddata-linear"):
       """
       4*4 = 16 + 
@@ -231,6 +231,7 @@ def test(TEST, multiprocessing = False, gap = True):
                  { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
                  { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  }]
         else:
+          print("on track")
           experiment_set = [
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
