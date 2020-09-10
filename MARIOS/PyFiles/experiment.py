@@ -9,7 +9,7 @@ def Merge(dict1, dict2):
 	res = {**dict1, **dict2} 
 	return res 
 
-def nrmse(pred_, truth, *, columnwise = False):
+def nrmse(pred_, truth, columnwise = False):
 	"""Calculate NRMSE (R) from numpy arrays
 	
 	Args:
@@ -207,7 +207,7 @@ class EchoStateExperiment:
 
 			return(obs_lst)
 
-		def endpoints2list(lb, ub, *, obs_spread = obs_spread, height = height): # obs = False, 
+		def endpoints2list(lb, ub, obs_spread = obs_spread, height = height): # obs = False, 
 			"""
 			Args:
 				[lb, ub] stand for [lowerbound, upperbound]
@@ -1065,18 +1065,10 @@ class EchoStateExperiment:
 			args2export = ifdel(args2export, "llambda")
 			args2export = ifdel(args2export, "noise")
 
-
-		
-
-
-
 		pred = self.prediction.tolist()
 		self.json2be["prediction"]= Merge(self.json2be["prediction"], {self.model: pred}) #Merge(self.json2be["prediction"], )
 		self.json2be["nrmse"][self.model] = nrmse(pred, self.xTe, columnwise = False)
 		self.json2be["best arguments"] = Merge(self.json2be["best arguments"], {self.model: args2export}) 
-
-		
-			
 
 	
 	def RC_CV(self, cv_args, model, hybrid_llambda_bounds = (-5, 1)): #TODO: change exp to 
