@@ -195,7 +195,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "p
         print("Test shape: " +  str(experiment.Test.shape))
         experiment.RC_CV(cv_args = cv_args, model = model_)
 
-def test(TEST, multiprocessing = False, gap = True):
+def test(TEST, multiprocessing = False, gap = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
@@ -303,6 +303,7 @@ def test(TEST, multiprocessing = False, gap = True):
                 }
     
     else:
+      print("This is not a test")
       bounds = { #noise hyper-parameter.
                  #all are log scale except  spectral radius, leaking rate and n_nodes
                 'noise' :          (-2, -4),
@@ -314,29 +315,29 @@ def test(TEST, multiprocessing = False, gap = True):
                 "leaking_rate" :   (0.01, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
-      experiment_set = [  #4k, 0.5 filling in some gaps:
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  500},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz':  750},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 250, 'target_hz': 1000},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz':  500},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz':  750},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 500, 'target_hz': 1000},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 750, 'target_hz':  500},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 750, 'target_hz':  750},
-                          {'target_freq': 4000, 'split': 0.5, 'obs_hz': 750, 'target_hz': 1000},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 250, 'target_hz':  500},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 250, 'target_hz':  750},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 250, 'target_hz': 1000},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz':  500},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz':  750},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 500, 'target_hz': 1000},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 750, 'target_hz':  500},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 750, 'target_hz':  750},
-                          {'target_freq': 4000, 'split': 0.9, 'obs_hz': 750, 'target_hz': 1000},
-                          ]
+      experiment_set = [
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
+
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
+                ]
+
+      #set_specific_args = {"prediction_type": "block"}
+      #experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
+
 
     for experiment in experiment_set:
       experiment["bounds"] = bounds
+      experiment["prediction_type"] = "block"
 
     try:
       set_start_method('forkserver')
@@ -361,7 +362,7 @@ if __name__ == '__main__':
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification))
 
-  TEST = True
+  TEST = False
 
   start = timeit.default_timer()
   test(TEST = TEST)
