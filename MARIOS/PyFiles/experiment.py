@@ -60,6 +60,7 @@ def ifdel(dictt, key):
     """
     try:
         del dictt[key]
+        return(dictt)
     except:
         return(dictt)
 
@@ -1200,22 +1201,26 @@ class EchoStateExperiment:
 
 
 	def already_trained(self, best_args, exponential):
-
+		print("exp: " + str(exponential))
 		self.best_arguments = best_args
 
-		self.esn = self.esn_spec(**self.best_arguments,
-								 obs_idx  = self.obs_idx,
-								 resp_idx = self.resp_idx,
-								 exponential = exponential)
+		if best_args:
 
-		self.esn.train(x = self.Train, y = self.xTr)
+			self.esn = self.esn_spec(**self.best_arguments,
+									 obs_idx  = self.obs_idx,
+									 resp_idx = self.resp_idx,
+									 exponential = exponential)
 
-		def my_predict(test, n_steps = None):
-			if not n_steps:
-				n_steps = test.shape[0]
-			return self.esn.predict(n_steps, x = test[ :n_steps, :])
+			self.esn.train(x = self.Train, y = self.xTr)
 
-		self.prediction = my_predict(self.Test)
+			def my_predict(test, n_steps = None):
+				if not n_steps:
+					n_steps = test.shape[0]
+				return self.esn.predict(n_steps, x = test[ :n_steps, :])
+
+			self.prediction = my_predict(self.Test)
+		else:
+			"at least one network not trained successfully"
 
 	"""
 	def Unif_RC_CV(self, cv_args):
