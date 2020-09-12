@@ -4,3 +4,9 @@ reconstraining parameters GP_regression.Gaussian_noise.variance
 reconstraining parameters Mat52.lengthscale
 reconstraining parameters Mat52.variance
 reconstraining parameters GP_regression.Gaussian_noise.variance
+reconstraining parameters Mat52.lengthscale
+reconstraining parameters Mat52.variance
+reconstraining parameters GP_regression.Gaussian_noise.variance
+reconstraining parameters Mat52.lengthscale
+reconstraining parameters Mat52.variance
+reconstraining parameters GP_regression.Gaussian_noise.variance
