@@ -1422,7 +1422,7 @@ class EchoStateExperiment:
 
 			griddata_type = "linear" if self.interpolation_method == "griddata-linear" else "cubic"
 
-			ip2_pred = griddata(point_lst, values, points_to_predict, method = "nearest")#griddata_type)#, rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
+			ip2_pred = griddata(point_lst, values, points_to_predict, method = griddata_type)#"nearest")#griddata_type)#, rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
 			ip2_pred = ip2_pred.reshape(self.xTe.shape)
 			#ip2_resid = ip2_pred - self.xTe
 			#points we can see in the training set
