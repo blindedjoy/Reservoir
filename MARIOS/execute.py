@@ -59,8 +59,7 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "medium",
-                   interpolation_method = "griddata-linear"):
+def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpolation_method = "griddata-linear"):
       """
       4*4 = 16 + 
 
@@ -83,6 +82,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
       }
 
       """
+      size = inputs["size"]
       #default arguments
       print("Prediction Type: " + inputs["prediction_type"])
 
@@ -112,7 +112,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
       if PREDICTION_TYPE == "column":
         train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
 
-        experiment_inputs = { "size" : size,
+        experiment_inputs = { "size" : inputs["size"],
                               "target_frequency" : None,
                               "verbose" : False,
                               "prediction_type" : inputs["prediction_type"],
@@ -169,7 +169,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, size = "m
           "max_iterations" : 2000,
           "eps" : 1e-4,
           'subsequence_length' : 500,
-          "initial_samples" : 200}
+          "initial_samples" : 100}
 
       if PREDICTION_TYPE == "column":
         if "subseq_len" in inputs:
@@ -259,7 +259,7 @@ def test(TEST, multiprocessing = False, gap = False):
           #            {'target_frequency': 1000, 'obs_hz': 100.0,  'target_hz': 100.0}]
 
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
-        set_specific_args = {"prediction_type": "block"}
+        set_specific_args = {"prediction_type": "block", "size" : "publish"}
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
 
       elif PREDICTION_TYPE == "column":
@@ -338,6 +338,7 @@ def test(TEST, multiprocessing = False, gap = False):
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       experiment["prediction_type"] = "block"
+      experiment["size"] = "publish"
 
     try:
       set_start_method('forkserver')
@@ -392,4 +393,5 @@ if __name__ == '__main__':
         # for 2k lets add some 750 target hz.
         experiment_set = [  #4k, 0.5 filling in some more gaps:
                           ]
+
       """

@@ -94,7 +94,7 @@ class EchoStateExperiment:
 		target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
 	"""
-	def __init__(self, size, *, #End positional arguments
+	def __init__(self, size, 
 				 file_path = "spectrogram_data/", target_frequency = None, out_path = None, obs_hz = None, 
 				 target_hz = None, train_time_idx = None, test_time_idx = None, verbose = True,
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
@@ -121,7 +121,6 @@ class EchoStateExperiment:
 		self.spectrogram_path = spectrogram_path
 		
 		self.verbose = verbose
-		print(self.spectrogram_type)
 
 		if obs_freqs:
 			self.target_frequency =  float(np.mean(target_freqs))
@@ -145,12 +144,11 @@ class EchoStateExperiment:
 		#order dependent attributes:
 		self.load_data()
 		if self.prediction_type == "block":
-			"BONK"
 			if obs_freqs:
 				self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
 				self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
-				print("obs_idx: " + str(self.obs_idx))
-				print("resp_idx: " + str(self.resp_idx))
+				#print("obs_idx: " + str(self.obs_idx))
+				#print("resp_idx: " + str(self.resp_idx))
 			if obs_hz and target_hz:
 				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
@@ -165,10 +163,7 @@ class EchoStateExperiment:
 		with open(save_path, 'wb') as handle:
 			pickle.dump(transform, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-	def hz2idx(self, 
-		   	   obs_hz = None, 
-		   	   target_hz = None, 
-		   	   silent = True):
+	def hz2idx(self, obs_hz = None, target_hz = None, silent = True):
 		""" This function acts as a helper function to simple_block and get_observers
 		and is thus designed. It takes a desired hz amount and translates that to indices of the data.
 		
@@ -179,7 +174,8 @@ class EchoStateExperiment:
 			target_hz: the number of requested target hertz
 			silent: if False prints general information
 		"""
-		#print("RUNNING HZ2IDX")
+		if not silent:
+			print("RUNNING HZ2IDX")
 
 		midpoint = self.target_frequency 
 		height   = self.freq_axis_len 
@@ -232,15 +228,11 @@ class EchoStateExperiment:
 				return(freq_idxs)
 
 			resp_range = librosa_range(lb, ub)
+
 			respLb, respUb = f[resp_range][0], f[resp_range][-1]
-
-			#print("respLb, respUb: " + str(respLb) + ", " +  str(respUb))
 			obs_hLb, obs_hUb = respUb, respUb + obs_spread 
-			#print("obs_hLb, obs_hUb : " + str(obs_hLb)  + ", " + str(obs_hUb))
-
 			obs_lLb, obs_lUb = respLb - obs_spread, respLb 
-			#print("obs_lLb, obs_lUb : " + str(obs_lLb)  + ", " + str(obs_lUb))
-			
+
 			obs_L, obs_H = librosa_range(obs_lLb, obs_lUb), librosa_range(obs_hLb, obs_hUb )
 
 			#drop the lowest index of obs_H and the highest index of obs_L to avoid overlap with resp_idx
@@ -307,10 +299,10 @@ class EchoStateExperiment:
 		self.resp_obs_idx_dict = dict2Return
 
 		self.obs_idx  = [int(i) for i in dict2Return["obs_idx"]]
-		print("OBS IDX: " + str(self.obs_idx))
+		#print("OBS IDX: " + str(self.obs_idx))
 
 		self.resp_idx = [int(i) for i in dict2Return["resp_idx"]]
-		print("Resp IDX: " + str(self.resp_idx))
+		#print("Resp IDX: " + str(self.resp_idx))
 
 
 	def smooth(self, sigma = 1):
@@ -320,10 +312,12 @@ class EchoStateExperiment:
 		#from scipy.ndimage import gaussian_filter
 		self.A = gaussian_filter( self.A, sigma = sigma)
 
-	def load_data(self, 
-				  smooth = True, 
-				  log = False):
+	def load_data(self, smooth = False):
 		"""Loads data.
+
+		Args: 
+			smooth: a gaussian filter
+			
 		"""
 		
 		if self.librosa:
@@ -366,13 +360,10 @@ class EchoStateExperiment:
 		#normalize the matrix
 		self.A = (self.A - np.mean(self.A)) / np.std(self.A)
 
-
 		#gaussian smoothing
 		if self.smooth_bool:
 			self.smooth()
 
-		if log:
-			self.f = np.log(self.f)
 
 		self.max_freq = int(np.max(self.f))
 		self.Freq2idx(self.target_frequency, init = True)
@@ -386,11 +377,6 @@ class EchoStateExperiment:
 				str2print += "successfully loaded: " + file_name_ + ".mat, "
 			print("maximum frequency: " + str(self.max_freq))
 			print("dataset shape: " + str(self.A.shape))
-
-		if log:
-			self.freq_idx = [ float(i) for i in self.f]
-		else:
-			self.freq_idx = [ int(i) for i in self.f]
 
 		self.key_freq_idxs = {}
 		for i in (2000, 4000, 8000):
@@ -444,6 +430,9 @@ class EchoStateExperiment:
 		"""
 		This is a helper function for get_observers which is a way to simplify the block method
 		for the purposes of our research. It only accepts 3 parameters and doesn't allow for multiple blocks.
+
+		Args: 
+			#TODO
 		"""
 
 		ctr = self.key_freq_idxs[target_freq]
@@ -477,7 +466,7 @@ class EchoStateExperiment:
 	def horiz_display(self, plot = False):
 		assert type(plot) == bool, "plot must be a bool"
 		A_pd = pd.DataFrame(self.A)
-		A_pd.columns = self.freq_idx
+		A_pd.columns = self.f #req_idx
 		if plot:
 			fig, ax = plt.subplots(1,1, figsize = (6,4))
 			my_heat= sns.heatmap(A_pd,  center=0, cmap=sns.color_palette("CMRmap"), ax = ax)
@@ -519,7 +508,6 @@ class EchoStateExperiment:
 		prediction_ = self.prediction
 		train = self.Train
 		test  = self.Test
-
 
 		full_dat = np.concatenate([train, test], axis = 0); full_dat_avg = np.mean(full_dat, axis = 1)
 		n_series, series_len = test.shape[1], test.shape[0]
@@ -794,7 +782,6 @@ class EchoStateExperiment:
 			This method is just like simple_block but upgraded to take in only frequencies by using the helper function hz2freq which must
 			be called first.
 			"""
-			print("EXACT!")
 			self.exact = True
 			
 			if self.prediction_type == "block":
@@ -838,7 +825,7 @@ class EchoStateExperiment:
 				rand_start = np.random.randint(k)
 				obs_idx = list(range(rand_start, A_shape_0, k))
 				self.obs_idx = obs_idx
-				print("K!" + str(self.train_time_idx))
+				#print("K!" + str(self.train_time_idx))
 				response_tr  = dataset[ self.train_time_idx, :]
 				response_tr  = response_tr[:, self.obs_idx]
 
@@ -974,7 +961,7 @@ class EchoStateExperiment:
 			self.outfile += "N_Obsidx_" + str(len(self.obs_idx))
 
 
-		print("OUTFILE: " + str(self.outfile))
+		#print("OUTFILE: " + str(self.outfile))
 
 
 	def getData2Save(self): 
@@ -996,9 +983,6 @@ class EchoStateExperiment:
 			jsonMerge({"best arguments" : {}})
 			self.json2be["obs_idx"] = self.obs_idx
 			self.json2be["resp_idx"] = self.resp_idx
-
-			#print("json2be after initi: ")
-			#print(self.json2be)
 
 
 		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
@@ -1047,8 +1031,6 @@ class EchoStateExperiment:
 		
 		# 2) saving the optimized hyper-parameters, nrmse
 
-		#print("json2be before pred assignment: ")
-		#print(self.json2be)
 		try:
 			self.best_arguments
 		except NameError:
@@ -1098,8 +1080,6 @@ class EchoStateExperiment:
 		}
 		#esn_cv_spec equivalent: EchoStateNetworkCV
 		"""
-		#print(self.resp_idx)
-		#print(self.obs_idx)
 		self.model = model
 		assert self.model in ["uniform", "exponential", "hybrid"], self.model + " model not yet implimented"
 
@@ -1134,7 +1114,7 @@ class EchoStateExperiment:
 				print(self.model + "rc cv set, ready to train")
 		else:
 			print("training hybrid part one: finding unif parameters")
-		print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
+		#print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
 		self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		
 
@@ -1201,7 +1181,7 @@ class EchoStateExperiment:
 
 
 	def already_trained(self, best_args, exponential):
-		print("exp: " + str(exponential))
+		#print("exp: " + str(exponential))
 		self.best_arguments = best_args
 
 		if best_args:
@@ -1221,31 +1201,6 @@ class EchoStateExperiment:
 			self.prediction = my_predict(self.Test)
 		else:
 			"at least one network not trained successfully"
-
-	"""
-	def Unif_RC_CV(self, cv_args):
-		'''
-		for example bounds see the above function. 
-		#TODO consider combining these functions.
-		'''
-
-		predetermined_args = {
-			'exp_weights' : False,
-			'obs_index' : self.resp_obs_idx_dict['obs_idx'],
-			'target_index' : self.resp_obs_idx_dict["resp_idx"]
-		}
-
-		input_dict = { **cv_args, **predetermined_args}
-
-		# subclass assignment: EchoStateNetworkCV
-		self.unif_esn_cv = self.esn_cv_spec(**input_dict)
-		print("uniform rc cv set, ready to train")
-
-		self.unif_best_arguments = self.unif_esn_cv.optimize(x = self.Train, y = self.xTr) 
-
-		self.save_json(exp = Falsepi)
-		print("uniform rc cv data saved")
-	"""
 
 	def save_json(self):
 		
@@ -1289,7 +1244,7 @@ class EchoStateExperiment:
 			
 			librosa_outfile += ".pickle"
 			self.save_pickle(path = librosa_outfile, transform = self.json2be)
-			print("outfile: " + str(librosa_outfile))
+			print("librosa outfile: " + str(librosa_outfile))
 
 		else:
 			#spectrogram
@@ -1320,17 +1275,17 @@ class EchoStateExperiment:
 			self.values   += [self.A[x,y]]
 
 	def runInterpolation(self, k = None, columnwise = False, show_prediction = False):
+		""" This function runs interpolation predictions as a baseline model for spectrogram predictions.
+
+		Args:
+			k: gap size, if applicable
+			columnwise: #TODO
+			show_prediction: Whether or not to plot the prediction.
+
+		"""
 		#2D interpolation
 		#observer coordinates
 		
-		"""
-		for i, column_idx in enumerate(dat["resp_idx"]):
-				print(column_idx)
-				values += list(A[:,column_idx].reshape(-1,))
-				point_lst += list(zip(range(A.shape[0]), [column_idx]*A.shape[0]))
-		print(len(point_lst))
-		print(len(values))
-		"""
 		
 		if self.prediction_type == "block":
 		
@@ -1342,9 +1297,9 @@ class EchoStateExperiment:
 			total_zone_idx = resp_idx + obs_idx
 			#print("TZONE: " + str(total_zone_idx))
 		#missing_ = 60
-		assert self.interpolation_method in ["griddata-linear", "rbf", "griddata-cubic"]
+		assert self.interpolation_method in ["griddata-linear", "rbf", "griddata-cubic", "griddata-nearest"]
 
-		if self.interpolation_method	 in ["griddata-linear", "griddata-cubic"]:
+		if self.interpolation_method	 in ["griddata-linear", "griddata-cubic", "griddata-nearest"]:
 			#print(self.interpolation_method)
 			points_to_predict = []
 			
@@ -1392,7 +1347,7 @@ class EchoStateExperiment:
 							point_lst += [(x,y)]
 							values	+= [self.A[x,y]]
 				else: #k =0
-					print("from ip, obs_idx_len: " + str(len(self.obs_idx)))
+					#print("from ip, obs_idx_len: " + str(len(self.obs_idx)))
 					for x in range(self.xTr.shape[0]):
 						# resonse points : train
 						for y in total_zone_idx:
@@ -1405,7 +1360,7 @@ class EchoStateExperiment:
 					# test set
 					for y in total_zone_idx:
 						points_to_predict += [(x,y)]
-				print(values[0:10])
+				#print(values[0:10])
 
 				xx_test, yy_test = list(zip(*points_to_predict)) 
 				xx_train, yy_train = list(zip(*point_lst)) 
@@ -1415,13 +1370,13 @@ class EchoStateExperiment:
 				plt.ylim(0, max(yy_train + yy_test))
 				plt.scatter(xx_train, yy_train, color = "blue")
 				plt.scatter(xx_test, yy_test, color = "red")
-				plt.show()
+				plt.show()	
 
-					
-						
-
-			griddata_type = "linear" if self.interpolation_method == "griddata-linear" else "cubic"
-
+			#extract the right method calls
+			translation_dict = { "griddata-linear" : "linear", "griddata-cubic"  : "cubic", "griddata-nearest": "nearest"}	
+			griddata_type = translation_dict[self.interpolation_method]
+			if self.verbose:
+				print("griddata " + griddata_type + " interpolation")
 			ip2_pred = griddata(point_lst, values, points_to_predict, method = griddata_type)#"nearest")#griddata_type)#, rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
 			ip2_pred = ip2_pred.reshape(self.xTe.shape)
 			#ip2_resid = ip2_pred - self.xTe
@@ -1508,7 +1463,7 @@ class EchoStateExperiment:
 			else:
 				values_rbf_output = []
 				LEN = len(self.xs_unknown)
-				print(LEN)
+				#print(LEN)
 				for i, xi in enumerate(self.xs_unknown):
 					print( i / LEN * 100)
 					yi = np.array(self.ys_unknown[i])
