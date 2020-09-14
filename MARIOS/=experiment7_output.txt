@@ -1,0 +1,34 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 7
+This is not a test
+Prediction Type: block
+{'size': 'publish', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 500.0, 'target_hz': 1000.0}
+Train shape: (2837, 142)
+Test shape: (316, 142)
+exponentialrc cv set, ready to train
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b7555742890>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['noise', 'llambda', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
+VIABLE START: 0
+VIABLE STOP: 2337
