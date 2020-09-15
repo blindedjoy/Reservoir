@@ -659,6 +659,7 @@ class EchoStateAnalysis:
         obs_hz_lst, targ_hz_lst, targ_freq_lst = [], [], []
 
         for i, experiment in enumerate(self.experiment_lst):
+            print(i)
             #print(experiment['experiment_inputs'].keys())
             targ_hz = experiment["experiment_inputs"]["target_hz"]
             obs_hz  = experiment["experiment_inputs"]["obs_hz"]
