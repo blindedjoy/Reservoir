@@ -167,9 +167,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
         default_presets = {
           "cv_samples" : 8,
           "max_iterations" : 2000,
-          "eps" : 1e-5,
+          "eps" : 1e-6,
           'subsequence_length' : 700,
-          "initial_samples" : 200}
+          "initial_samples" : 300}
 
       if PREDICTION_TYPE == "column":
         if "subseq_len" in inputs:
@@ -232,6 +232,7 @@ def test(TEST, multiprocessing = False, gap = False):
                  { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  }]
         else:
           print("on track")
+          
           experiment_set = [
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
@@ -316,19 +317,19 @@ def test(TEST, multiprocessing = False, gap = False):
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
       experiment_set = [
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980.0, 'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0,  'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 80.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 80.0,  'target_hz': 80.0},
 
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0,  'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 230.0,  'target_hz': 80.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 80.0,  'target_hz': 80.0},
                 ]
 
       #set_specific_args = {"prediction_type": "block"}
@@ -389,6 +390,21 @@ if __name__ == '__main__':
                           {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
               
                           ]
+        experiment_set = [
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
+
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
+                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
+                ]
       elif experiment_specification == 2: 
         # for 2k lets add some 750 target hz.
         experiment_set = [  #4k, 0.5 filling in some more gaps:

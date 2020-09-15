@@ -40,11 +40,13 @@ class EchoStateAnalysis:
         target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
     """
-    def __init__(self, path_list, bp = None, force = False):
+    def __init__(self, path_list, bp = None, force = False, ip_use_observers = True):
         self.path_list = path_list
         self.bp = bp
         self.force = force
+        self.ip_use_observers = ip_use_observers
         self.change_interpolation_json()
+        
 
         
     def get_experiment(self, json_obj, compare_ = False, plot_split = False,
@@ -139,8 +141,11 @@ class EchoStateAnalysis:
             
         path_lst = self.path_list
 
-        results_tmp = []
-        results_rel = []
+        if self.ip_use_observers == False:
+            ip_method = "nearest"
+
+        
+
         for i in trange(len(path_lst), desc='experiment list, loading data...'): 
             if not i:
                 experiment_lst, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
@@ -160,6 +165,10 @@ class EchoStateAnalysis:
                 NOT_YET_RUN += [i]
 
         for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
+
+            if not i:
+                results_tmp, results_rel = [], []
+
             experiment_dict = experiment_lst[i]
             if ip_method == "all":
                 for ip_method_ in ["linear", "cubic", "nearest"]:
@@ -173,23 +182,20 @@ class EchoStateAnalysis:
                 results_rel.append(rel_spec)
                 
                 #removing interpolation
-                pred_dict_temp = experiment_dict["prediction"]
-                pred_dict_temp = ifdel(pred_dict_temp, "interpolation")
-                
-                nrmse_dict_temp = experiment_dict["nrmse"]
-                nrmse_dict_temp = ifdel(nrmse_dict_temp, "interpolation")
-                
-                experiment_dict["nrmse"] = nrmse_dict_temp
-                experiment_dict["prediction"] = pred_dict_temp
-                
+                for key in ["prediction", "nrmse"]:
+                    dict_tmp = experiment_dict[key]
+                    dict_tmp = ifdel(dict_tmp, "interpolation")
+                    experiment_dict[key] = dict_tmp
+
                 results_tmp.append(experiment_dict["nrmse"])
-                
                 experiment_lst.append(experiment_dict)
+
             else:
                 rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["interpolation"] 
                             for key in experiment_dict["nrmse"].keys()}
                 results_rel.append(rel_spec)
-                experiment_dict = fix_interpolation(experiment_dict, method = ip_method) 
+                experiment_dict = self.fix_interpolation(experiment_dict, method = ip_method)
+
                 experiment_lst.append(experiment_dict)
                 results_tmp.append(experiment_dict["nrmse"])
 
@@ -404,7 +410,7 @@ class EchoStateAnalysis:
             hiObj.interpolation_method = "griddata-cubic"
         elif method == "nearest":
             hiObj.interpolation_method = "griddata-nearest"
-        hiObj.runInterpolation()
+        hiObj.runInterpolation(use_obs = self.ip_use_observers)
         exper_["prediction"]["interpolation"] = hiObj.ip_res["prediction"]
         exper_["nrmse"]["interpolation"] = hiObj.ip_res["nrmse"]
         return(exper_)
@@ -424,6 +430,7 @@ class EchoStateAnalysis:
             ax[i].set_xticklabels(ax[i].get_xticklabels(), rotation=label_rotation)
         ax[0].set_ylim(0, 1.05)
         ax[1].set_ylim(0.5, 2.0)
+
     def loss(pred_, truth, columnwise = True, typee = "L1"):
         """
         inputs should be numpy arrays
@@ -641,7 +648,7 @@ class EchoStateAnalysis:
         IGNORE_IP = False
 
 
-        def quick_dirty_convert(lst):
+        def quick_dirty_convert(lst, n_keys):
             if IGNORE_IP == True:
                 lst *= 2
             else:
@@ -653,8 +660,8 @@ class EchoStateAnalysis:
         idx_lst = list(range(len(self.experiment_lst)))
         #idx_lst *= 3
         #idx_lst = pd.DataFrame(np.array(idx_lst).reshape(-1,1))
-
-        idx_lst = quick_dirty_convert(idx_lst)
+        n_keys = len(list(self.experiment_lst[0]["nrmse"].keys()))
+        idx_lst = quick_dirty_convert(idx_lst, n_keys)
 
         obs_hz_lst, targ_hz_lst, targ_freq_lst = [], [], []
 
@@ -689,8 +696,10 @@ class EchoStateAnalysis:
             if IGNORE_IP == True:
                 df_spec_rel = df_spec_rel / experiment["nrmse"]["uniform"]#
             else:
-                df_spec_rel = df_spec_rel / experiment["nrmse"]["ip: linear"]
-
+                try:
+                    df_spec_rel = df_spec_rel / experiment["nrmse"]["ip: linear"]
+                except:
+                    df_spec_rel = df_spec_rel / experiment["nrmse"]["interpolation"]
 
 
             #print( df_spec_rel)
@@ -707,8 +716,10 @@ class EchoStateAnalysis:
 
             df_net = df_rel.copy()
 
-            obs_hz_lst, targ_hz_lst = quick_dirty_convert(obs_hz_lst), quick_dirty_convert(targ_hz_lst)
-            targ_freq_lst = quick_dirty_convert(targ_freq_lst)
+            n_keys = len(list(experiment["nrmse"].keys()))
+
+            obs_hz_lst, targ_hz_lst = quick_dirty_convert(obs_hz_lst, n_keys), quick_dirty_convert(targ_hz_lst, n_keys)
+            targ_freq_lst = quick_dirty_convert(targ_freq_lst, n_keys)
             #display(df)
             if IGNORE_IP == True:
                 df_rel = df_rel.drop(columns = ["ip: linear"])
@@ -717,7 +728,7 @@ class EchoStateAnalysis:
             #df      = df.drop(    columns = ["hybrid"])
 
             df, df_rel = pd.melt(df), pd.melt(df_rel)
-            df  = pd.concat( [idx_lst, df,  obs_hz_lst, targ_hz_lst, targ_freq_lst] ,axis = 1)
+            df  = pd.concat( [idx_lst, df,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
 
             df_rel = pd.concat( [idx_lst, df_rel,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
 

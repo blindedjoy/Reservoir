@@ -1274,7 +1274,7 @@ class EchoStateExperiment:
 			self.ys_known += [y]
 			self.values   += [self.A[x,y]]
 
-	def runInterpolation(self, k = None, columnwise = False, show_prediction = False):
+	def runInterpolation(self, k = None, columnwise = False, show_prediction = False, use_obs = True):
 		""" This function runs interpolation predictions as a baseline model for spectrogram predictions.
 
 		Args:
@@ -1286,11 +1286,9 @@ class EchoStateExperiment:
 		#2D interpolation
 		#observer coordinates
 		
-		
 		if self.prediction_type == "block":
 		
 			#Training points
-
 			resp_idx = self.resp_idx
 			obs_idx  = self.obs_idx
 
@@ -1301,11 +1299,7 @@ class EchoStateExperiment:
 
 		if self.interpolation_method	 in ["griddata-linear", "griddata-cubic", "griddata-nearest"]:
 			#print(self.interpolation_method)
-			points_to_predict = []
-			
-			values = []
-			#visible
-			point_lst = []
+			points_to_predict, values, point_lst = [], [], []
 			
 			if self.prediction_type == "block":
 			
@@ -1323,12 +1317,15 @@ class EchoStateExperiment:
 						points_to_predict += [(x,y)]
 						
 					# test set observers
-					for y in obs_idx:
-						point_lst += [(x,y)]
-						values	+= [self.A[x,y]]
+					if use_obs:
+						"using observers"
+						for y in obs_idx:
+							point_lst += [(x,y)]
+							values	+= [self.A[x,y]]
+					else:
+						"not using observers"
 
 			elif self.prediction_type == "column":
-
 
 				total_zone_idx = range(self.A.shape[1])
 
@@ -1343,9 +1340,10 @@ class EchoStateExperiment:
 								point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
 								values	  += [self.A[x,y]]
 					#obsevers
-					for y in self.obs_idx:
-							point_lst += [(x,y)]
-							values	+= [self.A[x,y]]
+					if not curtial_observers:
+						for y in self.obs_idx:
+								point_lst += [(x,y)]
+								values	+= [self.A[x,y]]
 				else: #k =0
 					#print("from ip, obs_idx_len: " + str(len(self.obs_idx)))
 					for x in range(self.xTr.shape[0]):
