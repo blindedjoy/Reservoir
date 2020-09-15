@@ -312,7 +312,7 @@ def test(TEST, multiprocessing = False, gap = False):
                 'connectivity':    (-3, 0),       # 0.5888436553555889, 
                 'n_nodes':         1000,          #(100, 1500),
                 'spectral_radius': (0.01, 0.99),
-                'regularization':  (-3, 3),#(-12, 1),
+                'regularization':  (-3, 4),#(-12, 1),
                 "leaking_rate" :   (0.01, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
