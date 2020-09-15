@@ -466,7 +466,7 @@ class EchoStateExperiment:
 	def horiz_display(self, plot = False):
 		assert type(plot) == bool, "plot must be a bool"
 		A_pd = pd.DataFrame(self.A)
-		A_pd.columns = self.f #req_idx
+		A_pd.columns = self.f
 		if plot:
 			fig, ax = plt.subplots(1,1, figsize = (6,4))
 			my_heat= sns.heatmap(A_pd,  center=0, cmap=sns.color_palette("CMRmap"), ax = ax)

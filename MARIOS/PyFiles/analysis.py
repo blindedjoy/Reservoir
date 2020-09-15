@@ -40,10 +40,12 @@ class EchoStateAnalysis:
         target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
     """
-    def __init__(self, path_list, bp = "experiment_results/medium/", force = False):
+    def __init__(self, path_list, bp = None, force = False):
         self.path_list = path_list
         self.bp = bp
         self.force = force
+        self.change_interpolation_json()
+
         
     def get_experiment(self, json_obj, compare_ = False, plot_split = False,
                    librosa = False, verbose = False, model = "exponential"):
@@ -134,14 +136,31 @@ class EchoStateAnalysis:
                 options: { "linear", "cubic", "nearest"}
 
         """
+            
         path_lst = self.path_list
+
         results_tmp = []
         results_rel = []
-        for i in trange(len(path_lst), desc='experiment list, fixing interpolation...'): 
+        for i in trange(len(path_lst), desc='experiment list, loading data...'): 
             if not i:
-                experiment_lst = []
-            experiment_dict = self.load_data(path_lst[i], bp = self.bp)
+                experiment_lst, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
+            
+            try:
+                experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
+                models_spec = list(experiment_dict["prediction"].keys())
+                assert "exponential" in models_spec, print(models_spec)
+                try:
+                    assert len(models_spec) >= 3
+                    assert "exponential" in models_spec, print(models_spec)
 
+                    experiment_lst.append(experiment_dict)
+                except:
+                    NOT_INCLUDED += [i]
+            except:
+                NOT_YET_RUN += [i]
+
+        for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
+            experiment_dict = experiment_lst[i]
             if ip_method == "all":
                 for ip_method_ in ["linear", "cubic", "nearest"]:
                     tmp_dict = self.fix_interpolation(experiment_dict, method = ip_method_)
@@ -186,6 +205,27 @@ class EchoStateAnalysis:
         self.R_results_df = results_df
         self.R_results_df_rel = results_df_rel
         #return(experiment_lst, results_df, results_df_rel)
+
+        #print(NOT_YET_RUN)
+        if NOT_YET_RUN:
+            print("the following paths have not yet been run: ")
+            print(np.array(path_lst)[NOT_YET_RUN])
+           
+                
+        if NOT_INCLUDED:
+            print("the following paths contain incomplete experiments: (only unif finished)")
+            #print(np.array(path_lst_unq)[NOT_INCLUDED])
+            print(np.array(path_lst)[NOT_INCLUDED])
+            
+
+        NOT_INCLUDED = check_for_duplicates(NOT_INCLUDED)
+        NOT_YET_RUN = check_for_duplicates(NOT_YET_RUN)
+        print("total experiments completed: " + str(len(experiment_lst)))
+        print("total experiments half complete: " + str(len(NOT_INCLUDED)))
+        print("total experiments not yet run: " + str(len(NOT_YET_RUN)))
+        pct_complete = (len(experiment_lst))/(len(experiment_lst)+len(NOT_INCLUDED)*0.5 + len(NOT_YET_RUN)) * 100
+        pct_complete  = str(round(pct_complete, 1))
+        print("Percentage of tests completed: " + str(pct_complete) + "%")  
     
     def load_data(self, file = "default", print_lst = None, bp = None, verbose = False, enforce_exp = False):
         """
@@ -201,7 +241,7 @@ class EchoStateAnalysis:
             datt = json.load(json_file)
         print(datt["nrmse"])
             
-        assert len(list(datt["nrmse"].keys())) >= 3, "at least one model not found: " + file
+        #assert len(list(datt["nrmse"].keys())) >= 3, "at least one model not found: " + file
         
         if verbose:
             print(datt["nrmse"])
@@ -384,5 +424,308 @@ class EchoStateAnalysis:
             ax[i].set_xticklabels(ax[i].get_xticklabels(), rotation=label_rotation)
         ax[0].set_ylim(0, 1.05)
         ax[1].set_ylim(0.5, 2.0)
+    def loss(pred_, truth, columnwise = True, typee = "L1"):
+        """
+        inputs should be numpy arrays
+        variables:
+        pred_ : the prediction numpy matrix
+        truth : ground truth numpy matrix
+        columnwise: bool if set to true takes row-wise numpy array (assumes reader thinks of time as running left to right
+            while the code actually runs vertically.)
+            
+        This is an average of the loss across that point, which we must do if we are to compare different sizes of data.
 
-#recover_test_set(hi)
+        """
+        pred_ = np.array(pred_)
+        truth = np.array(truth)
+        assert pred_.shape == truth.shape, "pred shape: " + str(pred_.shape) + " , " + str(truth.shape)
+        def L2_(pred, truth):
+            resid = pred - truth
+            return(resid**2)
+        def L1_(pred, truth):
+            resid = pred - truth
+            return(abs(resid))
+        def R_(pred, truth):
+            loss = ((pred - truth)**2)/(np.sum(truth**2))
+            loss = np.sqrt(loss)
+            return(loss)
+            
+        assert typee in ["L1", "L2", "R"]
+        if typee == "L1":
+            f = L1_
+        elif typee == "L2":
+            f = L2_
+        elif typee == "R":
+            f = R_
+            
+        loss_arr = f(pred_, truth )  
+        if columnwise == True:
+            if typee == "R":
+                loss_arr = loss_arr * loss_arr.shape[1]
+            loss_arr = np.mean(loss_arr, axis = 1)
+
+        return(loss_arr)
+
+
+    def get_prediction(self, model, json_obj):
+        
+        experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"])
+        
+        obs_inputs = json_obj["get_observer_inputs"]
+        obs_inputs["method"] = "exact"
+        
+        experiment_.obs_idx, experiment_.resp_idx  = json_obj["obs_idx"], json_obj["resp_idx"]
+        
+        experiment_.get_observers(**obs_inputs)
+        
+        
+        
+        #print(json_obj.keys())
+        best_args =  json_obj['best arguments'][model]
+
+        esn = EchoStateNetwork(**best_args,
+            obs_idx  = json_obj['obs_idx'],
+            resp_idx = json_obj['resp_idx'])
+        Train, Test = recover_test_set(json_obj)
+        if model == "uniform":
+            esn.exp_weights = False
+        else:
+            esn.exp_weights = True
+            
+        
+        
+        experiment_.already_trained(json_obj["best arguments"][model], exponential = False)
+        return(experiment_.prediction)
+
+
+    def build_loss_df(self,
+                  exp_json_lst, 
+                  columnwise = True,
+                  relative = True,
+                  rolling = None,
+                  models = ["uniform", "exponential", "interpolation"],#, "hybrid"],
+                  silent = True,
+                  hybrid = True):
+        #exp stands for experiment here, not exponential
+        """ Builds a loss dataframe
+        
+        Args:
+            #TODO
+        columnwise == False means don't take the mean.
+        """
+        count = 0
+        
+        for i in trange(len(exp_json_lst), desc='processing path list...'):
+            exp_json = exp_json_lst[i]
+            
+            
+            exp_obj = get_experiment(exp_json, compare_ = False, verbose = False, plot_split = False)
+            split_ = exp_json['get_observer_inputs']["split"]
+            
+            #construct the required data frame and caculate the nrmse from the predictions:
+            train_, test_ = exp_obj.xTr, exp_obj.xTe
+           
+                
+            if "hybrid" in exp_json["prediction"]:
+                del exp_json["prediction"]['hybrid'] 
+                del exp_json["nrmse"]['hybrid'] 
+                
+
+
+            if i == 0:
+                A = exp_obj.A
+                
+            test_len = test_.shape[0]
+            train_len = A.shape[0] - test_len
+            time_lst = []
+            time_lst_one_run = list(exp_obj.T[train_len:].reshape(-1,))
+            
+            if columnwise ==  False:
+                time_lst_one_run *= test_.shape[1]
+            existing_models = exp_json["nrmse"].keys()
+            print(existing_models)
+            for j, model in enumerate(models):
+                
+                #R is new name for nrmseccccc
+                shared_args = {
+                    "pred_" : exp_json["prediction"][model],
+                    "truth": test_,
+                    "columnwise" : columnwise
+                }
+
+                L1_spec = loss(**shared_args, typee = "L1")
+                L2_spec = loss(**shared_args, typee = "L2")
+                R_spec = loss(**shared_args, typee = "R")
+
+                if columnwise == False:
+                    #what does columnwise = True even mean?
+                    L1_spec = np.mean(L1_spec.T, axis = 0)
+                    L2_spec = np.mean(L2_spec.T, axis = 0)
+                    R_spec  =  np.mean(R_spec.T, axis = 0)
+                L2_spec = list(L2_spec.reshape(-1,))
+                R_spec = list(R_spec.reshape(-1,))
+
+                #idx_lst = list(range(test_len)
+
+                L1_spec = pd.DataFrame({model : L1_spec})
+                time_lst += time_lst_one_run
+
+                if j == 0:
+                    rDF_spec = L1_spec
+                    L2_lst = L2_spec 
+                    R_lst = R_spec 
+                else:
+                    rDF_spec = pd.concat([rDF_spec, L1_spec], axis = 1)
+                    L2_lst += L2_spec
+                    R_lst += R_spec
+                
+                
+            time_ = pd.Series(time_lst)
+            rDF_spec = pd.melt(rDF_spec)
+
+            rDF_spec["L2_loss"] = L2_lst
+            rDF_spec["R"] = R_lst
+            rDF_spec["split"] = split_
+            rDF_spec["time"] = time_ 
+            rDF_spec["experiment #"] = count
+            rDF_spec.columns = ["model", "L1_loss", "L2_loss", "R", "split",  "time","experiment #"]
+
+            if i == 0:
+                rDF = rDF_spec
+            else:
+                rDF = pd.concat([rDF, rDF_spec], axis = 0)
+                #count+=1
+                
+        if silent != True:
+            display(rDF)
+        return(rDF)
+
+    def loss_plot(self, rDF, rolling, split, loss = "L2",
+                 relative = False, include_ip = False, hybrid = False):
+        if not hybrid:
+            rDF = rDF[rDF.model != "hybrid"]
+        if include_ip == False:
+            rDF = rDF[(rDF.model == "uniform") | (rDF.model == "exponential")]
+        
+        rDF = rDF[rDF.split == split]
+        if loss == "L2":
+            LOSS = rDF.L2_loss
+        elif loss =="L1":
+            LOSS = rDF.L1_loss
+        elif loss =="R":
+            LOSS = rDF.L1_loss
+        
+        fig, ax = plt.subplots(1, 1, figsize = (12, 6))
+        if relative == True:
+            diff = rDF[rDF.model == "exponential"]["loss"].values.reshape(-1,) - rDF[rDF.model == "uniform"]["loss"].values.reshape(-1,)
+
+            df_diff = rDF[rDF.model == "uniform"].copy()
+            df_diff.model = "diff"
+            df_diff.loss = diff
+            
+            sns.lineplot( x = "time", y = "loss" , hue = "model" , data = df_diff)
+            ax.set_title(loss_ + " loss vs time relative")
+        else:
+        
+            display(rDF)
+            if rolling != None:
+                sns.lineplot( x = "time", y = LOSS.rolling(rolling).mean() , hue = "model" , data = rDF)
+                #sns.scatterplot( x = "time", y = "loss" , hue = "model" , data = rDF, alpha = 0.005, edgecolor= None)
+            else:
+                sns.lineplot( x = "time", y = loss , hue = "model" , data = rDF)
+            ax.set_title( "mean " + loss + " loss vs time for all RC's, split = " + str(split))
+            ax.set_ylabel(loss)
+
+
+    def get_df(self):
+        IGNORE_IP = False
+
+
+        def quick_dirty_convert(lst):
+            if IGNORE_IP == True:
+                lst *= 2
+            else:
+                lst *= 4
+            pd_ = pd.DataFrame(np.array(lst).reshape(-1,1))
+            return(pd_)
+
+
+        idx_lst = list(range(len(self.experiment_lst)))
+        #idx_lst *= 3
+        #idx_lst = pd.DataFrame(np.array(idx_lst).reshape(-1,1))
+
+        idx_lst = quick_dirty_convert(idx_lst)
+
+        obs_hz_lst, targ_hz_lst, targ_freq_lst = [], [], []
+
+        for i, experiment in enumerate(self.experiment_lst):
+            #print(experiment['experiment_inputs'].keys())
+            targ_hz = experiment["experiment_inputs"]["target_hz"]
+            obs_hz  = experiment["experiment_inputs"]["obs_hz"]
+            targ_freq = experiment["experiment_inputs"]['target_frequency']
+
+            if experiment["experiment_inputs"]["target_hz"] < 1:
+                targ_hz *= 1000*1000
+                obs_hz  *= 1000*1000
+            obs_hz_lst  += [obs_hz]
+            targ_hz_lst += [targ_hz]
+            targ_freq_lst += [targ_freq]
+
+
+            hz_line = {"target hz" : targ_hz }
+            hz_line = Merge(hz_line , {"obs hz" : obs_hz })
+
+            #print(hz_line)
+            df_spec= experiment["nrmse"]
+
+            #df_spec = Merge(experiment["nrmse"], {"target hz": targ_hz})
+            df_spec = pd.DataFrame(df_spec, index = [0])
+
+            df_spec_rel = df_spec.copy()
+            #/df_spec_diff["uniform"]
+            #df_spec_diff["rc_diff"]
+
+            if IGNORE_IP == True:
+                df_spec_rel = df_spec_rel / experiment["nrmse"]["uniform"]#
+            else:
+                df_spec_rel = df_spec_rel / experiment["nrmse"]["ip: linear"]
+
+
+
+            #print( df_spec_rel)
+            #print(experiment["experiment_inputs"].keys())
+            if i == 0:
+                df      = df_spec
+                df_rel  = df_spec_rel
+
+
+            else:
+                df = pd.concat([df, df_spec])
+                df_rel = pd.concat([df_rel, df_spec_rel])
+
+
+            df_net = df_rel.copy()
+
+            obs_hz_lst, targ_hz_lst = quick_dirty_convert(obs_hz_lst), quick_dirty_convert(targ_hz_lst)
+            targ_freq_lst = quick_dirty_convert(targ_freq_lst)
+            #display(df)
+            if IGNORE_IP == True:
+                df_rel = df_rel.drop(columns = ["ip: linear"])
+                df  = df.drop(columns = ["ip: linear"])
+            #df_rel  = df_rel.drop(columns = ["hybrid"])
+            #df      = df.drop(    columns = ["hybrid"])
+
+            df, df_rel = pd.melt(df), pd.melt(df_rel)
+            df  = pd.concat( [idx_lst, df,  obs_hz_lst, targ_hz_lst, targ_freq_lst] ,axis = 1)
+
+            df_rel = pd.concat( [idx_lst, df_rel,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
+
+            #df_diff = pd.concat( [idx_lst, df_diff,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
+
+            col_names = ["experiment", "model", "nrmse", "obs hz", "target hz", "target freq" ]
+            df.columns, df_rel.columns    = col_names, col_names
+
+            self.df, self.df_rel = df, df_rel
+
+
+        #recover_test_set(hi)

@@ -165,11 +165,11 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
           "initial_samples" : 100}
       elif size == "publish":
         default_presets = {
-          "cv_samples" : 5,
+          "cv_samples" : 8,
           "max_iterations" : 2000,
-          "eps" : 1e-4,
-          'subsequence_length' : 500,
-          "initial_samples" : 100}
+          "eps" : 1e-5,
+          'subsequence_length' : 700,
+          "initial_samples" : 200}
 
       if PREDICTION_TYPE == "column":
         if "subseq_len" in inputs:
