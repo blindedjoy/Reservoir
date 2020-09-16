@@ -40,20 +40,20 @@ def liang_idx_convert(lb, ub, k = None, small = True):
     idx_list = list(range(lb, ub + 1))
     return idx_list
 
- def get_frequencies(trial = 1):
-    """
-    get frequency lists
-    """
-    if trial == 1:
-        lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
-    elif trial == 2:
-        lb_targ, ub_targ, obs_hz  = 340, 640, 280
-    elif trial == 3:
-        lb_targ, ub_targ, obs_hz  = 340, 350, 40
-    obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
-    obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
-    resp_list = list( range( lb_targ, ub_targ, 10))
-    return obs_list, resp_list
+def get_frequencies(trial = 1):
+  """
+  get frequency lists
+  """
+  if trial == 1:
+      lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
+  elif trial == 2:
+      lb_targ, ub_targ, obs_hz  = 340, 640, 280
+  elif trial == 3:
+      lb_targ, ub_targ, obs_hz  = 340, 350, 40
+  obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
+  obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
+  resp_list = list( range( lb_targ, ub_targ, 10))
+  return obs_list, resp_list
 
 class NoDaemonProcess(multiprocessing.Process):
       @property
