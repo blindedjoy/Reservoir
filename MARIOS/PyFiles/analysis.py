@@ -431,7 +431,7 @@ class EchoStateAnalysis:
         ax[0].set_ylim(0, 1.05)
         ax[1].set_ylim(0.5, 2.0)
 
-    def loss(pred_, truth, columnwise = True, typee = "L1"):
+    def loss(self, pred_, truth, columnwise = True, typee = "L1"):
         """
         inputs should be numpy arrays
         variables:
@@ -505,14 +505,9 @@ class EchoStateAnalysis:
         return(experiment_.prediction)
 
 
-    def build_loss_df(self,
-                  exp_json_lst, 
-                  columnwise = True,
-                  relative = True,
-                  rolling = None,
-                  models = ["uniform", "exponential", "interpolation"],#, "hybrid"],
-                  silent = True,
-                  hybrid = True):
+    def build_loss_df(self, columnwise = True, relative = True,
+                  rolling = None, models = ["uniform", "exponential", "interpolation"],#, "hybrid"],
+                  silent = True, hybrid = False):
         #exp stands for experiment here, not exponential
         """ Builds a loss dataframe
         
@@ -521,23 +516,23 @@ class EchoStateAnalysis:
         columnwise == False means don't take the mean.
         """
         count = 0
+
+        exp_json_lst = self.experiment_lst
         
         for i in trange(len(exp_json_lst), desc='processing path list...'):
             exp_json = exp_json_lst[i]
             
             
-            exp_obj = get_experiment(exp_json, compare_ = False, verbose = False, plot_split = False)
+            exp_obj = self.get_experiment(exp_json, compare_ = False, verbose = False, plot_split = False)
             split_ = exp_json['get_observer_inputs']["split"]
             
             #construct the required data frame and caculate the nrmse from the predictions:
             train_, test_ = exp_obj.xTr, exp_obj.xTe
            
                 
-            if "hybrid" in exp_json["prediction"]:
-                del exp_json["prediction"]['hybrid'] 
-                del exp_json["nrmse"]['hybrid'] 
-                
-
+            #if "hybrid" in exp_json["prediction"]:
+            #    del exp_json["prediction"]['hybrid'] 
+            #    del exp_json["nrmse"]['hybrid'] 
 
             if i == 0:
                 A = exp_obj.A
@@ -550,7 +545,7 @@ class EchoStateAnalysis:
             if columnwise ==  False:
                 time_lst_one_run *= test_.shape[1]
             existing_models = exp_json["nrmse"].keys()
-            print(existing_models)
+
             for j, model in enumerate(models):
                 
                 #R is new name for nrmseccccc
@@ -560,9 +555,9 @@ class EchoStateAnalysis:
                     "columnwise" : columnwise
                 }
 
-                L1_spec = loss(**shared_args, typee = "L1")
-                L2_spec = loss(**shared_args, typee = "L2")
-                R_spec = loss(**shared_args, typee = "R")
+                L1_spec = self.loss(**shared_args, typee = "L1")
+                L2_spec = self.loss(**shared_args, typee = "L2")
+                R_spec  = self.loss(**shared_args, typee = "R")
 
                 if columnwise == False:
                     #what does columnwise = True even mean?
@@ -605,10 +600,11 @@ class EchoStateAnalysis:
                 
         if silent != True:
             display(rDF)
-        return(rDF)
+        self.rDF = rDF
 
-    def loss_plot(self, rDF, rolling, split, loss = "L2",
-                 relative = False, include_ip = False, hybrid = False):
+    def loss_plot(self, rolling, split, loss = "R",
+                 relative = False, include_ip = True, hybrid = False):
+        rDF = self.rDF
         if not hybrid:
             rDF = rDF[rDF.model != "hybrid"]
         if include_ip == False:
@@ -643,8 +639,50 @@ class EchoStateAnalysis:
             ax.set_title( "mean " + loss + " loss vs time for all RC's, split = " + str(split))
             ax.set_ylabel(loss)
 
+    def hyper_parameter_plot(self):
+        """
+        Let's visualize the hyper-parameter plots.
+        """
+        log_vars = ["noise", "connectivity", "regularization", "llambda"]
+        
+        for i, experiment in enumerate(self.experiment_lst):
+            df_spec_unif = pd.DataFrame(experiment["best arguments"]["uniform"], index = [0])
+            df_spec_exp  = pd.DataFrame(experiment["best arguments"]["exponential"], index = [0])
+            
+            if not i:
+                df_unif = df_spec_unif
+                df_exp = df_spec_exp
+            else:
+                df_unif = pd.concat([df_unif, df_spec_unif])
+                df_exp = pd.concat([df_exp, df_spec_exp])
 
-    def get_df(self):
+        unif_vars = ["connectivity", "regularization", "leaking_rate", "spectral_radius"]
+        exp_vars  = ["llambda", "noise"]
+        df_unif = df_unif[unif_vars]
+        df_exp = df_exp[unif_vars + exp_vars]
+        
+        for i in list(df_unif.columns):
+            if i in log_vars:
+                df_unif[i] = np.log(df_unif[i])/np.log(10)
+                
+        for i in list(df_exp.columns):
+            if i in log_vars:
+                df_exp[i] = np.log(df_exp[i])/np.log(10)
+        
+        
+        #display(df_unif)
+        
+        sns.catplot(data = df_unif)
+        plt.title("uniform RC hyper-parameters")
+        plt.show()
+        
+        
+        sns.catplot(data = df_exp)
+        plt.title("exponential RC hyper-parameters")
+        plt.xticks(rotation=45)
+        plt.show()
+
+    def get_df(self): #broken
         IGNORE_IP = False
 
 
@@ -714,30 +752,30 @@ class EchoStateAnalysis:
                 df_rel = pd.concat([df_rel, df_spec_rel])
 
 
-            df_net = df_rel.copy()
+        df_net = df_rel.copy()
 
-            n_keys = len(list(experiment["nrmse"].keys()))
+        n_keys = len(list(experiment["nrmse"].keys()))
 
-            obs_hz_lst, targ_hz_lst = quick_dirty_convert(obs_hz_lst, n_keys), quick_dirty_convert(targ_hz_lst, n_keys)
-            targ_freq_lst = quick_dirty_convert(targ_freq_lst, n_keys)
-            #display(df)
-            if IGNORE_IP == True:
-                df_rel = df_rel.drop(columns = ["ip: linear"])
-                df  = df.drop(columns = ["ip: linear"])
-            #df_rel  = df_rel.drop(columns = ["hybrid"])
-            #df      = df.drop(    columns = ["hybrid"])
+        obs_hz_lst, targ_hz_lst = quick_dirty_convert(obs_hz_lst, n_keys), quick_dirty_convert(targ_hz_lst, n_keys)
+        targ_freq_lst = quick_dirty_convert(targ_freq_lst, n_keys)
+        #display(df)
+        if IGNORE_IP == True:
+            df_rel = df_rel.drop(columns = ["ip: linear"])
+            df  = df.drop(columns = ["ip: linear"])
+        #df_rel  = df_rel.drop(columns = ["hybrid"])
+        #df      = df.drop(    columns = ["hybrid"])
 
-            df, df_rel = pd.melt(df), pd.melt(df_rel)
-            df  = pd.concat( [idx_lst, df,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
+        df, df_rel = pd.melt(df), pd.melt(df_rel)
+        df  = pd.concat( [idx_lst, df,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
 
-            df_rel = pd.concat( [idx_lst, df_rel,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
+        df_rel = pd.concat( [idx_lst, df_rel,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
 
-            #df_diff = pd.concat( [idx_lst, df_diff,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
+        #df_diff = pd.concat( [idx_lst, df_diff,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
 
-            col_names = ["experiment", "model", "nrmse", "obs hz", "target hz", "target freq" ]
-            df.columns, df_rel.columns    = col_names, col_names
+        col_names = ["experiment", "model", "nrmse", "obs hz", "target hz", "target freq" ]
+        df.columns, df_rel.columns    = col_names, col_names
 
-            self.df, self.df_rel = df, df_rel
+        self.df, self.df_rel = df, df_rel
 
 
         #recover_test_set(hi)

@@ -307,13 +307,20 @@ def test(TEST, multiprocessing = False, gap = False):
       print("This is not a test")
       bounds = { #noise hyper-parameter.
                  #all are log scale except  spectral radius, leaking rate and n_nodes
-                'noise' :          (-2, -4),
-                'llambda' :        (-3, -1), 
-                'connectivity':    (-3, 0),       # 0.5888436553555889, 
+
+                 #9/16/2020 based on the hyper-parameter plot we will make the following adjustments:
+                 #exponential adj:
+                 #llambda -> wider net: (-3.5, 0.5), noise -> larger (more general solution then): (-5, -0.5),
+                 # connectivity needs to be wider as well: (-5, 0)
+                 #unif adj:
+                 # not going to impliment these, but connectivity clustered around 1, leaking rate around 1, spectral radius around 1
+                'noise' :          (-5, -0.5),
+                'llambda' :        (-4, 0), 
+                'connectivity':    (-5, 0),       # 0.5888436553555889, 
                 'n_nodes':         1000,          #(100, 1500),
-                'spectral_radius': (0.01, 0.99),
+                'spectral_radius': (0.001, 0.999),
                 'regularization':  (-3, 4),#(-12, 1),
-                "leaking_rate" :   (0.01, 1) # we want some memory. 0 would mean no memory.
+                "leaking_rate" :   (0.001, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
       experiment_set = [
