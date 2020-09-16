@@ -40,6 +40,21 @@ def liang_idx_convert(lb, ub, k = None, small = True):
     idx_list = list(range(lb, ub + 1))
     return idx_list
 
+ def get_frequencies(trial = 1):
+    """
+    get frequency lists
+    """
+    if trial == 1:
+        lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
+    elif trial == 2:
+        lb_targ, ub_targ, obs_hz  = 340, 640, 280
+    elif trial == 3:
+        lb_targ, ub_targ, obs_hz  = 340, 350, 40
+    obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
+    obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
+    resp_list = list( range( lb_targ, ub_targ, 10))
+    return obs_list, resp_list
+
 class NoDaemonProcess(multiprocessing.Process):
       @property
       def daemon(self):
@@ -201,35 +216,7 @@ def test(TEST, multiprocessing = False, gap = False):
       print("TEST")
       if PREDICTION_TYPE == "block":
         if gap: 
-          def get_frequencies(trial = 1):
-            """
-            get frequency lists
-            """
-            if trial == 1:
-                lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
-            elif trial == 2:
-                lb_targ, ub_targ, obs_hz  = 340, 640, 280
-            elif trial == 3:
-                lb_targ, ub_targ, obs_hz  = 340, 350, 40
-            obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
-            obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
-            resp_list = list( range( lb_targ, ub_targ, 10))
-            return obs_list, resp_list
-
-          #librosa_args = {"spectrogram_path" : "19th_century_male_stft",
-          #                "spectrogram_type" : "db",#"db", #power
-          #                "librosa": True}
-        
-          obs_freqs, resp_freqs   = get_frequencies(1)
-          obs_freqs2, resp_freqs2 = get_frequencies(2)
-          obs_freqs3, resp_freqs3 = get_frequencies(3)
-
-          experiment_set = [
-                 { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-                 { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-                 { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-                 { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-                 { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  }]
+          print("HA")
         else:
           print("on track")
           
@@ -338,6 +325,25 @@ def test(TEST, multiprocessing = False, gap = False):
                 {'target_frequency': 990, "split" : 0.9, 'obs_hz': 230.0,  'target_hz': 80.0},
                 {'target_frequency': 990, "split" : 0.9, 'obs_hz': 80.0,  'target_hz': 80.0},
                 ]
+
+
+      #librosa_args = {"spectrogram_path" : "19th_century_male_stft",
+      #                "spectrogram_type" : "db",#"db", #power
+      #                "librosa": True}
+    
+      obs_freqs, resp_freqs   = get_frequencies(1)
+      obs_freqs2, resp_freqs2 = get_frequencies(2)
+      obs_freqs3, resp_freqs3 = get_frequencies(3)
+
+      experiment_set = [
+             { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+             { 'split': 0.7, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.7, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+             { 'split': 0.7, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
+             { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+             { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  }]
 
       #set_specific_args = {"prediction_type": "block"}
       #experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
