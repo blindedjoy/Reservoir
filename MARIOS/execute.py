@@ -50,6 +50,12 @@ def get_frequencies(trial = 1):
       lb_targ, ub_targ, obs_hz  = 340, 640, 280
   elif trial == 3:
       lb_targ, ub_targ, obs_hz  = 340, 350, 40
+  elif trial == 4:
+      lb_targ, ub_targ, obs_hz  = 60, 350, 40
+  elif trial == 5:
+      lb_targ, ub_targ, obs_hz  = 50, 200, 40
+  if trial == 6:
+      lb_targ, ub_targ, obs_hz  = 150, 560, 100
   obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
   obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
   resp_list = list( range( lb_targ, ub_targ, 10))
@@ -334,16 +340,33 @@ def test(TEST, multiprocessing = False, gap = False):
       obs_freqs, resp_freqs   = get_frequencies(1)
       obs_freqs2, resp_freqs2 = get_frequencies(2)
       obs_freqs3, resp_freqs3 = get_frequencies(3)
+      obs_freqs4, resp_freqs4 = get_frequencies(4)
+      obs_freqs5, resp_freqs5 = get_frequencies(5)
+      obs_freqs6, resp_freqs6 = get_frequencies(6)
 
       experiment_set = [
-             { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
              { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.7, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             { 'split': 0.9, "obs_freqs": obs_freqs4, "target_freqs": resp_freqs4 },
+             { 'split': 0.9, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
+             { 'split': 0.9, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
+
              { 'split': 0.7, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+             { 'split': 0.7, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
              { 'split': 0.7, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
-             { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.7, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
+             { 'split': 0.7, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
+             { 'split': 0.7, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
+
+             
              { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  }]
+             { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
+             { 'split': 0.5, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
+             { 'split': 0.5, "obs_freqs": obs_freqs5,  "target_freqs": resp_freqs5  },
+             { 'split': 0.5, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
+             ]
 
       #set_specific_args = {"prediction_type": "block"}
       #experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
