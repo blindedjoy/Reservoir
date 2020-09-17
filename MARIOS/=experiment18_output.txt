@@ -1,0 +1,3 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 18
+This is not a test
