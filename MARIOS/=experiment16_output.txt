@@ -1,0 +1,37 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 16
+This is not a test
+Prediction Type: block
+{'size': 'publish', 'verbose': False, 'obs_freqs': [10, 20, 30, 40, 200, 210, 220, 230], 'target_freqs': [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190], 'prediction_type': 'block'}
+Train shape: (1576, 8)
+Test shape: (1577, 8)
+exponentialrc cv set, ready to train
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2adad9b2d510>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['noise', 'llambda', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+Score: 0.04781493658512191
+Score: 0.01088345872143574
+Score: 0.09527081973837827
+Score: 0.17248217002847216
+Score: 0.14681685679697118
+Score: 0.018836280042100008
+Score: 0.014030847440437625
+Score: 0.014203521788945088
+Score: 0.019875032708703538
+Score: 0.018576956710035453
+Score: 0.014295133277894804
+Score: 0.040635145964335005
+Score: 0.05887469595825702
+Score: 0.03736274704026356
+Score: 0.01442077569232838
+Score: 0.038053904808394844
+Score: 0.059744174247912354
+Score: 0.03866150835065799
+Score: 0.025874959505915583
+Score: 0.016987953568633887
+Score: 0.011574512193562096
+Score: 0.05638581109907332
+Score: 0.013573693743459387
