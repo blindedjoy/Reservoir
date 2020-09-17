@@ -40,11 +40,12 @@ class EchoStateAnalysis:
         target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
     """
-    def __init__(self, path_list, bp = None, force = False, ip_use_observers = True):
+    def __init__(self, path_list, ip_method = "linear", bp = None, force = False, ip_use_observers = True):
         self.path_list = path_list
         self.bp = bp
         self.force = force
         self.ip_use_observers = ip_use_observers
+        self.ip_method = ip_method
         self.change_interpolation_json()
         
 
@@ -128,7 +129,7 @@ class EchoStateAnalysis:
                     verbose = False)
         return(experiment_)
     
-    def change_interpolation_json(self,  ip_method = "all"):
+    def change_interpolation_json(self):
         """ Imports a set of experiments and returns an altered list of jsons with a new interpolation method.
             Also plots the comparison.
 
@@ -138,11 +139,11 @@ class EchoStateAnalysis:
                 options: { "linear", "cubic", "nearest"}
 
         """
-            
+        
         path_lst = self.path_list
 
         if self.ip_use_observers == False:
-            ip_method = "nearest"
+            self.ip_method = "nearest"
 
         
 
@@ -170,7 +171,7 @@ class EchoStateAnalysis:
                 results_tmp, results_rel = [], []
 
             experiment_dict = experiment_lst[i]
-            if ip_method == "all":
+            if self.ip_method == "all":
                 for ip_method_ in ["linear", "cubic", "nearest"]:
                     tmp_dict = self.fix_interpolation(experiment_dict, method = ip_method_)
                     experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
@@ -194,7 +195,7 @@ class EchoStateAnalysis:
                 rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["interpolation"] 
                             for key in experiment_dict["nrmse"].keys()}
                 results_rel.append(rel_spec)
-                experiment_dict = self.fix_interpolation(experiment_dict, method = ip_method)
+                experiment_dict = self.fix_interpolation(experiment_dict, method = self.ip_method)
 
                 experiment_lst.append(experiment_dict)
                 results_tmp.append(experiment_dict["nrmse"])
@@ -515,7 +516,6 @@ class EchoStateAnalysis:
             #TODO
         columnwise == False means don't take the mean.
         """
-        count = 0
 
         exp_json_lst = self.experiment_lst
         
@@ -589,7 +589,7 @@ class EchoStateAnalysis:
             rDF_spec["R"] = R_lst
             rDF_spec["split"] = split_
             rDF_spec["time"] = time_ 
-            rDF_spec["experiment #"] = count
+            rDF_spec["experiment #"] = i
             rDF_spec.columns = ["model", "L1_loss", "L2_loss", "R", "split",  "time","experiment #"]
 
             if i == 0:
@@ -682,29 +682,25 @@ class EchoStateAnalysis:
         plt.xticks(rotation=45)
         plt.show()
 
-    def get_df(self): #broken
+    
+    def get_df(self):
+        """
+        this dataframe is essential for 
+        """
         IGNORE_IP = False
 
 
-        def quick_dirty_convert(lst, n_keys):
-            if IGNORE_IP == True:
-                lst *= 2
-            else:
-                lst *= 4
+        def quick_dirty_convert(lst, n):
+            lst *= n
             pd_ = pd.DataFrame(np.array(lst).reshape(-1,1))
             return(pd_)
 
-
-        idx_lst = list(range(len(self.experiment_lst)))
-        #idx_lst *= 3
-        #idx_lst = pd.DataFrame(np.array(idx_lst).reshape(-1,1))
-        n_keys = len(list(self.experiment_lst[0]["nrmse"].keys()))
-        idx_lst = quick_dirty_convert(idx_lst, n_keys)
-
-        obs_hz_lst, targ_hz_lst, targ_freq_lst = [], [], []
-
         for i, experiment in enumerate(self.experiment_lst):
-            print(i)
+            if not i:
+                n_keys = len(list(experiment["nrmse"].keys()))
+                idx_lst = list(range(len(self.experiment_lst)))
+                idx_lst = quick_dirty_convert(idx_lst, n_keys)
+                obs_hz_lst, targ_hz_lst, targ_freq_lst = [], [], []
             #print(experiment['experiment_inputs'].keys())
             targ_hz = experiment["experiment_inputs"]["target_hz"]
             obs_hz  = experiment["experiment_inputs"]["obs_hz"]
@@ -735,9 +731,10 @@ class EchoStateAnalysis:
                 df_spec_rel = df_spec_rel / experiment["nrmse"]["uniform"]#
             else:
                 try:
-                    df_spec_rel = df_spec_rel / experiment["nrmse"]["ip: linear"]
+                    f_spec_rel = df_spec_rel / experiment["nrmse"]["ip: linear"]
                 except:
-                    df_spec_rel = df_spec_rel / experiment["nrmse"]["interpolation"]
+                    f_spec_rel = df_spec_rel / experiment["nrmse"]["interpolation"]
+
 
 
             #print( df_spec_rel)
@@ -754,19 +751,17 @@ class EchoStateAnalysis:
 
         df_net = df_rel.copy()
 
-        n_keys = len(list(experiment["nrmse"].keys()))
-
         obs_hz_lst, targ_hz_lst = quick_dirty_convert(obs_hz_lst, n_keys), quick_dirty_convert(targ_hz_lst, n_keys)
         targ_freq_lst = quick_dirty_convert(targ_freq_lst, n_keys)
         #display(df)
         if IGNORE_IP == True:
-            df_rel = df_rel.drop(columns = ["ip: linear"])
-            df  = df.drop(columns = ["ip: linear"])
+            df_rel = df_rel.drop(columns = ["interpolation"])
+            df  = df.drop(columns = ["interpolation"])
         #df_rel  = df_rel.drop(columns = ["hybrid"])
         #df      = df.drop(    columns = ["hybrid"])
 
         df, df_rel = pd.melt(df), pd.melt(df_rel)
-        df  = pd.concat( [idx_lst, df,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
+        df  = pd.concat( [idx_lst, df,  obs_hz_lst, targ_hz_lst, targ_freq_lst] ,axis = 1)
 
         df_rel = pd.concat( [idx_lst, df_rel,  obs_hz_lst, targ_hz_lst, targ_freq_lst], axis = 1)
 
@@ -774,8 +769,141 @@ class EchoStateAnalysis:
 
         col_names = ["experiment", "model", "nrmse", "obs hz", "target hz", "target freq" ]
         df.columns, df_rel.columns    = col_names, col_names
-
         self.df, self.df_rel = df, df_rel
 
+    def plot_nrmse_kde_2d(self, 
+                          xx = "target hz", 
+                          log = True, 
+                          alph = 1, 
+                          black_pnts = True, 
+                          models = {"interpolation" : "Greens", "exponential" : "Reds", "uniform" : "Blues"},
+                          enforce_bounds = False,
+                          target_freq = None):
+        """
+        #todo description
+        """
+        if target_freq != None:
+            df_spec = self.df[self.df["target freq"] == target_freq]
+        else:
+            df_spec = self.df.copy()
+                
+        
+        def plot_(model_, colorr, alph = alph,  black_pnts =  black_pnts):
+            if colorr == "Blues":
+                color_ = "blue"
+            elif colorr == "Reds":
+                color_ = "red"
+            elif colorr == "Greens":
+                color_ = "green"
+                
+            df_ = df_spec[df_spec.model == model_] #df_ip  = df[df.model == "interpolation"]
+            
+            #display(df_)
+                
+            
+            hi = df_["nrmse"]
+            cap = 1
+            if log == True:
+                hi = np.log(hi)/ np.log(10)
+                cap = np.log(cap) / np.log(10)
+            
+            
+            sns.kdeplot(df_[xx], hi, cmap= colorr, 
+                        shade=True, shade_lowest=False, ax = ax, label = model_, alpha = alph)#, alpha = 0.5)
+            
+            if  black_pnts == True:
+                col_scatter = "black"
+            else:
+                col_scatter = color_
+            
+            sns.scatterplot(x = xx, y = hi, data = df_,  linewidth=0, 
+                            color = col_scatter, alpha = 0.4, ax = ax)
+            
+            plt.title("2d kde plot: nrmse vs " + xx)
+            
+            plt.axhline(y=cap, color=color_, linestyle='-', label = "mean " + str(model_), alpha = 0.5)
+            sns.lineplot(y = hi, x = xx, data = df_ , color = color_)#, alpha = 0.2)
+            if enforce_bounds == True:
+                ax.set_ylim(0,1)
+            if log == True:
+                ax.set_ylabel("log( NRMSE) ")
+            else: 
+                ax.set_ylabel("NRMSE")
+                
+        fig, ax = plt.subplots(1, 1, figsize = (12,6))
+        for model in list(models.keys()):
+            print(model)
+            plot_(model, models[model], alph = alph)
+        #plot_("interpolation", "Blues")
+        #plot_("exponential", "Reds", alph = alph)
+    
+    def kde_plots(self,
+                  target_freq = None, 
+                  log = False, 
+                  model = "uniform", 
+                   models = {"ip: linear" : "Greens", "exponential" : "Reds", "uniform" : "Blues"},
+                   enforce_bounds = True,
+                   split = None):
+        """
+        HEATMAP EXAMPLE:
+                         enforce_bounds = True)
+        flights = flights.pivot("month", "year", "passengers") #y, x, z
+        ax = sns.heatmap(flights)
+        plot_nrmse_kde_2d(**additional_arguments, 
+                          models = {"interpolation" : "Greens", "exponential" : "Reds", "uniform" : "Blues"})
+        
+        plot_nrmse_kde_2d(xx = "obs hz", **additional_arguments, 
+                          models = {"interpolation" : "Greens", "exponential" : "Reds", "uniform" : "Blues"})
+        """
+        
+        additional_arguments ={ "black_pnts" : False, 
+                               "alph" : 0.3, 
+                               "target_freq" : target_freq}    
+        
+        cmap = "coolwarm"
+        
+       
+        def add_noise(np_array, log = log):
+            sizee = len(np_array)
+            x =  np.random.randint(100, size = sizee) + np_array 
+            
+            return(x)
+        
+        nrmse_dict = {}
+        
+        for i, model in enumerate(["uniform", "exponential", "ip: linear"]):#"interpolation"]):
+            df_ = self.df[self.df.model == model ]
+            
+            xx, yy = add_noise(df_["target hz"]), add_noise(df_["obs hz"])
 
-        #recover_test_set(hi)
+            nrmse= df_["nrmse"]
+            if log == True:
+                print("hawabunga")
+                nrmse = np.log(nrmse)
+            nrmse_dict[model] = nrmse
+        
+        
+        
+        """
+        nrmse_diff = nrmse_dict["exponential"].values.reshape(-1,)  - nrmse_dict["uniform"].values.reshape(-1,) 
+        print("(+): " + str(np.sum((nrmse_diff > 0)*1)))
+        
+        print("(-): " + str(np.sum((nrmse_diff < 0)*1)))
+        
+        
+        display(nrmse_diff)
+        xx, yy = add_noise(df_["target hz"]), add_noise(df_["obs hz"])
+        #sns.distplot(nrmse_diff, ax = ax[2])
+        sns.scatterplot(x = xx, y = yy, data = df_, ax = ax[2], palette=cmap, alpha = 0.9, s = 50, hue = nrmse_diff) #size = nrmse,
+        ax[2].set_title(" diff: exponential - uniform" )
+        plt.show()
+        """
+        
+        self.plot_nrmse_kde_2d(**additional_arguments, log = False, 
+                          models = models, #{"exponential" : "Reds", "uniform" : "Blues", "interpolation" : "Greens"},
+                         enforce_bounds = True)
+        
+        
+        self.plot_nrmse_kde_2d(xx = "obs hz", **additional_arguments, log = False, 
+                           models = models, #{"exponential" : "Reds", "uniform" : "Blues", "interpolation" : "Greens"},
+                           enforce_bounds = True)

@@ -726,7 +726,7 @@ class EchoStateExperiment:
 		elif method == "all":
 			obs_idx = np.random.choice( col_idx, num_observers, replace = False)
 			response_idx  = diff( col_idx, obs_idx.tolist())
-			response  = dataset[ : , response_idx]
+			response  = dataset[ : , self.target_idx]
 		
 		### BLOCK: this is oldschool and super-annoying: you have to specify indices.
 		elif method == "block":
@@ -740,7 +740,7 @@ class EchoStateExperiment:
 			else:
 				
 				response_idx =  self.my_range2lst(response_range)
-				response = dataset[ : , response_idx].reshape( -1, len( response_idx))
+				response = dataset[ : , self.target_idx].reshape( -1, len( self.target_idx))
 				
 			for resp_idx_spec in response_idx:
 				col_idx.remove( resp_idx_spec)
@@ -992,10 +992,15 @@ class EchoStateExperiment:
 			self.json2be["experiment_inputs"] = {
 				 "size" : self.size, 
 				 "target_frequency" : int(self.target_frequency),
-				 "obs_hz" :	float(self.obs_kHz)	* 1000,
-				 "target_hz" : float(self.target_kHz) * 1000,
+				 
 				 "verbose" : self.verbose,
 				 }
+			if self.obs_kHz:
+			   json2be["experiment_inputs"]["obs_hz"] = float(self.obs_kHz)	* 1000
+			   json2be["experiment_inputs"]["target_hz"] = float(self.target_kHz) * 1000
+			elif self.obs_freqs:
+			   json2be["experiment_inputs"]["target_freqs"] = self.target_freqs
+			   json2be["experiment_inputs"]["obs_freqs"] = self.obs_freqs
 		else:
 			self.json2be["experiment_inputs"] = {
 				 "size" : self.size, 
