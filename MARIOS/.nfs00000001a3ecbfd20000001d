@@ -31,3 +31,9 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateExperiment' object has no attribute 'obs_kHz'
+reconstraining parameters Mat52.lengthscale
+reconstraining parameters Mat52.variance
+reconstraining parameters GP_regression.Gaussian_noise.variance
+reconstraining parameters Mat52.lengthscale
+reconstraining parameters Mat52.variance
+reconstraining parameters GP_regression.Gaussian_noise.variance
