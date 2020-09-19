@@ -40,18 +40,19 @@ class EchoStateAnalysis:
         target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
     """
-    def __init__(self, path_list, ip_method = "linear", bp = None, force = False, ip_use_observers = True):
+    def __init__(self, path_list, model, ip_method = "linear", bp = None, force = False, ip_use_observers = True):
         self.path_list = path_list
         self.bp = bp
         self.force = force
         self.ip_use_observers = ip_use_observers
         self.ip_method = ip_method
         self.change_interpolation_json()
+        self.model = model
         
 
         
     def get_experiment(self, json_obj, compare_ = False, plot_split = False,
-                   librosa = False, verbose = False, model = "exponential"):
+                   librosa = False, verbose = False):
         """ This function retrieves, from a json dictionary file, an EchoStateExperiment object.
 
         Args:
@@ -79,9 +80,9 @@ class EchoStateAnalysis:
             print("Train.shape: " + str(experiment_.Train.shape))
             print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
 
-        if model == "uniform":
+        if self.model == "uniform":
             experiment_.already_trained(json_obj["best arguments"]["uniform"], exponential = False)
-        elif model == "exponential": 
+        elif self.model == "exponential": 
             experiment_.already_trained(json_obj["best arguments"]["exponential"], exponential = True)
 
         experiment_.Train, experiment_.Test = experiment_.xTr, experiment_.xTe#self.recover_test_set(json_obj)
@@ -172,34 +173,34 @@ class EchoStateAnalysis:
 
             experiment_dict = experiment_lst[i]
             if self.ip_method == "all":
-                for ip_method_ in ["linear", "cubic", "nearest"]:
-                    tmp_dict = self.fix_interpolation(experiment_dict, method = ip_method_)
-                    experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
-                    experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
+                ip_methods_ = ["linear", "cubic", "nearest"]
+            else:
+                ip_methods_ = [self.ip_method]
 
+            for ip_method_ in ip_methods_:
+                tmp_dict = self.fix_interpolation(experiment_dict, method = ip_method_)
+                experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
+                experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
+
+            try:
                 rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["ip: linear"] 
                             for key in experiment_dict["nrmse"].keys()}
-                
-                results_rel.append(rel_spec)
-                
-                #removing interpolation
-                for key in ["prediction", "nrmse"]:
-                    dict_tmp = experiment_dict[key]
-                    dict_tmp = ifdel(dict_tmp, "interpolation")
-                    experiment_dict[key] = dict_tmp
-
-                results_tmp.append(experiment_dict["nrmse"])
-                experiment_lst.append(experiment_dict)
-
-            else:
+            except:
                 rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["interpolation"] 
                             for key in experiment_dict["nrmse"].keys()}
-                results_rel.append(rel_spec)
-                experiment_dict = self.fix_interpolation(experiment_dict, method = self.ip_method)
+            
+            results_rel.append(rel_spec)
+            
+            #removing interpolation
+            for key in ["prediction", "nrmse"]:
+                dict_tmp = experiment_dict[key]
+                dict_tmp = ifdel(dict_tmp, "interpolation")
+                experiment_dict[key] = dict_tmp
 
-                experiment_lst.append(experiment_dict)
-                results_tmp.append(experiment_dict["nrmse"])
+            results_tmp.append(experiment_dict["nrmse"])
+            experiment_lst.append(experiment_dict)
 
+            
         results_df = pd.DataFrame(results_tmp)
         results_df = results_df.melt()
         results_df.columns = ["model", "R"]
@@ -414,6 +415,9 @@ class EchoStateAnalysis:
         hiObj.runInterpolation(use_obs = self.ip_use_observers)
         exper_["prediction"]["interpolation"] = hiObj.ip_res["prediction"]
         exper_["nrmse"]["interpolation"] = hiObj.ip_res["nrmse"]
+        exper_["xTe"] = hiObj.xTe
+        exper_["xTr"] = hiObj.xTr
+
         return(exper_)
     
     def make_R_barplots(self, label_rotation = 45):

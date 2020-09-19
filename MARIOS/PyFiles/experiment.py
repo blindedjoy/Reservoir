@@ -987,18 +987,18 @@ class EchoStateExperiment:
 
 		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
 
-		if not self.librosa:
+		if not self.librosa: 
 			# 1) Here stored are the inputs to 
-			self.json2be["experiment_inputs"] = {
+			self.json2be["experiment_inputs"] = { #this should be built into the initialization to avoid errors.
 				 "size" : self.size, 
 				 "target_frequency" : int(self.target_frequency),
 				 
 				 "verbose" : self.verbose,
 				 }
-			if self.obs_kHz:
+			try:
 			   json2be["experiment_inputs"]["obs_hz"] = float(self.obs_kHz)	* 1000
 			   json2be["experiment_inputs"]["target_hz"] = float(self.target_kHz) * 1000
-			elif self.obs_freqs:
+			except:
 			   json2be["experiment_inputs"]["target_freqs"] = self.target_freqs
 			   json2be["experiment_inputs"]["obs_freqs"] = self.obs_freqs
 		else:
@@ -1162,7 +1162,7 @@ class EchoStateExperiment:
 			#self.esn_cv = self.esn_cv_spec(**input_dict)
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 
-		self.esn = self.esn_spec(**self.best_arguments,
+		self.esn = self.esn_spec(**self.best_arguments, #you clearly aren't telling the network that this is expo.
 								 obs_idx  = predetermined_args['obs_index'],
 								 resp_idx = predetermined_args['target_index'])
 
