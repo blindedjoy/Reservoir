@@ -33,10 +33,10 @@ accept_Specs = list(range(100))#[1, 2, 3, 4, 5, 100, 200, 300, 400, 500]
 
 assert experiment_specification in accept_Specs
 
-def liang_idx_convert(lb, ub, k = None, small = True):
+def liang_idx_convert(lb, ub, small = True):
     if small:
-      lb = lb #// 2
-      ub = ub # // 2
+      lb = lb - 1 #// 2
+      ub = ub - 1 # // 2
     idx_list = list(range(lb, ub + 1))
     return idx_list
 
@@ -258,21 +258,22 @@ def test(TEST, multiprocessing = False, gap = False):
 
       elif PREDICTION_TYPE == "column":
 
-        librosa_args = {"spectrogram_path" : "publish",   #examples: 18th_cqt_low,
-                        "spectrogram_type"  : "power",    #examples: db, power
-                        "librosa": True}
+        #librosa_args = {"spectrogram_path" : "publish",   #examples: 18th_cqt_low,
+        #                "spectrogram_type"  : "power",    #examples: db, power
+        #                "librosa": True}
+        librosa_args = {}
         
         gap_start = 250
-        train_width = gap_start#100
-        test1 = liang_idx_convert(gap_start, gap_start + 9)
-        train1  = liang_idx_convert(gap_start - train_width, gap_start - 1)#, k = 20)
+        train_width = 50
+        train_width = gap_start
+        test1    = liang_idx_convert(gap_start, 289)  #249 -> 288 inclusive
+        train1   = liang_idx_convert(gap_start - train_width, gap_start - 1 ) #199 -> 248 inclusive
 
         subseq_len = int(np.array(train1).shape[0] * 0.5)
+        
         gap_start2 = 514
-
-        #print("train1: " + str(train1))
-        test2 = liang_idx_convert(gap_start2, gap_start2 + 9)
-        train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1)#, k = 30)
+        test2   = liang_idx_convert(gap_start2, 613) #514 -> 613 in matlab, 513 -> 612 in python
+        train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1 )
 
         set_specific_args = {"prediction_type": "column", "subseq_len" : subseq_len}
         experiment_set = [
