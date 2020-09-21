@@ -14,9 +14,9 @@ import time
 import timeit
 import multiprocessing.pool 
 
-PREDICTION_TYPE = "block"
 
-TEACHER_FORCING = False
+#load tests ect.
+from execute_scripts.column import *
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
@@ -40,27 +40,6 @@ def liang_idx_convert(lb, ub, small = True):
     idx_list = list(range(lb, ub + 1))
     return idx_list
 
-def get_frequencies(trial = 1):
-  """
-  get frequency lists
-  """
-  if trial == 1:
-      lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
-  elif trial == 2:
-      lb_targ, ub_targ, obs_hz  = 340, 640, 280
-  elif trial == 3:
-      lb_targ, ub_targ, obs_hz  = 340, 350, 40
-  elif trial == 4:
-      lb_targ, ub_targ, obs_hz  = 60, 350, 40
-  elif trial == 5:
-      lb_targ, ub_targ, obs_hz  = 50, 200, 40
-  if trial == 6:
-      lb_targ, ub_targ, obs_hz  = 150, 560, 100
-  obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
-  obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
-  resp_list = list( range( lb_targ, ub_targ, 10))
-  return obs_list, resp_list
-
 class NoDaemonProcess(multiprocessing.Process):
       @property
       def daemon(self):
@@ -80,141 +59,6 @@ class MyPool(multiprocessing.pool.Pool): #ThreadPool):#
         kwargs['context'] = NoDaemonContext()
         super(MyPool, self).__init__(*args, **kwargs)
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpolation_method = "griddata-linear"):
-      """
-      4*4 = 16 + 
-
-      The final form of the input dict is:
-
-        inputs = {"target_frequency_" : ...
-                  "obs_hz" : ...
-                  "target_hz" : ...
-                  "split" : ...
-                  ""
-                  }
-
-      Reinier's example:
-      {
-        'leaking_rate' : (0, 1), 
-        'spectral_radius': (0, 1.25),
-        'regularization': (-12, 1),
-        'connectivity': (-3, 0),
-        'n_nodes':  (100, 1000)
-      }
-
-      """
-      size = inputs["size"]
-      #default arguments
-      print("Prediction Type: " + inputs["prediction_type"])
-
-      ####if you imported the data via librosa this will work
-      if "librosa" in inputs:
-        default_presets = {
-          "cv_samples" : 4,
-          "max_iterations" : 3000,
-          "eps" : 1e-8,
-          'subsequence_length' : 250,
-          "initial_samples" : 1000}
-        librosa_args = { "spectrogram_path": inputs["spectrogram_path"],
-                         "librosa": inputs["librosa"],
-                         "spectrogram_type": inputs["spectrogram_type"]
-                        }
-      else:
-        librosa_args = {}
-
-      EchoArgs = { "size"    : size, 
-                   "verbose" : False}
-
-      obs_inputs = {"split" : inputs["split"], "aspect": 0.9, "plot_split": False}
-
-      if "k" in inputs:
-        obs_inputs["k"] = inputs["k"]
-
-      if PREDICTION_TYPE == "column":
-        train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
-
-        experiment_inputs = { "size" : inputs["size"],
-                              "target_frequency" : None,
-                              "verbose" : False,
-                              "prediction_type" : inputs["prediction_type"],
-                              "train_time_idx" : train_time_idx,
-                              "test_time_idx" : test_time_idx,
-                              **librosa_args
-                            }
-
-        print("experiment_inputs: " + str(experiment_inputs))
-        experiment = EchoStateExperiment(**experiment_inputs)
-        
-        obs_inputs = Merge(obs_inputs, {"method" : "exact"})
-
-        print("obs_inputs: " + str(obs_inputs))
-        experiment.get_observers(**obs_inputs)
-      
-      elif PREDICTION_TYPE == "block":
-        if "obs_freqs" in inputs:
-          AddEchoArgs = { "obs_freqs" : inputs["obs_freqs"],
-                          "target_freqs" : inputs["target_freqs"],
-                          "prediction_type" : PREDICTION_TYPE
-                        }
-          EchoArgs = Merge(EchoArgs, AddEchoArgs)
-        else:
-          AddEchoArgs = { "target_frequency" : inputs["target_frequency"],
-                          "obs_hz" : inputs["obs_hz"],
-                          "target_hz" : inputs["target_hz"]
-                        }
-          EchoArgs = Merge( Merge(EchoArgs, AddEchoArgs), librosa_args)
-        print(EchoArgs)
-        experiment = EchoStateExperiment( **EchoArgs)
-        ### NOW GET OBSERVERS
-        method = "exact" if "obs_freqs" in inputs else "freq"
-
-        experiment.get_observers(method = method, **obs_inputs)
-      
-      if size == "small":
-        default_presets = {
-          "cv_samples" : 6,
-          "max_iterations" : 1000,
-          "eps" : 1e-5,
-          'subsequence_length' : 180,
-          "initial_samples" : 100}
-      elif size == "medium":
-        default_presets = {
-          "cv_samples" : 5,
-          "max_iterations" : 4000,
-          "eps" : 1e-5,
-          'subsequence_length' : 250,
-          "initial_samples" : 100}
-      elif size == "publish":
-        default_presets = {
-          "cv_samples" : 8,
-          "max_iterations" : 2000,
-          "eps" : 1e-6,
-          'subsequence_length' : 700,
-          "initial_samples" : 300}
-
-      if PREDICTION_TYPE == "column":
-        if "subseq_len" in inputs:
-          default_presets['subsequence_length'] = inputs["subseq_len"]
-        else:
-          default_presets['subsequence_length'] = 75
-
-      cv_args = {
-          'bounds' : inputs["bounds"],
-          'scoring_method' : 'tanh',
-          "n_jobs" : n_cores,
-          "verbose" : True,
-          "plot" : False, 
-          **default_presets
-      }
-
-      if TEACHER_FORCING:
-        cv_args = Merge(cv_args, {"esn_feedback" : True})
-
-      models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"] #
-      for model_ in models:
-        print("Train shape: " + str(experiment.Train.shape))
-        print("Test shape: " +  str(experiment.Test.shape))
-        experiment.RC_CV(cv_args = cv_args, model = model_)
 
 def test(TEST, multiprocessing = False, gap = False):
     assert type(TEST) == bool
@@ -258,35 +102,38 @@ def test(TEST, multiprocessing = False, gap = False):
 
       elif PREDICTION_TYPE == "column":
 
-        #librosa_args = {"spectrogram_path" : "publish",   #examples: 18th_cqt_low,
-        #                "spectrogram_type"  : "power",    #examples: db, power
-        #                "librosa": True}
         librosa_args = {}
         
         gap_start = 250
         train_width = 50
         train_width = gap_start
-        test1    = liang_idx_convert(gap_start, 289)  #249 -> 288 inclusive
-        train1   = liang_idx_convert(gap_start - train_width, gap_start - 1 ) #199 -> 248 inclusive
 
-        subseq_len = int(np.array(train1).shape[0] * 0.5)
+        #not actually a test, we need this asap.
+        zhizhuo_target1    = liang_idx_convert(gap_start, 289)  #249 -> 288 inclusive
+        zhizhuo_train1   = liang_idx_convert(gap_start - train_width, gap_start - 1 ) #199 -> 248 inclusive
+
+        subseq_len = int(np.array(zhizhuo_train1).shape[0] * 0.5)
         
         gap_start2 = 514
-        test2   = liang_idx_convert(gap_start2, 613) #514 -> 613 in matlab, 513 -> 612 in python
-        train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1 )
+        zhizhuo_target2 = liang_idx_convert(gap_start2, 613) #514 -> 613 in matlab, 513 -> 612 in python
+        zhizhuo_train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1 )
 
-        set_specific_args = {"prediction_type": "column", "subseq_len" : subseq_len}
+
+        single_column_target = liang_idx_convert(100, 100)
+        single_column_train = liang_idx_convert(100 - 5, 100-1)
+
+        print("single column target" + str(single_column_target))
+
+        set_specific_args = {"prediction_type": "column"}
         experiment_set = [
-                          {'split': 0.5, 'train_time_idx': train1 , 'test_time_idx': test1},#, "k" : 100},
-                          {'split': 0.5, 'train_time_idx': train2, 'test_time_idx':  test2},#, "k" : 30},
-                          {'split': 0.9, 'train_time_idx': train1 , 'test_time_idx': test1}, #, "k" : 35},
-                          {'split': 0.9, 'train_time_idx': train2, 'test_time_idx':  test2}#, "k" : 40}
+                          #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 100, "subseq_len" : 3},
+                          {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 200, "subseq_len" : subseq_len},#, "k" : 100},
+                          {'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 200, "subseq_len" : subseq_len},#, "k" : 30},
+                          {'split': 0.9, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 200, "subseq_len" : subseq_len}, #, "k" : 35},
+                          {'split': 0.9, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 200, "subseq_len" : subseq_len}#, "k" : 40}
                          ]
 
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
-
-        if librosa_args["spectrogram_path"] == "18th_cqt_low":
-          experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
         
       bounds = {
                 #'noise' : (-2, -4),
@@ -375,8 +222,11 @@ def test(TEST, multiprocessing = False, gap = False):
 
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-      experiment["prediction_type"] = "block"
+      experiment["prediction_type"] = PREDICTION_TYPE
+
       experiment["size"] = "publish"
+      if PREDICTION_TYPE == "column":
+        experiment["size"] = "small"
 
     try:
       set_start_method('forkserver')
@@ -399,9 +249,12 @@ def test(TEST, multiprocessing = False, gap = False):
 if __name__ == '__main__':
 
   print("Total cpus available: " + str(ncpus))
-  print("RUNNING EXPERIMENT " + str(experiment_specification))
+  print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
-  TEST = False
+  if PREDICTION_TYPE == True:
+    TEST = False
+  else:
+    TEST = True
 
   start = timeit.default_timer()
   test(TEST = TEST)
@@ -447,4 +300,7 @@ if __name__ == '__main__':
         experiment_set = [  #4k, 0.5 filling in some more gaps:
                           ]
 
+        #librosa_args = {"spectrogram_path" : "publish",   #examples: 18th_cqt_low,
+        #                "spectrogram_type"  : "power",    #examples: db, power
+        #                "librosa": True}
       """

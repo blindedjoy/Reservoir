@@ -30,7 +30,7 @@ def build_string(message, *values, sep = ""):
         return message.join(str(x) + sep for x in values)
 
 class EchoStateAnalysis:
-    """ #Spectrogram class for training, testing, and splitting data for submission to reservoir nueral network code.
+    """ #Spectrogram analysis class for analyzing the output of neural networks.
     
     Args: #TODO Incomplete
         bounds:
@@ -40,14 +40,15 @@ class EchoStateAnalysis:
         target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
     """
-    def __init__(self, path_list, model, ip_method = "linear", bp = None, force = False, ip_use_observers = True):
+    def __init__(self, path_list, model = "uniform", ip_method = "linear", bp = None, force = False, ip_use_observers = True):
         self.path_list = path_list
         self.bp = bp
         self.force = force
         self.ip_use_observers = ip_use_observers
         self.ip_method = ip_method
-        self.change_interpolation_json()
         self.model = model
+        self.change_interpolation_json()
+        
         
 
         

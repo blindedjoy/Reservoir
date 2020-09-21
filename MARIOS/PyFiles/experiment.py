@@ -99,7 +99,7 @@ class EchoStateExperiment:
 				 target_hz = None, train_time_idx = None, test_time_idx = None, verbose = True,
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
-				 target_freqs = None, spectrogram_type = None
+				 target_freqs = None, spectrogram_type = None, k = None
 				 #obs_idx = None,
 				 ):
 		# Parameters
@@ -121,6 +121,8 @@ class EchoStateExperiment:
 		self.spectrogram_path = spectrogram_path
 		
 		self.verbose = verbose
+		self.target_freqs = target_freqs
+		self.obs_freqs = obs_freqs
 
 		if obs_freqs:
 			self.target_frequency =  float(np.mean(target_freqs))
@@ -135,7 +137,7 @@ class EchoStateExperiment:
 
 		if self.prediction_type == "column":
 			self.target_frequency = 100
-
+		print(self.prediction_type)
 		assert self.target_frequency, "you must enter a target frequency"
 		assert is_numeric(self.target_frequency), "you must enter a numeric target frequency"
 		assert size in ["small", "medium", "publish", "librosa"], "Please choose a size from ['small', 'medium', 'publish']"
@@ -156,6 +158,7 @@ class EchoStateExperiment:
 				self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		
 		self.horiz_display()
+		self.k = k
 
 	def save_pickle(self, path, transform):
 		self.getData2Save()
@@ -681,8 +684,7 @@ class EchoStateExperiment:
 					  observer_range = None,
 					  plot_split = False,
 					  response_range = None,
-					  split = 0.2,
-					  k = None
+					  split = 0.2
 					  ): 
 		"""
 		arguments:
@@ -702,6 +704,8 @@ class EchoStateExperiment:
 			observer_range: if you select the "block" opion
 		"""
 		#preprocessing:
+		
+		k = self.k
 		dataset, freq_idx  = self.A,  self.f
 		n_rows, n_cols = dataset.shape[0], dataset.shape[1]
 		train_len = int(n_rows * split)
@@ -808,7 +812,7 @@ class EchoStateExperiment:
 			observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
 
 			response_tr, response_te = response[ :train_len, : ], response[ train_len: , : ]
-		else:
+		elif self.prediction_type == "column":
 			#no observers so assign empty arrays
 			obs_arrs = [np.array([[]]) for i in [1, 2, 3]]
 			observers, observers_tr, observers_te = obs_arrs
@@ -835,6 +839,7 @@ class EchoStateExperiment:
 			#print("response_te shape: " + str(response_te.shape))
 			train_len = len(self.train_time_idx)
 			test_len = len(self.test_time_idx)
+
 
 		### Visualize the train test split and the observers
 		if plot_split:
@@ -960,7 +965,7 @@ class EchoStateExperiment:
 			self.outfile += "N_Targidx_" + str(len(self.resp_idx)) 
 			self.outfile += "N_Obsidx_" + str(len(self.obs_idx))
 
-
+		print("Finishing OBSERVERS")
 		#print("OUTFILE: " + str(self.outfile))
 
 
@@ -999,8 +1004,12 @@ class EchoStateExperiment:
 			   json2be["experiment_inputs"]["obs_hz"] = float(self.obs_kHz)	* 1000
 			   json2be["experiment_inputs"]["target_hz"] = float(self.target_kHz) * 1000
 			except:
+				print("")
+			try:
 			   json2be["experiment_inputs"]["target_freqs"] = self.target_freqs
 			   json2be["experiment_inputs"]["obs_freqs"] = self.obs_freqs
+			except:
+				print("")
 		else:
 			self.json2be["experiment_inputs"] = {
 				 "size" : self.size, 
@@ -1331,10 +1340,12 @@ class EchoStateExperiment:
 						"not using observers"
 
 			elif self.prediction_type == "column":
+				
 
 				total_zone_idx = range(self.A.shape[1])
 
 				if k: #probably broken
+					print("k")
 					seen_idx = self.obs_idx
 				
 					#Train Zone
@@ -1345,12 +1356,12 @@ class EchoStateExperiment:
 								point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
 								values	  += [self.A[x,y]]
 					#obsevers
-					if not curtial_observers:
-						for y in self.obs_idx:
-								point_lst += [(x,y)]
-								values	+= [self.A[x,y]]
+					for y in self.obs_idx:
+							point_lst += [(x,y)]
+							values	+= [self.A[x,y]]
 				else: #k =0
 					#print("from ip, obs_idx_len: " + str(len(self.obs_idx)))
+					print("no k")
 					for x in range(self.xTr.shape[0]):
 						# resonse points : train
 						for y in total_zone_idx:
@@ -1368,12 +1379,12 @@ class EchoStateExperiment:
 				xx_test, yy_test = list(zip(*points_to_predict)) 
 				xx_train, yy_train = list(zip(*point_lst)) 
 
-
-				plt.xlim(0, max(xx_train+ xx_test))
-				plt.ylim(0, max(yy_train + yy_test))
-				plt.scatter(xx_train, yy_train, color = "blue")
-				plt.scatter(xx_test, yy_test, color = "red")
-				plt.show()	
+				if show_prediction:
+					plt.xlim(0, max(xx_train+ xx_test))
+					plt.ylim(0, max(yy_train + yy_test))
+					plt.scatter(xx_train, yy_train, color = "blue")
+					plt.scatter(xx_test, yy_test, color = "red")
+					plt.show()	
 
 			#extract the right method calls
 			translation_dict = { "griddata-linear" : "linear", "griddata-cubic"  : "cubic", "griddata-nearest": "nearest"}	
