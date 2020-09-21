@@ -1161,9 +1161,7 @@ class EchoStateExperiment:
 
 
 
-			input_dict = { **cv_args, 
-					   **predetermined_args,
-					   **exp_w_}
+			input_dict = {**cv_args, **predetermined_args, **exp_w_}
 			print("new input dict: ")
 			print(input_dict)
 			
