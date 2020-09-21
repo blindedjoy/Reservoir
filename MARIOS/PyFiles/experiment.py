@@ -955,11 +955,15 @@ class EchoStateExperiment:
 		
 		
 		self.outfile = "experiment_results/" 
-		if self.prediction_type == "column":
-			self.outfile += "column/"
+
 		self.outfile += self.size
 
 		self.outfile += "/split_" + str(split)  +"/"
+
+		if self.prediction_type == "column":
+			self.outfile += "column_"
+		elif self.prediction_type == "block":
+			self.outfile += "block_"
 		
 		if self.method == "freq":
 			ctr = int(np.mean([int(self.f[idx]) for idx in self.resp_idx]))
