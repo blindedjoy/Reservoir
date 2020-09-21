@@ -127,8 +127,8 @@ def test(TEST, multiprocessing = False, gap = False):
         set_specific_args = {"prediction_type": "column"}
         experiment_set = [
                           #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 100, "subseq_len" : 3},
-                          {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 200, "subseq_len" : subseq_len},#, "k" : 100},
-                          {'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 200, "subseq_len" : subseq_len},#, "k" : 30},
+                          {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 20, "subseq_len" : subseq_len},#, "k" : 100},
+                          {'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 20, "subseq_len" : subseq_len},#, "k" : 30},
                           ]
 
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
