@@ -1,0 +1,26 @@
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 121, in worker
+    result = (True, func(*args, **kwds))
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 44, in mapstar
+    return list(map(*args))
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute_scripts/column.py", line 94, in run_experiment
+    experiment.get_observers(**obs_inputs)
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 833, in get_observers
+    response_tr  = dataset[ self.train_time_idx, :]
+IndexError: index 512 is out of bounds for axis 0 with size 512
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "execute.py", line 260, in <module>
+    test(TEST = TEST)
+  File "execute.py", line 242, in test
+    pool.map(run_experiment, exper_)
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 268, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
+    raise self._value
+IndexError: index 512 is out of bounds for axis 0 with size 512
