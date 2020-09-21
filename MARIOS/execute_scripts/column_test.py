@@ -39,8 +39,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
           "initial_samples" : 1000}
         librosa_args = { "spectrogram_path": inputs["spectrogram_path"],
                          "librosa": inputs["librosa"],
-                         "spectrogram_type": inputs["spectrogram_type"]
-                        }
+                         "spectrogram_type": inputs["spectrogram_type"]}
       else:
         librosa_args = {}
 

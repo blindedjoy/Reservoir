@@ -954,7 +954,11 @@ class EchoStateExperiment:
 		#assert self.xTr.shape[1] == self.xTe.shape[1], "something is broken, xTr and xTe should have the same column dimension"
 		
 		
-		self.outfile = "experiment_results/" + self.size
+		self.outfile = "experiment_results/" 
+		if self.prediction_type == "column":
+			self.outfile += "column/"
+		self.outfile += self.size
+
 		self.outfile += "/split_" + str(split)  +"/"
 		
 		if self.method == "freq":

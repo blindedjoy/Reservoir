@@ -119,7 +119,7 @@ def test(TEST, multiprocessing = False, gap = False):
         zhizhuo_train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1 )
 
 
-        single_column_target = liang_idx_convert(100, 100)
+        single_column_target = liang_idx_convert(100, 101)
         single_column_train = liang_idx_convert(100 - 5, 100-1)
 
         print("single column target" + str(single_column_target))
