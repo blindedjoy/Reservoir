@@ -1172,8 +1172,8 @@ class EchoStateExperiment:
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 
 		self.esn = self.esn_spec(**self.best_arguments, #you clearly aren't telling the network that this is expo.
-								 obs_idx  = predetermined_args['obs_index'],
-								 resp_idx = predetermined_args['target_index'])
+								 obs_idx  = self.obs_idx,
+								 resp_idx = self.resp_idx)
 
 		self.esn.train(x = self.Train, y = self.xTr)
 
