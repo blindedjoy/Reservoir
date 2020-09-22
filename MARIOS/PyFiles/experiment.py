@@ -804,37 +804,36 @@ class EchoStateExperiment:
 
 		assert method in  ["freq", "exact"], "at this time only use the 'freq' method for cluster, \
 												  'exact' for analysis"
-				
+
 		if self.prediction_type != "column":
 			# PARTITION THE DATA
 			observers = dataset[ : , self.obs_idx]
+			self.Train, self.Test = observers[ :train_len, : ], observers[ train_len:, : ]
+			self.xTr, self.xTe = response[ :train_len, : ], response[ train_len:, : ]
 
-			observers_tr, observers_te = observers[ :train_len, : ], observers[ train_len:  , : ]
 
-			response_tr, response_te = response[ :train_len, : ], response[ train_len: , : ]
 		elif self.prediction_type == "column":
 			#no observers so assign empty arrays
 			obs_arrs = [np.array([[]]) for i in [1, 2, 3]]
 			observers, observers_tr, observers_te = obs_arrs
 			A_shape_0 = self.A.shape[0]
-			if not k:
-				response_tr  = dataset[ self.train_time_idx, : ]
 
-				response_te = dataset[ self.test_time_idx , : ]
-				self.obs_idx = []#range(A_shape_0 )
-			else:
-				
-				# calculating 1 in k observers:
+			self.obs_idx = []
+			self.xTr = dataset[ self.train_time_idx, : ]
+			self.xTe = dataset[ self.test_time_idx , : ]
+			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
+
+			if k: # calculating 1 in k observers:
 				n_obs = A_shape_0 // k
-				rand_start = np.random.randint(k)
-				obs_idx = list(range(rand_start, A_shape_0, k))
-				self.obs_idx = obs_idx
-				#print("K!" + str(self.train_time_idx))
-				response_tr  = dataset[ self.train_time_idx, :]
-				response_tr  = response_tr[:, self.obs_idx]
 
-				#print("REsponse TR!" + str(response_tr.shape))
-				response_te = dataset[ self.test_time_idx , : ]
+				#rand_start = np.random.randint(k) <-- upgrade to this later.
+				rand_start = 0 
+				keep_index = list(range(rand_start, A_shape_0, k))
+
+				#we are slimming down the inputs to reduce computational complexity.
+				self.Train = self.Train[:, keep_index]
+				self.Test  = self.Test[:, keep_index]
+				
 
 			#print("response_te shape: " + str(response_te.shape))
 			train_len = len(self.train_time_idx)
@@ -917,18 +916,17 @@ class EchoStateExperiment:
 			
 			##################################### END plots
 			
-		self.dat = {"obs_tr"  : observers_tr, 
-					"obs_te"  : observers_te,
-					"resp_tr" : response_tr,
-					"resp_te" : response_te,
-					"obs_idx" : self.obs_idx,
-					"resp_idx" : self.resp_idx}
+		#self.dat = {"obs_tr"  : self.Train, 
+		#			"obs_te"  : self.Test,
+		#			"resp_tr" : response_tr,
+		#			"resp_te" : response_te,
+		#			"obs_idx" : self.obs_idx,
+		#			"resp_idx" : self.resp_idx}
 
-		self.Train, self.Test = observers_tr, observers_te
-		self.xTr, self.xTe = response_tr, response_te
+		#self.Train, self.Test = observers_tr, observers_te
+		#self.xTr, self.xTe = response_tr, response_te
 		
-		if self.prediction_type == "column":
-			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
+		
 
 
 		self.runInterpolation(k = k)
@@ -940,8 +938,8 @@ class EchoStateExperiment:
 				
 			for i in print_lst:
 				Shape(i)
-			print("total observers: " + str(len(self.dat["obs_idx"])))
-			print("total targets: " + str(len(self.dat["resp_idx"])))
+			#print("total observers: " + str(len(self.dat["obs_idx"])))
+			#print("total targets: " + str(len(self.dat["resp_idx"])))
 		
 			if method != "freq":
 				print("observer_range: " + str(observer_range))
@@ -1039,15 +1037,15 @@ class EchoStateExperiment:
 		# TODO: REWRITE THE BELOW, dat no longer makes sense as a way to save data.
 
 		#1) jsonify dat
-		new_dat = self.dat.copy().copy()
-		for key, item in new_dat.items():
-			if type(item) != list:
-				new_dat[key] = item.tolist()
-				if type(new_dat[key]) == int:
-					new_dat[key] = [int(item) for item in new_dat[key]]
-
-				if type(new_dat[key]) == float:
-					new_dat[key] = [float(item) for item in new_dat[key]]
+		#new_dat = self.dat.copy().copy()
+		#for key, item in new_dat.items():
+		#	if type(item) != list:
+		#		new_dat[key] = item.tolist()
+		#		if type(new_dat[key]) == int:
+		#			new_dat[key] = [int(item) for item in new_dat[key]]
+		#
+		#		if type(new_dat[key]) == float:
+		#			new_dat[key] = [float(item) for item in new_dat[key]]
 		
 		#json2be["dat"] = new_dat
 		
@@ -1350,37 +1348,18 @@ class EchoStateExperiment:
 
 				total_zone_idx = range(self.A.shape[1])
 
-				if k: #probably broken
-					print("k")
-					seen_idx = self.obs_idx
+				for x in range(self.xTr.shape[0]):
+
+					# resonse points : train
+					for y in total_zone_idx:
+						
+						point_lst += [(x,y)]
+						values	  += [self.A[x,y]]
 				
-					#Train Zone
-					for x in range(self.xTr.shape[0]):
-						# resonse points : train
-						for y in total_zone_idx:
-							if y in seen_idx:
-								point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
-								values	  += [self.A[x,y]]
-					#obsevers
-					for y in self.obs_idx:
-							point_lst += [(x,y)]
-							values	+= [self.A[x,y]]
-				else: #k =0
-					#print("from ip, obs_idx_len: " + str(len(self.obs_idx)))
-					print("no k")
-					for x in range(self.xTr.shape[0]):
-						# resonse points : train
-						for y in total_zone_idx:
-							
-							point_lst += [(x,y)]#list(zip(range(Train.shape[0]) , [missing_]*Train.shape[0]))
-							values	  += [self.A[x,y]]
-				
-				#Test set doesn't depend on k
 				for x in range(self.xTr.shape[0], self.xTr.shape[0] + self.xTe.shape[0]):
 					# test set
 					for y in total_zone_idx:
 						points_to_predict += [(x,y)]
-				#print(values[0:10])
 
 				xx_test, yy_test = list(zip(*points_to_predict)) 
 				xx_train, yy_train = list(zip(*point_lst)) 

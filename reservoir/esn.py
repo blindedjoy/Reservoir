@@ -220,6 +220,7 @@ class EchoStateNetwork:
 
         """
         # Checks
+        print("keep: " + str(keep))
         if inputs is None and outputs is None:
             raise ValueError('Inputs and outputs cannot both be None')
 
@@ -231,7 +232,7 @@ class EchoStateNetwork:
                 # Store for denormalization
                 self._input_means = inputs.mean(axis=0)
                 self._input_stds = inputs.std(ddof=1, axis=0)
-
+            
             # Transform
             transformed.append((inputs - self._input_means) / self._input_stds)
 
