@@ -38,3 +38,191 @@ Score: 1.0
 Score: 1.0
 Score: 1.0
 Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Model initialization done. 
+
+
+Name : GP regression
+Objective : -339.7160549403961
+Number of Parameters : 6
+Number of Optimization Parameters : 6
+Updates : True
+Parameters:
+  [1mGP_regression.         [0;0m  |                   value  |  constraints  |       priors      
+  [1mMat52.variance         [0;0m  |   0.0004175082312106783  |      +ve      |  iGa(0.001, 0.001)
+  [1mMat52.lengthscale      [0;0m  |                    (4,)  |      +ve      |  iGa(0.001, 0.001)
+  [1mGaussian_noise.variance[0;0m  |  2.1015397029027898e-05  |      +ve      |  iGa(0.001, 0.001) 
+
+  [1mindex[0;0m  |  GP_regression.Mat52.lengthscale  |  constraints  |       priors      
+  [1m[0]  [0;0m  |                       6.63871424  |      +ve      |  iGa(0.001, 0.001)
+  [1m[1]  [0;0m  |                       6.50157898  |      +ve      |  iGa(0.001, 0.001)
+  [1m[2]  [0;0m  |                       6.57382174  |      +ve      |  iGa(0.001, 0.001)
+  [1m[3]  [0;0m  |                       6.48369257  |      +ve      |  iGa(0.001, 0.001) 
+
