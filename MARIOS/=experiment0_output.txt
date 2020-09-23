@@ -3,19 +3,38 @@ RUNNING EXPERIMENT 0 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
 TEST
 single column target[99, 100]
 Prediction Type: column
-experiment_inputs: {'size': 'small', 'target_frequency': None, 'verbose': False, 'prediction_type': 'column', 'train_time_idx': [94, 95, 96, 97, 98], 'test_time_idx': [99, 100], 'k': 10}
+experiment_inputs: {'size': 'medium', 'target_frequency': None, 'verbose': False, 'prediction_type': 'column', 'train_time_idx': [94, 95, 96, 97, 98], 'test_time_idx': [99, 100], 'k': None}
 column
 obs_inputs: {'split': 0.5, 'aspect': 0.9, 'plot_split': False, 'method': 'exact'}
-Train Region Train/Observers shape: (5, 52)
-Test Region Train/Observers shape: (2, 52)
-Train Region Target shape: (5, 552)
-Test Region Target shape: (2, 552)
+Train Region Train/Observers shape: (5, 1103)
+Test Region Train/Observers shape: (2, 1103)
+Train Region Target shape: (5, 1103)
+Test Region Target shape: (2, 1103)
 Finishing OBSERVERS
 uniformrc cv set, ready to train
 Warning: y-array has more series (columns) than samples (rows). Check if this is correct
 Model initialization and exploration run...
 Starting optimization... 
 
-Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2ba66126a110>
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b2117813d10>
 Hayden edit: fixed_parameters: ['n_nodes']
 Hayden edit: free_parameters: ['llambda', 'connectivity', 'spectral_radius', 'regularization']
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
