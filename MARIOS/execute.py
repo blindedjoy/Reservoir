@@ -225,7 +225,7 @@ def test(TEST, multiprocessing = False, gap = False):
       experiment["bounds"] = bounds
       experiment["prediction_type"] = PREDICTION_TYPE
 
-      experiment["size"] = "small"
+      experiment["size"] = "medium"
       #if PREDICTION_TYPE == "column":
       #  experiment["size"] = "small"
 
