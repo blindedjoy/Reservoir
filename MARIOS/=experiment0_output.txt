@@ -226,3 +226,25 @@ Parameters:
   [1m[2]  [0;0m  |                       6.57382174  |      +ve      |  iGa(0.001, 0.001)
   [1m[3]  [0;0m  |                       6.48369257  |      +ve      |  iGa(0.001, 0.001) 
 
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
