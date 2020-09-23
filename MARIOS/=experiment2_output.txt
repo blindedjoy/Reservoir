@@ -58,3 +58,119 @@ Score: 1.0
 Score: 1.0
 Score: 1.0
 Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Model initialization done. 
+
+
+Name : GP regression
+Objective : -339.7392258365621
+Number of Parameters : 6
+Number of Optimization Parameters : 6
+Updates : True
+Parameters:
+  [1mGP_regression.         [0;0m  |                   value  |  constraints  |       priors      
+  [1mMat52.variance         [0;0m  |   0.0004174958018018523  |      +ve      |  iGa(0.001, 0.001)
+  [1mMat52.lengthscale      [0;0m  |                    (4,)  |      +ve      |  iGa(0.001, 0.001)
+  [1mGaussian_noise.variance[0;0m  |  2.1015334761923427e-05  |      +ve      |  iGa(0.001, 0.001) 
+
+  [1mindex[0;0m  |  GP_regression.Mat52.lengthscale  |  constraints  |       priors      
+  [1m[0]  [0;0m  |                       6.52037492  |      +ve      |  iGa(0.001, 0.001)
+  [1m[1]  [0;0m  |                       6.42263289  |      +ve      |  iGa(0.001, 0.001)
+  [1m[2]  [0;0m  |                       6.53701249  |      +ve      |  iGa(0.001, 0.001)
+  [1m[3]  [0;0m  |                       6.40771978  |      +ve      |  iGa(0.001, 0.001) 
+
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
