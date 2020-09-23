@@ -55,7 +55,8 @@ class EchoStateNetwork:
                  n_nodes=1000, input_scaling=0.5, feedback_scaling=0.5, spectral_radius=0.8, leaking_rate=1.0,
                  connectivity = np.exp(-.23),#0.1,
                  regularization=1e-8, feedback=False, random_seed=123,
-                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, plot = False, noise = 0.0):
+                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, plot = False, noise = 0.0,
+                 already_normalized = False):
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
@@ -73,6 +74,7 @@ class EchoStateNetwork:
         self.llambda = llambda
         self.plot = plot
         self.noise = noise
+        self.already_normalized = already_normalized
         self.generate_reservoir()
 
 
@@ -220,7 +222,7 @@ class EchoStateNetwork:
 
         """
         # Checks
-        print("keep: " + str(keep))
+        #print("keep: " + str(keep))
         if inputs is None and outputs is None:
             raise ValueError('Inputs and outputs cannot both be None')
 
@@ -310,10 +312,11 @@ class EchoStateNetwork:
         # Initialize new random state
         random_state = np.random.RandomState(self.seed + 1)
 
-        # Normalize inputs and outputs
-        y = self.normalize(outputs=y, keep=True)
-        if not x is None:
-            x = self.normalize(inputs=x, keep=True)
+        if not self.already_normalized:
+            # Normalize inputs and outputs
+            y = self.normalize(outputs=y, keep=True)
+            if not x is None:
+                x = self.normalize(inputs=x, keep=True)
 
         # Reset state
         current_state = self.state[-1]  # From default or pretrained state
@@ -459,9 +462,10 @@ class EchoStateNetwork:
         if self.out_weights is None or self.y_last is None:
             raise ValueError('Error: ESN not trained yet')
 
-        # Normalize the inputs (like was done in train)
-        if not x is None:
-            x = self.normalize(inputs=x)
+        if not self.already_normalized:
+            # Normalize the inputs (like was done in train)
+            if not x is None:
+                x = self.normalize(inputs=x)
 
         # Initialize input
         inputs = np.ones((n_steps, 1), dtype=np.float32)  # Add bias term
@@ -478,9 +482,10 @@ class EchoStateNetwork:
         else:
           y_predicted = np.zeros(n_steps, dtype=np.float32)
 
-        # Get last states
-        previous_y = self.y_last
-        if not y_start is None:
+        if not self.already_normalized:
+          # Get last states
+          previous_y = self.y_last
+          if not y_start is None:
             previous_y = self.normalize(outputs=y_start)[0]
 
         # Initialize state from last availble in train
@@ -508,9 +513,9 @@ class EchoStateNetwork:
 
             
             
-
-        # Denormalize predictions
-        y_predicted = self.denormalize(outputs=y_predicted)
+        if not self.already_normalized:
+            # Denormalize predictions
+            y_predicted = self.denormalize(outputs=y_predicted)
 
         # Return predictions
         return y_predicted.reshape(-1, self.out_weights.shape[1])
@@ -541,10 +546,11 @@ class EchoStateNetwork:
         if self.out_weights is None or self.y_last is None:
             raise ValueError('Error: ESN not trained yet')
 
-        # Normalize the arguments (like was done in train)
-        y = self.normalize(outputs=y)
-        if not x is None:
-            x = self.normalize(inputs=x)
+        if not self.already_normalized:
+            # Normalize the arguments (like was done in train)
+            y = self.normalize(outputs=y)
+            if not x is None:
+                x = self.normalize(inputs=x)
 
         # Timesteps in y
         t_steps = y.shape[0]
@@ -573,8 +579,9 @@ class EchoStateNetwork:
 
         # Get last states
         previous_y = self.y_last
-        if not y_start is None:
-            previous_y = self.normalize(outputs=y_start)[0]
+        if not self.already_normalized:
+            if not y_start is None:
+                previous_y = self.normalize(outputs=y_start)[0]
 
         # Initialize state from last availble in train
         current_state = self.state[-1]
@@ -610,8 +617,9 @@ class EchoStateNetwork:
             # Evolve true state
             previous_y = y[t]
 
-        # Denormalize predictions
-        y_predicted = self.denormalize(outputs=y_predicted)
+        if not self.already_normalized:
+            # Denormalize predictions
+            y_predicted = self.denormalize(outputs=y_predicted)
 
         # Return predictions
         return y_predicted

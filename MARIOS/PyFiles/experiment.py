@@ -71,6 +71,10 @@ def pp(variable, label): #TODO replace with wrappers.
 	print(label +": " + str(variable))
 
 def Shape(lst):
+	""" Prints out the shape of an np array object
+	Arguments:
+		lst: (np_array, label) ie Shape([self.Train, "Train"])
+	"""
 	npObj, label = lst; print(label + " shape: " +  str(npObj.shape))
 
 def is_numeric(x):
@@ -839,7 +843,10 @@ class EchoStateExperiment:
 			train_len = len(self.train_time_idx)
 			test_len = len(self.test_time_idx)
 
-
+		Shape([self.Train, "Train Region Train/Observers"])
+		Shape([self.Test, "Test Region Train/Observers"])
+		Shape([self.xTr, "Train Region Target"])
+		Shape([self.xTe, "Test Region Target"])
 		### Visualize the train test split and the observers
 		if plot_split:
 			red, yellow, blue, black = [255, 0, 0], [255, 255, 0], [0, 255, 255], [0, 0, 0]
@@ -1177,9 +1184,11 @@ class EchoStateExperiment:
 
 		self.esn = self.esn_spec(**self.best_arguments, #you clearly aren't telling the network that this is expo.
 								 obs_idx  = self.obs_idx,
-								 resp_idx = self.resp_idx)
+								 resp_idx = self.resp_idx, 
+								 already_normalized = True)
 
 		self.esn.train(x = self.Train, y = self.xTr)
+		print(self.best_arguments)
 
 		def my_predict(test, n_steps = None):
 			if not n_steps:
