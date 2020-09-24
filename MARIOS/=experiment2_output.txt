@@ -178,3 +178,17 @@ Score: 1.0
 Score: 1.0
 Score: 1.0
 Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Converged at iteration 322
+Done after 322 iterations.
+initialiazing json2be
+
+
