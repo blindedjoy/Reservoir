@@ -1232,7 +1232,7 @@ class EchoStateExperiment:
 	def save_json(self):
 		
 		self.getData2Save()
-		if self.librosa or self.prediction_type == "column":
+		if self.librosa: # or self.prediction_type == "column"
 
 			#build_string_lst = [self.spectrogram_path,"/",self.spectrogram_type,"/"
 
