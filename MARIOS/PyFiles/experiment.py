@@ -149,6 +149,7 @@ class EchoStateExperiment:
 		
 		#order dependent attributes:
 		self.load_data()
+		print("obs_freqs" + str(self.obs_freqs))
 		if self.prediction_type == "block":
 			if obs_freqs:
 				self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
@@ -159,6 +160,7 @@ class EchoStateExperiment:
 				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
 			if not target_freqs:
+				print("great success")
 				self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 		
 		self.horiz_display()
@@ -183,7 +185,7 @@ class EchoStateExperiment:
 		"""
 		if not silent:
 			print("RUNNING HZ2IDX")
-
+		print("RUNNING HZ2IDX")
 		midpoint = self.target_frequency 
 		height   = self.freq_axis_len 
 
@@ -459,13 +461,12 @@ class EchoStateExperiment:
 		if not silent:
 			print("response bounds: " + str(resp_bounds))
 			print("observers bounds: " + str(obs_bounds))
+
 		self.bounds = {"response_bounds" : resp_bounds, "observer_bounds" : obs_bounds}
-		self.get_observers(method = "block",
-					missing = ctr,
-					split = split,
-					observer_range = self.bounds["observer_bounds"],  #format: [[425, 525], [527,627]],
-					response_range = self.bounds["response_bounds"], #format: [[525, 527]],
-					aspect = aspect)
+
+		self.get_observers(method = "block", missing = ctr, split = split, aspect = aspect,
+			observer_range = self.bounds["observer_bounds"], 
+			response_range = self.bounds["response_bounds"])
 
 
 	
@@ -742,11 +743,14 @@ class EchoStateExperiment:
 			This method either blocks observers and/or the response area.
 			"""
 			print("you selected the block method")
-			if response_range == None:
+			print(self.resp_idx)
+			if self.resp_idx:
+				print("assigning resp_idx")
+				response_idx = self.resp_idx
+			elif response_range == None:
 				response_idx  = [missing]
 				response	  = dataset[ : , missing].reshape( -1, 1)
 			else:
-				
 				response_idx =  self.my_range2lst(response_range)
 				response = dataset[ : , self.target_idx].reshape( -1, len( self.target_idx))
 				
@@ -758,6 +762,8 @@ class EchoStateExperiment:
 				obs_idx = np.sort( np.random.choice( col_idx, 
 													num_observers, 
 													replace = False))
+			elif self.obs_idx:
+				obs_idx = self.obs_idx
 			else:
 				obs_idx = self.my_range2lst(observer_range)
 				
@@ -796,6 +802,7 @@ class EchoStateExperiment:
 				assert self.obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
 				assert self.resp_idx, "oops, your response index cannot be None"
 				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
+				response_idx = self.resp_idx
 
 			elif self.prediction_type == "column":
 				if not k:
