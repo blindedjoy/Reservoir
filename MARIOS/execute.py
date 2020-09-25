@@ -192,29 +192,17 @@ def test(TEST, multiprocessing = False, gap = False):
       obs_freqs4, resp_freqs4 = get_frequencies(4)
       obs_freqs5, resp_freqs5 = get_frequencies(5)
       obs_freqs6, resp_freqs6 = get_frequencies(6)
+      obs_freqs7, resp_freqs7 = get_frequencies(7)
 
       experiment_set = [
-             { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
              { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             { 'split': 0.9, "obs_freqs": obs_freqs4, "target_freqs": resp_freqs4 },
-             { 'split': 0.9, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
-             { 'split': 0.9, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
-
-             { 'split': 0.7, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.7, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-             { 'split': 0.7, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
-             { 'split': 0.7, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
-             { 'split': 0.7, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
-             { 'split': 0.7, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
-
+             { 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
-             { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-             { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
-             { 'split': 0.5, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
-             { 'split': 0.5, "obs_freqs": obs_freqs5,  "target_freqs": resp_freqs5  },
-             { 'split': 0.5, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
+             { 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             { 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
+             
+             { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
 
       #set_specific_args = {"prediction_type": "block"}
@@ -304,4 +292,27 @@ if __name__ == '__main__':
         #librosa_args = {"spectrogram_path" : "publish",   #examples: 18th_cqt_low,
         #                "spectrogram_type"  : "power",    #examples: db, power
         #                "librosa": True}
+      experiment_set = [
+             { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+             { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             { 'split': 0.9, "obs_freqs": obs_freqs4, "target_freqs": resp_freqs4 },
+             { 'split': 0.9, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
+             { 'split': 0.9, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
+
+             { 'split': 0.7, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+             { 'split': 0.7, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.7, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
+             { 'split': 0.7, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
+             { 'split': 0.7, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
+             { 'split': 0.7, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
+
+             
+             { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
+             { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
+             { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
+             { 'split': 0.5, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
+             { 'split': 0.5, "obs_freqs": obs_freqs5,  "target_freqs": resp_freqs5  },
+             { 'split': 0.5, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
+             ]
       """

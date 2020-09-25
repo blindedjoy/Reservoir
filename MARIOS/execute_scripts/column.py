@@ -20,6 +20,8 @@ def get_frequencies(trial = 1):
       lb_targ, ub_targ, obs_hz  = 50, 200, 40
   if trial == 6:
       lb_targ, ub_targ, obs_hz  = 150, 560, 100
+  if trial == 7:
+      lb_targ, ub_targ, obs_hz  = 400, 900, 200
   obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
   obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
   resp_list = list( range( lb_targ, ub_targ, 10))
