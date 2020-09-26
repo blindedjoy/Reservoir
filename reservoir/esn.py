@@ -55,8 +55,8 @@ class EchoStateNetwork:
                  n_nodes=1000, input_scaling=0.5, feedback_scaling=0.5, spectral_radius=0.8, leaking_rate=1.0,
                  connectivity = np.exp(-.23),#0.1,
                  regularization=1e-8, feedback=False, random_seed=123,
-                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, plot = False, noise = 0.0,
-                 already_normalized = False):
+                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, llambda2 = None, 
+                 plot = False, noise = 0.0, already_normalized = False):
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
@@ -75,6 +75,12 @@ class EchoStateNetwork:
         self.plot = plot
         self.noise = noise
         self.already_normalized = already_normalized
+
+        if llambda2:
+            #print("dual lambda")
+            self.llambda = [self.llambda, llambda2]
+            self.dual_lambda = True
+
         self.generate_reservoir()
 
 
@@ -88,18 +94,52 @@ class EchoStateNetwork:
         distance matrix which measures the distance from the 
         observer sequences to the target sequences.
         """
-        #print("assigning expo weights")
-        exp_np = np.exp( - self.llambda * self.distance_np) #*llambda
-        exp_np = exp_np.sum(axis = 0).reshape( -1 )
-        
-        #normalize the max weight to 1.
-        exp_np = (exp_np) / np.max(exp_np)
-        exp_np = exp_np.reshape(-1,)
-        #print("exp_np sahep : " + str(exp_np.shape))
+        random_state = np.random.RandomState(self.seed)
+        def get_exp_w_set(llambda_, distance_np_):
+            exp_np_ = np.exp( - llambda_ * distance_np_) #*llambda
+            exp_np_ = exp_np_.sum(axis = 0).reshape( -1 )
+            
+            #normalize the max weight to 1.
+            exp_np_ = (exp_np_) / np.max(exp_np_)
+            exp_np_ = exp_np_.reshape(-1,)
 
-        white_Noise = np.random.normal(size = exp_np.shape[0]) * self.noise
-        exp_np += white_Noise
-        return(exp_np)
+            #white_Noise = np.random.normal(size = exp_np_.shape[0]) * self.noise
+            #exp_np_ += white_Noise
+            return(exp_np_)
+
+
+        if not self.dual_lambda:
+            
+            exp_np = get_exp_w_set( self.llambda, self.distance_np)
+            white_Noise = random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, exp_np.shape[0]))
+            exp_np = exp_np + white_Noise
+
+            if self.llambda < 10 ** (-4):
+                exp_np = random_state.uniform(-1, 1, size=(exp_np.shape))
+            
+        else:
+            #print("llambda:" + str(self.llambda))
+            exp_np1 = get_exp_w_set( self.llambda[0], self.distance_np[0])
+            exp_np2 = get_exp_w_set( self.llambda[1], self.distance_np[1]) 
+            
+            exp_np  = list(exp_np2) + list(exp_np1)
+            exp_np = np.array(exp_np)
+            white_Noise = random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, exp_np.shape[0]))
+            exp_np = exp_np + white_Noise
+
+            nn = exp_np1.shape[0]
+
+            if self.llambda[0] < 10 ** (-4):
+                exp_np[:, :nn] = random_state.uniform(-1, 1, size=(self.n_nodes, nn))
+            if self.llambda[1] < 10 ** (-4):
+                exp_np[:, nn:] = random_state.uniform(-1, 1, size=(self.n_nodes, nn))
+
+
+        ### Now add the noise. Make it two dimensional.
+        
+
+        self.exp_weights = exp_np
+
        
     def build_distance_matrix(self, verbose = False):
         """	
@@ -110,18 +150,59 @@ class EchoStateNetwork:
         Description:
         	DistsToTarg stands for distance numpy array
         """
-        for i, resp_seq in enumerate(self.resp_idx):
-            DistsToTarg = abs(resp_seq - np.array(self.obs_idx)).reshape(1, -1)
-            if i == 0:
-                distance_np = DistsToTarg
-            else:
-            	distance_np = np.concatenate([distance_np, DistsToTarg], axis = 0)
-        #if verbose == True:
-        #    display(pd.DataFrame(distance_np))
-        self.distance_np = distance_np
-        if verbose == True:
-            print("distance_matrix completed " + str(self.distance_np.shape))
-            display(self.distance_np)
+        def calculate_distance_matrix(obs_idx):
+            for i, resp_seq in enumerate(self.resp_idx):
+                DistsToTarg = abs(resp_seq - np.array(obs_idx)).reshape(1, -1)
+                if i == 0:
+                    distance_np_ = DistsToTarg
+                else:
+                    distance_np_ = np.concatenate([distance_np_, DistsToTarg], axis = 0)
+            #if verbose == True:
+            #    display(pd.DataFrame(distance_np))
+            distance_np_ = distance_np_
+            if verbose == True:
+                print("distance_matrix completed " + str(self.distance_np_.shape))
+                display(self.distance_np_)
+            return(distance_np_)
+
+        if not self.dual_lambda:
+
+            self.distance_np = calculate_distance_matrix(self.obs_idx) 
+            if self.plot:
+                plt.imshow(self.distance_np)
+                plt.show()
+
+        else:
+
+            def split_lst(lst, scnd_lst):
+                
+                lst = np.array(lst)
+                breaka = np.mean(scnd_lst)
+                scnd_arr = np.array(scnd_lst)
+                lst1, lst2 = lst[lst < scnd_arr.min()], lst[lst > scnd_arr.max()]
+
+                return list(lst1), list(lst2)
+
+            obs_lsts = split_lst(self.obs_idx, self.resp_idx) #good!
+            self.distance_np = [calculate_distance_matrix(obs_lst) for obs_lst in obs_lsts]
+            if self.plot:
+                for i in self.distance_np:
+                    plt.imshow(i)
+                    plt.show()
+            hi = """
+            for i, resp_seq in enumerate(self.resp_idx):
+                DistsToTarg = abs(resp_seq - np.array(self.obs_idx)).reshape(1, -1)
+                if i == 0:
+                    distance_np = DistsToTarg
+                else:
+                    distance_np = np.concatenate([distance_np, DistsToTarg], axis = 0)
+            #if verbose == True:
+            #    display(pd.DataFrame(distance_np))
+            self.distance_np = distance_np
+            if verbose == True:
+                print("distance_matrix completed " + str(self.distance_np.shape))
+                display(self.distance_np)
+            """
 
     def get_exp_weights(self):
         """
@@ -129,16 +210,27 @@ class EchoStateNetwork:
         change the automatic var assignments
         """
         self.build_distance_matrix()
-        self.exp_weights = self.exp_w()
+        self.exp_w()
         n_temp = len(self.exp_weights)
-        sign = np.random.choice([-1, 1], n_temp)
-        #print("exp weights shape", exp_weights.shape)
+        sign = np.random.choice([-1, 1], self.exp_weights.shape)
+
         self.exp_weights *= sign
-        #print("max_weight: " + str(np.max(exp_weights)))
+
         if self.plot == True:
-            pd_ = pd.DataFrame({"obs_idx": self.obs_idx, "weight": self.exp_weights})
-            fig, ax = plt.subplots(1,1, figsize = (6, 4))
-            sns.scatterplot(x = "obs_idx", y = "weight", data = pd_, ax = ax)
+            print("PLOTTING")
+            for i in range(self.exp_weights.shape[0]):
+                if not i:
+                    exp_w_dict = {}
+                    exp_w_dict["obs_idx"] = []
+                    exp_w_dict["weight"] = []
+                #lst.append({"obs_idx": , "weight": })
+                exp_w_dict["weight"]+= list(self.exp_weights[i, :].reshape(-1,))
+                exp_w_dict["obs_idx"]+= self.obs_idx
+
+            pd_ = pd.DataFrame(exp_w_dict)
+            #print(pd_)
+            fig, ax = plt.subplots(1, 1, figsize = (6, 4))
+            sns.scatterplot(x = "obs_idx", y = "weight", data = pd_, ax = ax, linewidth=0, alpha = 0.003)
             ax.set_title("Exponential Attention Weights")
             plt.show()
 
@@ -174,7 +266,7 @@ class EchoStateNetwork:
             """
             
             max_eigenvalue = np.abs( np.linalg.eigvals( self.weights)).max()
-            #print("max_eigen: " + str(max_eigenvalue))
+
             if max_eigenvalue > 0:
                 break
             elif i == max_tries - 1:
@@ -222,7 +314,6 @@ class EchoStateNetwork:
 
         """
         # Checks
-        #print("keep: " + str(keep))
         if inputs is None and outputs is None:
             raise ValueError('Inputs and outputs cannot both be None')
 
@@ -337,7 +428,7 @@ class EchoStateNetwork:
 
         if self.exponential == True:
             self.get_exp_weights()
-            
+        
 
         # Set and scale input weights (for memory length and non-linearity)
         ###
@@ -352,16 +443,18 @@ class EchoStateNetwork:
             #print(str2 + shape2)
         #self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
     
-        if inputs.shape[1] > 1:
-            if self.exponential == True:
-                
-                self.in_weights = self.input_scaling * self.exp_weights 
-                ### What about this line?
-                self.in_weights = np.hstack((self.in_weights, 0.01))
-                ###
-            else:
-                self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-            #self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
+        #if inputs.shape[1] > 1:
+        if self.exponential == True:
+            
+            self.in_weights = self.input_scaling * self.exp_weights 
+            ### What about this line?
+            uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+
+            self.in_weights = np.hstack((self.in_weights, uniform_bias)) #This looks like the bias term. changed from 0.01 to 1.
+            ###
+        else:
+            self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
+        #self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
          
         ###
 
@@ -370,12 +463,10 @@ class EchoStateNetwork:
             inputs = np.hstack((inputs, y[:-1]))  # Add teacher forced signal (equivalent to y(t-1) as input)
             feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
             self.in_weights = np.hstack((self.in_weights, feedback_weights))
-        
-        #print("inputs shape: " + str(inputs[0].T.shape))
-        #print("input weights shape: " + str(self.in_weights.shape))
 
         # Train iteratively
         for t in range(inputs.shape[0]):
+            
             update = np.tanh(self.in_weights @ inputs[t].T + self.weights @ current_state)
             current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state  # Leaking separate
             self.state[t] = current_state

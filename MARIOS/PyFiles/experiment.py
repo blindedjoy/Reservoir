@@ -154,8 +154,13 @@ class EchoStateExperiment:
 			if obs_freqs:
 				self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
 				self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
-				#print("obs_idx: " + str(self.obs_idx))
-				#print("resp_idx: " + str(self.resp_idx))
+
+				self.obs_idx = list(np.unique(np.array(self.obs_idx)))
+				for i in self.resp_idx:
+					if i in self.obs_idx:
+						self.obs_idx.remove(i)
+				print("OBS IDX: " + str(self.obs_idx))
+				print("RESP IDX: " + str(self.resp_idx))
 			if obs_hz and target_hz:
 				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
@@ -185,7 +190,6 @@ class EchoStateExperiment:
 		"""
 		if not silent:
 			print("RUNNING HZ2IDX")
-		print("RUNNING HZ2IDX")
 		midpoint = self.target_frequency 
 		height   = self.freq_axis_len 
 
@@ -252,10 +256,13 @@ class EchoStateExperiment:
 
 			final_ranges = []
 			for range_ in ranges:
+				assert len(np.unique(range_)) == len(range_)
 				range_ = [int(idx) for idx in range_] #enforce integer type
 				range_ = [height - i for i in range_] #Inversion
 				range_ = my_sort(range_)
 				final_ranges.append(range_)
+			#hack
+
 			return(ranges)
 		### END helper functions
 
@@ -1281,21 +1288,14 @@ class EchoStateExperiment:
 			print("librosa outfile: " + str(librosa_outfile))
 
 		else:
-			#spectrogram
-			
-
+			# For a host of reasons I'm retiring the old saving data method.
 			new_file = self.outfile
+			new_file += ".pickle"
 
-			"""
-			if self.exp == True:
-				model_ = "_exp"
-			else:
-				model_ = "_unif"
-			"""
-			new_file += ".txt"
+			self.save_pickle(path = new_file, transform = self.json2be)
 
-			with open(new_file, "w") as outfile:
-				data = json.dump(self.json2be, outfile)
+			#with open(new_file, "w") as outfile:
+			#	data = json.dump(self.json2be, outfile)
 
 	def rbf_add_point(self, point_tuple, test_set = False):
 

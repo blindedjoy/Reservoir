@@ -219,6 +219,9 @@ class EchoStateNetworkCV:
         if 'llambda' in arguments:
             arguments['llambda'] = 10. ** arguments['llambda']  # Log scale correction
 
+        if 'llambda2' in arguments:
+            arguments['llambda2'] = 10. ** arguments['llambda2']  # Log scale correction
+
         if 'noise' in arguments:
             arguments['noise'] = 10. ** arguments['noise']  # Log scale correction
 
