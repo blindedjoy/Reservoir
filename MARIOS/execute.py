@@ -191,9 +191,11 @@ def test(TEST, multiprocessing = False, gap = False):
              { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
+             { 'split': 0.7, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
              { 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
+             { 'split': 0.5, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
