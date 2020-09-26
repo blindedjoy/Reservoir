@@ -13,10 +13,10 @@ import sys
 import time
 import timeit
 import multiprocessing.pool 
-
-
 #load tests ect.
 from execute_scripts.column import *
+
+RUN_LITE = True
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
@@ -65,6 +65,16 @@ def test(TEST, multiprocessing = False, gap = False):
     if TEST == True:
       print("TEST")
       if PREDICTION_TYPE == "block":
+        bounds = { 
+                'noise' :          (-5, -0.5),
+                'llambda' :        (-4, 0), 
+                'connectivity':    (-5, 0),       
+                'n_nodes':         1000,          
+                'spectral_radius': (0.001, 0.999),
+                'regularization':  (-3, 4),
+                "leaking_rate" :   (0.001, 1) # we want some memory. 0 would mean no memory.
+                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
+                }
         if gap: 
           print("HA")
         else:
@@ -85,17 +95,7 @@ def test(TEST, multiprocessing = False, gap = False):
                 {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
                 {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
                 ]
-          #{ 'target_freq': 500, 'split': 0.5, 'obs_hz': 20,  'target_hz': 10}]
-          #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 20,  'target_hz': 10}]
-          #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 100, 'target_hz': 20},
-          #{ 'target_freq': 250, 'split': 0.5, 'obs_hz': 25,  'target_hz': 50},
-          #
-          #NEXTUP:
-          #[{'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 500.0},
-          #            {'target_frequency': 1000, 'obs_hz': 500.0,  'target_hz': 500.0},
-          #            {'target_frequency': 1000, 'obs_hz': 250.0,  'target_hz': 100.0},
-          #            {'target_frequency': 1000, 'obs_hz': 100.0,  'target_hz': 100.0}]
-
+          
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
         set_specific_args = {"prediction_type": "block", "size" : "publish"}
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
@@ -133,17 +133,12 @@ def test(TEST, multiprocessing = False, gap = False):
                           #{'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 10, "subseq_len" : subseq_len},#, "k" : 100},
                           #{'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 10, "subseq_len" : subseq_len},#, "k" : 30},
                           ]
+        # {'llambda': 0.00938595717962852, 'llambda2': 0.002908498759116776, 'connectivity': 1.0, 'spectral_radius': 0.48154601180553436, 'regularization': 0.3676013152573216, 'leaking_rate': 0.7179883186221123, 'noise': 1.2589254117941673, 'n_nodes': 1000, 'random_seed': 123}
 
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
         
-      bounds = {
-                #'noise' : (-2, -4),
-                'llambda' : (-3, -1), 
-                'connectivity': (-3, 0), # 0.5888436553555889, 
-                'n_nodes': 1000,#(100, 1500),
-                'spectral_radius': (0.05, 0.99),
-                'regularization': (-10,-2)
-                }
+      
+      
     
     else:
       print("This is not a test")
@@ -157,7 +152,8 @@ def test(TEST, multiprocessing = False, gap = False):
                  #unif adj:
                  # not going to impliment these, but connectivity clustered around 1, leaking rate around 1, spectral radius around 1
                 'noise' :          (-5, -0.5),
-                'llambda' :        (-4, 0), 
+                'llambda' :        (-5, 0),
+                'llambda2' :       (-5, 0), 
                 'connectivity':    (-5, 0),       # 0.5888436553555889, 
                 'n_nodes':         1000,          #(100, 1500),
                 'spectral_radius': (0.001, 0.999),
@@ -165,23 +161,19 @@ def test(TEST, multiprocessing = False, gap = False):
                 "leaking_rate" :   (0.001, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
-      experiment_set = [
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980.0, 'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0,  'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 80.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 80.0,  'target_hz': 80.0},
 
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0,  'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 230.0,  'target_hz': 80.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 80.0,  'target_hz': 80.0},
-                ]
-
-
+      if RUN_LITE == True:
+        bounds = { #noise hyper-parameter.
+                'noise' :          0.1, #(-5, -0.5),
+                'llambda' :        (-3, -1),
+                'llambda2' :       0.1, 
+                'connectivity':    0.05,       # 0.5888436553555889, 
+                'n_nodes':         1000,          #(100, 1500),
+                'spectral_radius': (0.001, 0.999),
+                'regularization':  (-3, 1),#(-12, 1),
+                "leaking_rate" :   0.99 #(0.001, 1) # we want some memory. 0 would mean no memory.
+                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
+                }
       #librosa_args = {"spectrogram_path" : "19th_century_male_stft",
       #                "spectrogram_type" : "db",#"db", #power
       #                "librosa": True}
@@ -195,11 +187,11 @@ def test(TEST, multiprocessing = False, gap = False):
       obs_freqs7, resp_freqs7 = get_frequencies(7)
 
       experiment_set = [
-             { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             { 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
+             #{ 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             #{ 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
-             { 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             { 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
+             #{ 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             #{ 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
@@ -211,9 +203,9 @@ def test(TEST, multiprocessing = False, gap = False):
 
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-      experiment["prediction_type"] = PREDICTION_TYPE
+      experiment["prediction_type"] = "block"#PREDICTION_TYPE
 
-      experiment["size"] = "medium"
+      experiment["size"] = "small"
       #if PREDICTION_TYPE == "column":
       #  experiment["size"] = "small"
 
@@ -240,10 +232,7 @@ if __name__ == '__main__':
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
-  if PREDICTION_TYPE == True:
-    TEST = False
-  else:
-    TEST = True
+  TEST = False #false for low frequencies, true for column.
 
   start = timeit.default_timer()
   test(TEST = TEST)
@@ -315,4 +304,27 @@ if __name__ == '__main__':
              { 'split': 0.5, "obs_freqs": obs_freqs5,  "target_freqs": resp_freqs5  },
              { 'split': 0.5, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
              ]
+             experiment_set = [
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980.0, 'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0,  'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 80.0},
+                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 80.0,  'target_hz': 80.0},
+
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0, 'target_hz': 980.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0,  'target_hz': 450.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 230.0,  'target_hz': 80.0},
+                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 80.0,  'target_hz': 80.0},
+                ]
+      bounds = {
+                #'noise' : (-2, -4),
+                'llambda' : (-3, -1), 
+                'connectivity': (-3, 0), # 0.5888436553555889, 
+                'n_nodes': 1000,#(100, 1500),
+                'spectral_radius': (0.05, 0.99),
+                'regularization': (-10,-2)
+                }
       """

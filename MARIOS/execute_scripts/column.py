@@ -13,7 +13,7 @@ def get_frequencies(trial = 1):
   elif trial == 2:
       lb_targ, ub_targ, obs_hz  = 340, 640, 280
   elif trial == 3:
-      lb_targ, ub_targ, obs_hz  = 340, 350, 40
+      lb_targ, ub_targ, obs_hz  = 340, 350, 20#40
   elif trial == 4:
       lb_targ, ub_targ, obs_hz  = 60, 350, 40
   elif trial == 5:
@@ -26,7 +26,7 @@ def get_frequencies(trial = 1):
   obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
   resp_list = list( range( lb_targ, ub_targ, 10))
   return obs_list, resp_list
-PREDICTION_TYPE = "column"
+PREDICTION_TYPE = "block"
 
 def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpolation_method = "griddata-linear"):
   """
@@ -154,7 +154,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
 
   if TEACHER_FORCING:
     cv_args = Merge(cv_args, {"esn_feedback" : True})
-  experiment.RC_CV(cv_args = cv_args, model = "uniform")
+  #experiment.RC_CV(cv_args = cv_args, model = "uniform")
+  experiment.RC_CV(cv_args = cv_args, model = "exponential")
   """
   models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"] #
   for model_ in models:
