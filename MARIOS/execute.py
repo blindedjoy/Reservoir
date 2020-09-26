@@ -75,6 +75,24 @@ def test(TEST, multiprocessing = False, gap = False):
                 "leaking_rate" :   (0.001, 1) # we want some memory. 0 would mean no memory.
                 # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
                 }
+        bounds = { #noise hyper-parameter.
+                 #all are log scale except  spectral radius, leaking rate and n_nodes
+
+                 #9/16/2020 based on the hyper-parameter plot we will make the following adjustments:
+                 #exponential adj:
+                 #llambda -> wider net: (-3.5, 0.5), noise -> larger (more general solution then): (-5, -0.5),
+                 # connectivity needs to be wider as well: (-5, 0)
+                 #unif adj:
+                 # not going to impliment these, but connectivity clustered around 1, leaking rate around 1, spectral radius around 1
+                'noise' :          (-5, -0.5),
+                'llambda' :        (-4, 0),
+                'connectivity':    (-5, 0),       # 0.5888436553555889, 
+                'n_nodes':         1000,          #(100, 1500),
+                'spectral_radius': (0.001, 0.999),
+                'regularization':  (-3, 4),#(-12, 1),
+                "leaking_rate" :   (0.001, 1) # we want some memory. 0 would mean no memory.
+                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
+                }
         if gap: 
           print("HA")
         else:
@@ -206,9 +224,9 @@ def test(TEST, multiprocessing = False, gap = False):
 
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-      experiment["prediction_type"] = "block"#PREDICTION_TYPE
+      experiment["prediction_type"] = "column" #"block"#PREDICTION_TYPE
 
-      experiment["size"] = "publish"
+      experiment["size"] = "medium"
       #if PREDICTION_TYPE == "column":
       #  experiment["size"] = "small"
 
@@ -235,7 +253,8 @@ if __name__ == '__main__':
   print("Total cpus available: " + str(ncpus))
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
-  TEST = False #false for low frequencies, true for column.
+
+  TEST = True #false for low frequencies, true for column.
 
   start = timeit.default_timer()
   test(TEST = TEST)
