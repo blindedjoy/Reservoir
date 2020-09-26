@@ -154,7 +154,7 @@ class EchoStateExperiment:
 			if obs_freqs:
 				self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
 				self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
-
+				self.resp_idx = list(np.unique(np.array(self.resp_idx)))
 				self.obs_idx = list(np.unique(np.array(self.obs_idx)))
 				for i in self.resp_idx:
 					if i in self.obs_idx:
@@ -167,6 +167,14 @@ class EchoStateExperiment:
 			if not target_freqs:
 				print("great success")
 				self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
+		elif self.prediction_type == "exact":
+			self.obs_idx = list(np.unique(np.array(self.obs_idx)))
+			self.resp_idx = list(np.unique(np.array(self.resp_idx)))
+			for i in self.resp_idx:
+				if i in self.obs_idx:
+					self.obs_idx.remove(i)
+			print("OBS IDX: " + str(self.obs_idx))
+			print("RESP IDX: " + str(self.resp_idx))
 		
 		self.horiz_display()
 		self.k = k

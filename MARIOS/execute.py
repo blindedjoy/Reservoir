@@ -16,7 +16,7 @@ import multiprocessing.pool
 #load tests ect.
 from execute_scripts.column import *
 
-RUN_LITE = True
+RUN_LITE = False
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
@@ -187,11 +187,12 @@ def test(TEST, multiprocessing = False, gap = False):
       obs_freqs7, resp_freqs7 = get_frequencies(7)
 
       experiment_set = [
-             #{ 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             #{ 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
+             { 'split': 0.9, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
+             { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             { 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
-             #{ 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             #{ 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
+             { 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             { 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
