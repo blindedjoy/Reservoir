@@ -1,0 +1,41 @@
+reconstraining parameters Mat52.lengthscale
+reconstraining parameters Mat52.variance
+reconstraining parameters GP_regression.Gaussian_noise.variance
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 121, in worker
+    result = (True, func(*args, **kwds))
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 44, in mapstar
+    return list(map(*args))
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute_scripts/column.py", line 155, in run_experiment
+    if TEACHER_FORCING:
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1213, in RC_CV
+    self.save_json()
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1298, in save_json
+    data = json.dump(self.json2be, outfile)
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/json/encoder.py", line 431, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/json/encoder.py", line 405, in _iterencode_dict
+    yield from chunks
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/json/encoder.py", line 438, in _iterencode
+    o = _default(o)
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/json/encoder.py", line 179, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type range is not JSON serializable
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "execute.py", line 261, in <module>
+    {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500},
+  File "execute.py", line 243, in test
+    if PREDICTION_TYPE == True:
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 268, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
+    raise self._value
+TypeError: Object of type range is not JSON serializable

@@ -32,3 +32,120 @@ Score: 1.0
 Score: 1.0
 Score: 1.0
 Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Model initialization done. 
+
+
+Name : GP regression
+Objective : -339.73175132819654
+Number of Parameters : 6
+Number of Optimization Parameters : 6
+Updates : True
+Parameters:
+  [1mGP_regression.         [0;0m  |                   value  |  constraints  |       priors      
+  [1mMat52.variance         [0;0m  |   0.0004177344396300975  |      +ve      |  iGa(0.001, 0.001)
+  [1mMat52.lengthscale      [0;0m  |                    (4,)  |      +ve      |  iGa(0.001, 0.001)
+  [1mGaussian_noise.variance[0;0m  |  2.1014685323411524e-05  |      +ve      |  iGa(0.001, 0.001) 
+
+  [1mindex[0;0m  |  GP_regression.Mat52.lengthscale  |  constraints  |       priors      
+  [1m[0]  [0;0m  |                       6.49365967  |      +ve      |  iGa(0.001, 0.001)
+  [1m[1]  [0;0m  |                       6.54766789  |      +ve      |  iGa(0.001, 0.001)
+  [1m[2]  [0;0m  |                       6.54144742  |      +ve      |  iGa(0.001, 0.001)
+  [1m[3]  [0;0m  |                       6.50969527  |      +ve      |  iGa(0.001, 0.001) 
+
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Converged at iteration 103
+Done after 103 iterations.
+{'llambda': 0.004255283918637293, 'connectivity': 0.10842090714046212, 'spectral_radius': 0.9711814165115357, 'regularization': 4.29424567180154e-06, 'n_nodes': 1000, 'random_seed': 123}
+initialiazing json2be
+
+
