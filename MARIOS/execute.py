@@ -208,7 +208,7 @@ def test(TEST, multiprocessing = False, gap = False):
       experiment["bounds"] = bounds
       experiment["prediction_type"] = "block"#PREDICTION_TYPE
 
-      experiment["size"] = "small"
+      experiment["size"] = "publish"
       #if PREDICTION_TYPE == "column":
       #  experiment["size"] = "small"
 
