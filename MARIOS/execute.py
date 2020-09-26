@@ -225,10 +225,7 @@ def test(TEST, multiprocessing = False, gap = False):
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       experiment["prediction_type"] = "column" #"block"#PREDICTION_TYPE
-
       experiment["size"] = "medium"
-      #if PREDICTION_TYPE == "column":
-      #  experiment["size"] = "small"
 
     try:
       set_start_method('forkserver')
