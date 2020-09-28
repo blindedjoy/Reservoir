@@ -1,7 +1,7 @@
 reconstraining parameters Mat52.lengthscale
 reconstraining parameters Mat52.variance
 reconstraining parameters GP_regression.Gaussian_noise.variance
-Process Process-1:9651:
+Process Process-1:8884:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -40,7 +40,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9659:
+Process Process-1:8890:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -79,7 +79,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9655:
+Process Process-1:8888:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -118,7 +118,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9660:
+Process Process-1:8885:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -157,7 +157,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9658:
+Process Process-1:8881:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -196,7 +196,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9657:
+Process Process-1:8882:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -235,7 +235,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9654:
+Process Process-1:8889:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -274,7 +274,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9652:
+Process Process-1:8886:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -313,7 +313,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9653:
+Process Process-1:8883:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):
@@ -352,7 +352,7 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'dual_lambda'
-Process Process-1:9656:
+Process Process-1:8887:
 multiprocessing.pool.RemoteTraceback: 
 """
 Traceback (most recent call last):

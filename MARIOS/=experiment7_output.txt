@@ -1,0 +1,163 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 7 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
+TEST
+on track
+Prediction Type: column
+{'size': 'medium', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 500.0, 'target_hz': 1000.0}
+block
+obs_freqsNone
+great success
+Train Region Train/Observers shape: (921, 50)
+Test Region Train/Observers shape: (103, 50)
+Train Region Target shape: (921, 101)
+Test Region Target shape: (103, 101)
+Finishing OBSERVERS
+uniformrc cv set, ready to train
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2af228b2f7d0>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['noise', 'llambda', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+Score: 0.2932175022095377
+Score: 0.5204988375769812
+Score: 0.3500154146691629
+Score: 0.2956588746240844
+Score: 0.18509620878953637
+Score: 0.24819898046677724
+Score: 0.246132054922633
+Score: 0.20097706927755182
+Score: 0.2944473162296334
+Score: 0.4847031909912969
+Score: 0.19084926253024354
+Score: 0.39540900671210044
+Score: 0.18925223063658259
+Score: 0.22272490632154032
+Score: 0.4946577385086011
+Score: 0.1915253162249234
+Score: 0.19899198449499336
+Score: 0.5100728170981292
+Score: 0.3142735429344369
+Score: 0.17557604089273823
+Score: 0.8065770887665455
+Score: 0.4200808798661888
+Score: 0.1670740737911338
+Score: 0.169250972865068
+Score: 0.21687226820631836
+Score: 0.190346331656146
+Score: 0.18398088848704328
+Score: 0.17251314220051434
+Score: 0.2328268313104064
+Score: 0.3773692205230793
+Score: 0.18474832982160685
+Score: 0.30226669858230754
+Score: 0.29624590009857793
+Score: 0.31936302926460475
+Score: 0.17311159678721036
+Score: 0.31661655675401074
+Score: 0.19779981137957076
+Score: 0.5668573771143581
+Score: 0.17598595378556678
+Score: 0.16246679674562392
+Score: 0.1737999415988964
+Score: 0.1673469160288943
+Score: 0.167725898409105
+Score: 0.32361596716456137
+Score: 0.16823746213215152
+Score: 0.1864390758405774
+Score: 0.17566359174006427
+Score: 0.19344411884606683
+Score: 0.6874190579293262
+Score: 0.33940234091105437
+Score: 0.2503778780751467
+Score: 0.1556114084594158
+Score: 0.24843372668659813
+Score: 0.2834737657596119
+Score: 0.17297302200848597
+Score: 0.34169226360692523
+Score: 0.16713287693280418
+Score: 0.18291788028941555
+Score: 0.17037250936632659
+Score: 0.40470050308769084
+Score: 0.22421889622095093
+Score: 0.40564051653105243
+Score: 0.32201923109274755
+Score: 0.15091603918315974
+Score: 0.7750744370370993
+Score: 0.3897934223355674
+Score: 0.758524069769066
+Score: 0.30649910883925907
+Score: 0.17989766150132497
+Score: 0.567950239148966
+Score: 0.23924278821959533
+Score: 0.189326493066689
+Score: 0.20013360410765246
+Score: 0.32215421313575754
+Score: 0.24755645934285087
+Score: 0.18684681897632302
+Score: 0.29976250061716775
+Score: 0.2969352399316556
+Score: 0.16454582306589532
+Score: 0.40024281046789995
+Score: 0.2881994538845168
+Score: 0.23486289334088864
+Score: 0.21479750418285984
+Score: 0.2778914663729479
+Score: 0.5096419665848512
+Score: 0.2842780051700467
+Score: 0.26396312988145987
+Score: 0.26621613353946477
+Score: 0.2688284431456839
+Score: 0.1919855043834243
+Score: 0.2910336547165267
+Score: 0.18286718916949385
+Score: 0.29286351472356675
+Score: 0.3844801525010396
+Score: 0.20446929307031866
+Score: 0.2031396897256019
+Score: 0.17567530503946388
+Score: 0.18432723439567325
+Score: 0.1869598100360892
+Score: 0.3599902471553749
+Model initialization done. 
+
+
+Name : GP regression
+Objective : 90.55059453733327
+Number of Parameters : 8
+Number of Optimization Parameters : 8
+Updates : True
+Parameters:
+  [1mGP_regression.         [0;0m  |                 value  |  constraints  |       priors      
+  [1mMat52.variance         [0;0m  |    0.7109096121305664  |      +ve      |  iGa(0.001, 0.001)
+  [1mMat52.lengthscale      [0;0m  |                  (6,)  |      +ve      |  iGa(0.001, 0.001)
+  [1mGaussian_noise.variance[0;0m  |  0.053356641117475484  |      +ve      |  iGa(0.001, 0.001) 
+
+  [1mindex[0;0m  |  GP_regression.Mat52.lengthscale  |  constraints  |       priors      
+  [1m[0]  [0;0m  |                       7.10546004  |      +ve      |  iGa(0.001, 0.001)
+  [1m[1]  [0;0m  |                       5.19428837  |      +ve      |  iGa(0.001, 0.001)
+  [1m[2]  [0;0m  |                       3.67504291  |      +ve      |  iGa(0.001, 0.001)
+  [1m[3]  [0;0m  |                       5.08967068  |      +ve      |  iGa(0.001, 0.001)
+  [1m[4]  [0;0m  |                       0.43063490  |      +ve      |  iGa(0.001, 0.001)
+  [1m[5]  [0;0m  |                       0.66880941  |      +ve      |  iGa(0.001, 0.001) 
+
+Score: 0.14978856168464738
+Score: 0.1687706394517825
+Converged at iteration 102
+Done after 102 iterations.
+{'noise': 1e-05, 'llambda': 1.0, 'connectivity': 1e-05, 'spectral_radius': 0.999, 'regularization': 10000.0, 'leaking_rate': 0.001, 'n_nodes': 1000, 'random_seed': 123}
+initialiazing json2be
+
+
+
+
+
+ 
+ exp rc cv data saved @ : experiment_results/medium/split_0.9/block_targetHz_ctr:_1000targetKhz:_1.0__obskHz:_0.5.txt
+exponentialrc cv set, ready to train
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2af23679c7d0>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['noise', 'llambda', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
