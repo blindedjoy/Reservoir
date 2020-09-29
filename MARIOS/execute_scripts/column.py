@@ -21,7 +21,7 @@ def get_frequencies(trial = 1):
   if trial == 6:
       lb_targ, ub_targ, obs_hz  = 130, 530, 130
   if trial == 7:
-      lb_targ, ub_targ, obs_hz  = 500, 900, 300
+      lb_targ, ub_targ, obs_hz  = 500, 900, 250
   obs_list =  list( range( lb_targ - obs_hz, lb_targ, 10))
   obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
   resp_list = list( range( lb_targ, ub_targ, 10))
@@ -156,6 +156,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     cv_args = Merge(cv_args, {"esn_feedback" : True})
   experiment.RC_CV(cv_args = cv_args, model = "uniform")
   experiment.RC_CV(cv_args = cv_args, model = "exponential")
+  
   """
   models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"] #
   for model_ in models:

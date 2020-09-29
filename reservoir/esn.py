@@ -80,6 +80,9 @@ class EchoStateNetwork:
             #print("dual lambda")
             self.llambda = [self.llambda, llambda2]
             self.dual_lambda = True
+        else:
+            self.dual_lambda = False
+
 
         self.generate_reservoir()
 

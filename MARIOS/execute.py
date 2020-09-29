@@ -224,8 +224,8 @@ def test(TEST, multiprocessing = False, gap = False):
 
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-      experiment["prediction_type"] = "column" #"block"#PREDICTION_TYPE
-      experiment["size"] = "medium"
+      experiment["prediction_type"] = "block" #"block"#PREDICTION_TYPE
+      experiment["size"] = "publish"
 
     try:
       set_start_method('forkserver')
@@ -251,7 +251,7 @@ if __name__ == '__main__':
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
 
-  TEST = True #false for low frequencies, true for column.
+  TEST = False #false for low frequencies, true for column.
 
   start = timeit.default_timer()
   test(TEST = TEST)
