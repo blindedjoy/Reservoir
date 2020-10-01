@@ -1,0 +1,68 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 0 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
+This is not a test
+Prediction Type: block
+{'size': 'publish', 'verbose': False, 'obs_freqs': [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650], 'target_freqs': [130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520], 'prediction_type': 'block'}
+block
+obs_freqs[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650]
+OBS IDX: [0, 3, 6, 9, 11, 14, 17, 20, 23, 26, 29, 31, 34, 152, 154, 157, 160, 163, 166, 169, 172, 174, 177, 180, 183, 186]
+RESP IDX: [37, 40, 43, 46, 49, 51, 54, 57, 60, 63, 66, 69, 71, 74, 77, 80, 83, 86, 89, 91, 94, 97, 100, 103, 106, 109, 111, 114, 117, 120, 123, 126, 129, 132, 134, 137, 140, 143, 146, 149]
+Train Region Train/Observers shape: (2837, 26)
+Test Region Train/Observers shape: (316, 26)
+Train Region Target shape: (2837, 40)
+Test Region Target shape: (316, 40)
+Finishing OBSERVERS
+uniformrc cv set, ready to train
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b6a92244710>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['noise', 'llambda', 'llambda2', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+Score: 0.08535641670709507
+Score: 0.059350188466427714
+Score: 0.2786476826232346
+Score: 0.08369753760156237
+Score: 0.08975473185760798
+Score: 0.052565502266478735
+Score: 0.05928431654582365
+Score: 0.1437526118716808
+Score: 0.05544391662468194
+Score: 0.13278828493037187
+Score: 0.05173108222587079
+Score: 0.9154682286178547
+Score: 0.06268135573229756
+Score: 0.06135048412648143
+Score: 0.07882372211913742
+Score: 0.056136057463536004
+Score: 0.14352229142354797
+Score: 0.5233152381920728
+Score: 0.05272520016506392
+Score: 0.7832653719552892
+Score: 0.09258415166748898
+Score: 0.07428288026511237
+Score: 0.19052194880630752
+Score: 0.048980001280419065
+Score: 0.08757188009888105
+Score: 0.06555646203552443
+Score: 0.08647999781037756
+Score: 0.13720198334801273
+Score: 0.060970826783408
+Score: 0.05692725322346304
+Score: 0.08915056380960024
+Score: 0.07394608133536092
+Score: 0.13211524129574825
+Score: 0.06896968557829056
+Score: 0.06820506383775445
+Score: 0.06502734000626169
+Score: 0.06276795968137097
+Score: 0.11813144483095109
+Score: 0.08246499816801586
+Score: 0.09389730459991491
+Score: 0.07349900635820153
+Score: 0.08607220755890047
+Score: 0.13181061015334647
+Score: 0.06289245065271278
+Score: 0.07252437154256745
+Score: 0.09154527974702867
+Score: 0.1137574535461193
