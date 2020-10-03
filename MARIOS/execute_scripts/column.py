@@ -26,6 +26,7 @@ def get_frequencies(trial = 1):
   obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
   resp_list = list( range( lb_targ, ub_targ, 10))
   return obs_list, resp_list
+  
 PREDICTION_TYPE = "block"
 
 def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpolation_method = "griddata-linear"):

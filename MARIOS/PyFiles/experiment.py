@@ -103,7 +103,7 @@ class EchoStateExperiment:
 				 target_hz = None, train_time_idx = None, test_time_idx = None, verbose = True,
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
-				 target_freqs = None, spectrogram_type = None, k = None
+				 target_freqs = None, spectrogram_type = None, k = None, obs_idx = None, resp_idx = None
 				 #obs_idx = None,
 				 ):
 		# Parameters
@@ -127,6 +127,8 @@ class EchoStateExperiment:
 		self.verbose = verbose
 		self.target_freqs = target_freqs
 		self.obs_freqs = obs_freqs
+		self.obs_idx = obs_idx
+		self.resp_idx = resp_idx
 
 		if obs_freqs:
 			self.target_frequency =  float(np.mean(target_freqs))
@@ -150,23 +152,29 @@ class EchoStateExperiment:
 		#order dependent attributes:
 		self.load_data()
 		print("obs_freqs" + str(self.obs_freqs))
+
+		#This deals with obs_freqs or obs_hz. We need a different method if we already have the exact index.
 		if self.prediction_type == "block":
-			if obs_freqs:
-				self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
-				self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
-				self.resp_idx = list(np.unique(np.array(self.resp_idx)))
-				self.obs_idx = list(np.unique(np.array(self.obs_idx)))
-				for i in self.resp_idx:
-					if i in self.obs_idx:
-						self.obs_idx.remove(i)
-				print("OBS IDX: " + str(self.obs_idx))
-				print("RESP IDX: " + str(self.resp_idx))
-			if obs_hz and target_hz:
-				assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
-				assert is_numeric(target_hz), "you must enter a numeric target frequency range"
-			if not target_freqs:
-				print("great success")
-				self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
+			#if the observer index hasn't been initialized or if it equal to None do this:
+			if not self.obs_idx:
+				if obs_freqs:
+					self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
+					self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
+					self.resp_idx = list(np.unique(np.array(self.resp_idx)))
+					self.obs_idx = list(np.unique(np.array(self.obs_idx)))
+					for i in self.resp_idx:
+						if i in self.obs_idx:
+							self.obs_idx.remove(i)
+					print("OBS IDX: " + str(self.obs_idx))
+					print("RESP IDX: " + str(self.resp_idx))
+				if obs_hz and target_hz:
+					assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
+					assert is_numeric(target_hz), "you must enter a numeric target frequency range"
+				if not target_freqs:
+					print("great success")
+					self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
+
+		## exact assumes you already have the obss_idx
 		elif self.prediction_type == "exact":
 			self.obs_idx = list(np.unique(np.array(self.obs_idx)))
 			self.resp_idx = list(np.unique(np.array(self.resp_idx)))
@@ -811,7 +819,10 @@ class EchoStateExperiment:
 			This method is just like simple_block but upgraded to take in only frequencies by using the helper function hz2freq which must
 			be called first.
 			"""
+			
 			self.exact = True
+			response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
+			response_idx = self.resp_idx
 			
 			if self.prediction_type == "block":
 				assert self.obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
@@ -1328,7 +1339,7 @@ class EchoStateExperiment:
 		#2D interpolation
 		#observer coordinates
 		
-		if self.prediction_type == "block":
+		if self.prediction_type == "block" or self.prediction_type == "exact":
 		
 			#Training points
 			resp_idx = self.resp_idx
@@ -1342,8 +1353,8 @@ class EchoStateExperiment:
 		if self.interpolation_method	 in ["griddata-linear", "griddata-cubic", "griddata-nearest"]:
 			#print(self.interpolation_method)
 			points_to_predict, values, point_lst = [], [], []
-			
-			if self.prediction_type == "block":
+
+			if self.prediction_type == "block" or self.prediction_type == "exact":
 			
 				#Train zone
 				for x in range(self.xTr.shape[0]):
@@ -1400,7 +1411,11 @@ class EchoStateExperiment:
 			griddata_type = translation_dict[self.interpolation_method]
 			if self.verbose:
 				print("griddata " + griddata_type + " interpolation")
+
 			ip2_pred = griddata(point_lst, values, points_to_predict, method = griddata_type)#"nearest")#griddata_type)#, rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
+			
+			#Shape(ip2_pred, "ip2_pred")
+			#print(self.xTe.shape)
 			ip2_pred = ip2_pred.reshape(self.xTe.shape)
 			#ip2_resid = ip2_pred - self.xTe
 			#points we can see in the training set

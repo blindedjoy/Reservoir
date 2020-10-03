@@ -65,16 +65,6 @@ def test(TEST, multiprocessing = False, gap = False):
     if TEST == True:
       print("TEST")
       if PREDICTION_TYPE == "block":
-        bounds = { 
-                'noise' :          (-5, -0.5),
-                'llambda' :        (-4, 0), 
-                'connectivity':    (-5, 0),       
-                'n_nodes':         1000,          
-                'spectral_radius': (0.001, 0.999),
-                'regularization':  (-3, 4),
-                "leaking_rate" :   (0.001, 1) # we want some memory. 0 would mean no memory.
-                # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
-                }
         bounds = { #noise hyper-parameter.
                  #all are log scale except  spectral radius, leaking rate and n_nodes
 
@@ -106,12 +96,12 @@ def test(TEST, multiprocessing = False, gap = False):
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
 
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
+                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
+                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
+                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
                 ]
           
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
@@ -251,7 +241,7 @@ if __name__ == '__main__':
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
 
-  TEST = False #false for low frequencies, true for column.
+  TEST = True #false for low frequencies, true for column.
 
   start = timeit.default_timer()
   test(TEST = TEST)
