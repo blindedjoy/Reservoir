@@ -76,6 +76,7 @@ def test(TEST, multiprocessing = False, gap = False):
                  # not going to impliment these, but connectivity clustered around 1, leaking rate around 1, spectral radius around 1
                 'noise' :          (-5, -0.5),
                 'llambda' :        (-4, 0),
+                'llambda2' :       (-5, 0),
                 'connectivity':    (-5, 0),       # 0.5888436553555889, 
                 'n_nodes':         1000,          #(100, 1500),
                 'spectral_radius': (0.001, 0.999),
