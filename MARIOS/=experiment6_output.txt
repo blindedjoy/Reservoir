@@ -1,4 +1,3 @@
 Total cpus available: 10
 RUNNING EXPERIMENT 6 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
-TEST
-on track
+This is not a test
