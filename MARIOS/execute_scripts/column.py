@@ -49,6 +49,10 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     'regularization': (-12, 1),
     'connectivity': (-3, 0),
     'n_nodes':  (100, 1000)
+
+
+  #notes on modularizing this: column.py doesn't make sense in terms of its name. Ideally you will have block.py and column.py,
+  but at the end of the day the experiment specifications should be easier to execute. Namely, they should be at the top of this file.
   }"""
   model_type = inputs["model_type"]
   size = inputs["size"]
@@ -57,7 +61,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   else:
     k = None
   #default arguments
-  print("Prediction Type: " + inputs["prediction_type"])
+  #print("Prediction Type: " + inputs["prediction_type"])
 
   ####if you imported the data via librosa this will work
   if "librosa" in inputs:
