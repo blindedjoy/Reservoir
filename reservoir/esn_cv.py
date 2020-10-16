@@ -77,7 +77,8 @@ class EchoStateNetworkCV:
                  validate_fraction=0.2, steps_ahead=1, max_iterations=1000, batch_size=1, cv_samples=1,
                  scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
-                 plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0):
+                 plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
+                 model_type = "random", activation_function = "tanh"):
         # Bookkeeping
         self.bounds = OrderedDict(bounds)  # Fix order
         self.parameters = list(self.bounds.keys())
@@ -107,14 +108,18 @@ class EchoStateNetworkCV:
         self.verbose = verbose
         self.plot = plot
         self.target_score = target_score
+
+        #Hayden modifications: varying the architectures
         self.exp_weights = exp_weights
         self.obs_index = obs_index
         self.target_index = target_index
         self.noise = noise
-
+        self.model_type = model_type
 
         # Normalize bounds domains and remember transformation
         self.scaled_bounds, self.bound_scalings, self.bound_intercepts = self.normalize_bounds(self.bounds)
+
+        self.activation_function = activation_function
 
     def normalize_bounds(self, bounds):
         """Makes sure all bounds feeded into GPyOpt are scaled to the domain [0, 1],
@@ -212,6 +217,11 @@ class EchoStateNetworkCV:
         arguments['random_seed'] = self.seed
         if 'regularization' in arguments:
             arguments['regularization'] = 10. ** arguments['regularization']  # Log scale correction
+
+        log_vars = ["cyclic_res_w", "cyclic_input_w", "cyclic_bias"]
+
+        for var in log_vars:
+            arguments[var] = 10. ** arguments[var]  # Log scale correction
 
         if 'connectivity' in arguments:
             arguments['connectivity'] = 10. ** arguments['connectivity']  # Log scale correction
@@ -345,7 +355,7 @@ class EchoStateNetworkCV:
         ###
         print("Hayden edit: space: " + str(space))
         print("Hayden edit: fixed_parameters: " + str(self.fixed_parameters))
-        print("Hayden edit: free_parameters: " + str(self.free_parameters))
+        print("Hayden edit: free_parameters: "  + str(self.free_parameters))
         ###
 
         # Build optimizer
@@ -415,8 +425,8 @@ class EchoStateNetworkCV:
         #print("args" + str(arguments))
 
         # Build network
-        esn = self.model(**arguments, exponential = self.exp_weights, 
-                obs_idx = self.obs_index, resp_idx = self.target_index, plot = False)
+        esn = self.model(**arguments, exponential = self.exp_weights, activation_function = self.activation_function,
+                obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type)
 
         # Train
         esn.train(x=train_x, y=train_y, burn_in=self.esn_burn_in)

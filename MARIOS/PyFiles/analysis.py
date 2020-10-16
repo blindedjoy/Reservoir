@@ -2,11 +2,9 @@ from tqdm.notebook import trange, tqdm
 
 def check_for_duplicates(lst, UnqLst = True, verbose = True):
     """ return the duplicate items in a list
-    
     Args:
         UnqLst: if True return the duplicates
         verbose: if True print the duplicates
-    
     """
     lst_tmp = []
     duplicates = []
@@ -49,16 +47,24 @@ class EchoStateAnalysis:
         self.ip_method = ip_method
         self.model = model
         self.data_type = data_type
+
+        assert model in ["uniform", "exponential", "delay_line"]
+
         if data_type == "json":
             self.change_interpolation_json()
         else:
             self.change_interpolation_pickle()
-        
-        
 
+        models = ["uniform", "exponential", "ip: linear"]
+
+        if self.model == "delay_line":
+            models = ["delay_line", "ip: linear"]
+
+        self.build_loss_df(models = models, group_by = "freq", columnwise = False)
+        self.build_loss_df(models = models, group_by = "time", columnwise = False)
         
-    def get_experiment(self, json_obj, compare_ = False, plot_split = False,
-                   librosa = False, verbose = False):
+        
+    def get_experiment(self, json_obj, compare_ = False, plot_split = False, librosa = False, verbose = False):
         """ This function retrieves, from a json dictionary file, an EchoStateExperiment object.
 
         Args:
@@ -70,20 +76,22 @@ class EchoStateAnalysis:
                 the spectrograms that were created with the librosa package.
 
         """
-        print(type(json_obj))
-        print(json_obj.keys())
+        
         print(json_obj["get_observer_inputs"])
-        print(json_obj["obs_idx"])
         if self.data_type == "json":
             print("DATA TYPE JSON")
             experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], librosa = librosa)
+            assert 1==0, "json is no longer supported"
         elif self.data_type == "pickle":
-            print("DATA TYPE PICKLE")
+            
             pickle_obj = json_obj
             extra_inputs = { "obs_idx" : pickle_obj["obs_idx"],
                              "resp_idx" : pickle_obj["resp_idx"],
                              "prediction_type" : "exact"
                         }
+            if self.model == "delay_line":
+                extra_inputs = {**extra_inputs, "model" : "delay_line" }
+
             experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
 
 
@@ -102,8 +110,14 @@ class EchoStateAnalysis:
 
         if self.model == "uniform":
             experiment_.already_trained(json_obj["best arguments"]["uniform"], exponential = False)
+
         elif self.model == "exponential": 
             experiment_.already_trained(json_obj["best arguments"]["exponential"], exponential = True)
+
+        elif self.model == "delay_line":
+            print(json_obj["best arguments"].keys())
+            experiment_.already_trained(json_obj["best arguments"]["delay_line"], exponential = False)
+
 
         experiment_.Train, experiment_.Test = experiment_.xTr, experiment_.xTe#self.recover_test_set(json_obj)
 
@@ -189,6 +203,7 @@ class EchoStateAnalysis:
         for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
 
             if not i:
+                print("initializing loop 2")
                 results_tmp, results_rel = [], []
 
             experiment_dict = experiment_lst[i]
@@ -265,40 +280,48 @@ class EchoStateAnalysis:
                 options: { "linear", "cubic", "nearest"}
 
         """
-        
         path_lst = self.path_list
 
+        #strange, this seems hacky.
         if self.ip_use_observers == False:
             self.ip_method = "nearest"
 
-        
-
+        #What is the point of this loop? If model is random -->  make sure uniform and exponential are successfully run.
+        #also a vestigal part of this loop is to check if it is even possible to load this.
         for i in trange(len(path_lst), desc='experiment list, loading data...'): 
+
             if not i:
-                experiment_lst, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
+                experiment_list_temp, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
             
-            try:
-                experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
-                models_spec = list(experiment_dict["prediction"].keys())
-                assert "exponential" in models_spec, print(models_spec)
+            if self.model != "delay_line":
                 try:
-                    assert len(models_spec) >= 3
+                    experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
+                    models_spec = list(experiment_dict["prediction"].keys())
                     assert "exponential" in models_spec, print(models_spec)
-
-                    experiment_lst.append(experiment_dict)
+                    try:
+                        assert len(models_spec) >= 3
+                        experiment_list_temp.append(experiment_dict)
+                    except:
+                        print("NOT INCLUDED")
+                        NOT_INCLUDED += [i]
                 except:
-                    print("NOT INCLUDED")
-                    NOT_INCLUDED += [i]
-            except:
-                print("NOT YET RUN")
-                NOT_YET_RUN += [i]
+                    print("NOT YET RUN")
+                    NOT_YET_RUN += [i]
+            else:
+                print("debug loc 2: " + str(path_lst))
+                experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
+                experiment_list_temp.append(experiment_dict)
 
-        for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
+
+        #in this loop we actually get the experiment.
+
+        print("debug loc alpha: " + str(len(experiment_list_temp)))
+        for i in trange( len(experiment_list_temp), desc='experiment list, fixing interpolation...'): 
 
             if not i:
-                results_tmp, results_rel = [], []
+                results_tmp, results_rel, experiment_list = [], [], []
 
-            experiment_dict = experiment_lst[i]
+            experiment_dict = experiment_list_temp[i]
             if self.ip_method == "all":
                 ip_methods_ = ["linear", "cubic", "nearest"]
             else:
@@ -308,7 +331,6 @@ class EchoStateAnalysis:
                 tmp_dict = self.fix_interpolation(experiment_dict, method = ip_method_)
                 experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
                 experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
-
             try:
                 rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["ip: linear"] 
                             for key in experiment_dict["nrmse"].keys()}
@@ -323,11 +345,11 @@ class EchoStateAnalysis:
                 dict_tmp = experiment_dict[key]
                 dict_tmp = ifdel(dict_tmp, "interpolation")
                 experiment_dict[key] = dict_tmp
+                print("debug loc 3: " + str(path_lst) + " " + str(key))
 
             results_tmp.append(experiment_dict["nrmse"])
-            experiment_lst.append(experiment_dict)
+            experiment_list.append(experiment_dict)
 
-            
         results_df = pd.DataFrame(results_tmp)
         results_df = results_df.melt()
         results_df.columns = ["model", "R"]
@@ -336,12 +358,10 @@ class EchoStateAnalysis:
         results_df_rel = results_df_rel.melt()
         results_df_rel.columns = ["model", "R"]
         
-        self.experiment_lst = experiment_lst
+        self.experiment_lst = experiment_list
         self.R_results_df = results_df
         self.R_results_df_rel = results_df_rel
-        #return(experiment_lst, results_df, results_df_rel)
 
-        #print(NOT_YET_RUN)
         if NOT_YET_RUN:
             print("the following paths have not yet been run: ")
             print(np.array(path_lst)[NOT_YET_RUN])
@@ -355,10 +375,10 @@ class EchoStateAnalysis:
 
         NOT_INCLUDED = check_for_duplicates(NOT_INCLUDED)
         NOT_YET_RUN = check_for_duplicates(NOT_YET_RUN)
-        print("total experiments completed: " + str(len(experiment_lst)))
+        print("total experiments completed: " + str(len(self.experiment_lst)))
         print("total experiments half complete: " + str(len(NOT_INCLUDED)))
         print("total experiments not yet run: " + str(len(NOT_YET_RUN)))
-        pct_complete = (len(experiment_lst))/(len(experiment_lst)+len(NOT_INCLUDED)*0.5 + len(NOT_YET_RUN)) * 100
+        pct_complete = (len(self.experiment_lst))/(len(self.experiment_lst)+len(NOT_INCLUDED)*0.5 + len(NOT_YET_RUN)) * 100
         pct_complete  = str(round(pct_complete, 1))
         print("Percentage of tests completed: " + str(pct_complete) + "%")  
     
@@ -538,18 +558,47 @@ class EchoStateAnalysis:
             exper_: the json experiment dictionary which you will to alter.
             method: the type of interpolation method (chosen from 'linear', 'cubic', 'nearest')
         """
-        hiObj = self.get_experiment(exper_, verbose = False, plot_split = False, compare_ = False)
-        if method == "cubic":
-            hiObj.interpolation_method = "griddata-cubic"
-        elif method == "nearest":
-            hiObj.interpolation_method = "griddata-nearest"
-        hiObj.runInterpolation(use_obs = self.ip_use_observers)
-        exper_["prediction"]["interpolation"] = hiObj.ip_res["prediction"]
-        exper_["nrmse"]["interpolation"] = hiObj.ip_res["nrmse"]
-        exper_["xTe"] = hiObj.xTe
-        exper_["xTr"] = hiObj.xTr
+        # we can get most of our information from either model, we just have to fix the exponential predictions at the end.
+        
+        if self.model == "delay_line":
+            exper_dl = self.get_experiment(exper_, verbose = False, plot_split = False, compare_ = False)
+            #TODO
+            exper_spec = exper_dl
+        else:
+            self.model = "uniform"
+            exper_unif = self.get_experiment(exper_, verbose = False, plot_split = False, compare_ = False)
+            unif_nrmse = nrmse(exper_unif.prediction, exper_unif.xTe)
+            exper_["prediction"]["uniform"] = exper_unif.prediction
+            exper_["nrmse"]["uniform"] = unif_nrmse
 
+            self.model = "exponential"
+            exper_exp = self.get_experiment(exper_, verbose = False, plot_split = False, compare_ = False)
+            exp_nrmse = nrmse(exper_exp.prediction, exper_exp.xTe)
+            exper_["prediction"]["exponential"] = exper_exp.prediction
+            exper_["nrmse"]["exponential"] = exp_nrmse
+
+            exper_spec = exper_unif
+
+        #interpolation:
+        if method == "cubic":
+            exper_spec.interpolation_method = "griddata-cubic"
+        elif method == "nearest":
+            exper_spec.interpolation_method = "griddata-nearest"
+        exper_spec.runInterpolation(use_obs = self.ip_use_observers)
+        exper_["prediction"]["interpolation"] = exper_spec.ip_res["prediction"]
+        exper_["nrmse"]["interpolation"] = exper_spec.ip_res["nrmse"]
+
+        #get important pieces of information for later, to avoid running get_experiment over and over and over.
+        exper_["xTe"] = exper_spec.xTe
+        exper_["xTr"] = exper_spec.xTr
+        exper_["f"]   = exper_spec.f
+        exper_["T"]   = exper_spec.T
+        exper_["A"]   = exper_spec.A
+
+        #now repair the exponential predictions.
         return(exper_)
+        
+
     
     def make_R_barplots(self, label_rotation = 45):
         """
@@ -567,7 +616,7 @@ class EchoStateAnalysis:
         ax[0].set_ylim(0, 1.05)
         ax[1].set_ylim(0.5, 2.0)
 
-    def loss(self, pred_, truth, columnwise = True, typee = "L1"):
+    def loss(self, pred_, truth, axis, columnwise = True, typee = "L1"):
         """
         inputs should be numpy arrays
         variables:
@@ -582,12 +631,15 @@ class EchoStateAnalysis:
         pred_ = np.array(pred_)
         truth = np.array(truth)
         assert pred_.shape == truth.shape, "pred shape: " + str(pred_.shape) + " , " + str(truth.shape)
+
         def L2_(pred, truth):
             resid = pred - truth
             return(resid**2)
+
         def L1_(pred, truth):
             resid = pred - truth
             return(abs(resid))
+
         def R_(pred, truth):
             loss = ((pred - truth)**2)/(np.sum(truth**2))
             loss = np.sqrt(loss)
@@ -604,8 +656,8 @@ class EchoStateAnalysis:
         loss_arr = f(pred_, truth )  
         if columnwise == True:
             if typee == "R":
-                loss_arr = loss_arr * loss_arr.shape[1]
-            loss_arr = np.mean(loss_arr, axis = 1)
+                loss_arr = loss_arr * loss_arr.shape[axis]
+            loss_arr = np.mean(loss_arr, axis = axis)
 
         return(loss_arr)
 
@@ -621,8 +673,6 @@ class EchoStateAnalysis:
         
         experiment_.get_observers(**obs_inputs)
         
-        
-        
         #print(json_obj.keys())
         best_args =  json_obj['best arguments'][model]
 
@@ -634,15 +684,13 @@ class EchoStateAnalysis:
             esn.exp_weights = False
         else:
             esn.exp_weights = True
-            
-        
         
         experiment_.already_trained(json_obj["best arguments"][model], exponential = False)
         return(experiment_.prediction)
 
 
-    def build_loss_df(self, columnwise = True, relative = True,
-                  rolling = None, models = ["uniform", "exponential", "interpolation"],#, "hybrid"],
+    def build_loss_df(self, group_by = "time", columnwise = True, relative = True,
+                  rolling = None, models = ["uniform", "exponential", "interpolation"],
                   silent = True, hybrid = False):
         #exp stands for experiment here, not exponential
         """ Builds a loss dataframe
@@ -652,17 +700,17 @@ class EchoStateAnalysis:
         columnwise == False means don't take the mean.
         """
 
-        exp_json_lst = self.experiment_lst
+        experiment_list = self.experiment_lst
         
-        for i in trange(len(exp_json_lst), desc='processing path list...'):
-            exp_json = exp_json_lst[i]
+        for i in trange(len(experiment_list), desc='processing path list...'):
+
+            experiment_ = experiment_list[i]
+            #exp_obj = self.get_experiment(exper_dict_spec, compare_ = False, verbose = False, plot_split = False)
             
-            
-            exp_obj = self.get_experiment(exp_json, compare_ = False, verbose = False, plot_split = False)
-            split_ = exp_json['get_observer_inputs']["split"]
+            split_ = experiment_['get_observer_inputs']["split"]
             
             #construct the required data frame and caculate the nrmse from the predictions:
-            train_, test_ = exp_obj.xTr, exp_obj.xTe
+            train_, test_ = experiment_["xTr"], experiment_["xTe"]
            
                 
             #if "hybrid" in exp_json["prediction"]:
@@ -670,35 +718,53 @@ class EchoStateAnalysis:
             #    del exp_json["nrmse"]['hybrid'] 
 
             if i == 0:
-                A = exp_obj.A
+                A = experiment_["A"]
                 
             test_len = test_.shape[0]
             train_len = A.shape[0] - test_len
-            time_lst = []
-            time_lst_one_run = list(exp_obj.T[train_len:].reshape(-1,))
+            
+            ###################################################
+            time_lst, freq_lst = [], []
+            resp_idx = experiment_["resp_idx"]
+            T, f = experiment_["T"], np.array(experiment_["f"])
+
+            time_lst_one_run = list(T[train_len:].reshape(-1,))
+            freq_lst_one_run = list(f[resp_idx].reshape(-1,))
             
             if columnwise ==  False:
                 time_lst_one_run *= test_.shape[1]
-            existing_models = exp_json["nrmse"].keys()
+                freq_lst_one_run *= test_.shape[0]
+            ###################################################
+
+            existing_models = experiment_["nrmse"].keys()
+            
 
             for j, model in enumerate(models):
                 
                 #R is new name for nrmseccccc
+                axis = 0 if group_by == "time" else 1
                 shared_args = {
-                    "pred_" : exp_json["prediction"][model],
+                    "pred_" : experiment_["prediction"][model],
                     "truth": test_,
-                    "columnwise" : columnwise
+                    "columnwise" : columnwise,
+                    "axis" : axis
                 }
 
                 L1_spec = self.loss(**shared_args, typee = "L1")
                 L2_spec = self.loss(**shared_args, typee = "L2")
                 R_spec  = self.loss(**shared_args, typee = "R")
 
+                self.L2_entire_df = L2_spec
+                self.L1_entire_df = L1_spec
+                self.R_entire_df  = R_spec
+
+                #what does columnwise = True even mean?
                 if columnwise == False:
-                    #what does columnwise = True even mean?
-                    L1_spec = np.mean(L1_spec.T, axis = 0)
-                    L2_spec = np.mean(L2_spec.T, axis = 0)
-                    R_spec  =  np.mean(R_spec.T, axis = 0)
+                    
+                    L1_spec = np.mean(L1_spec.T, axis = axis)
+                    L2_spec = np.mean(L2_spec.T, axis = axis)
+                    R_spec  = np.mean(R_spec.T,  axis = axis)
+
                 L2_spec = list(L2_spec.reshape(-1,))
                 R_spec = list(R_spec.reshape(-1,))
 
@@ -706,6 +772,7 @@ class EchoStateAnalysis:
 
                 L1_spec = pd.DataFrame({model : L1_spec})
                 time_lst += time_lst_one_run
+                freq_lst += freq_lst_one_run
 
                 if j == 0:
                     rDF_spec = L1_spec
@@ -718,14 +785,21 @@ class EchoStateAnalysis:
                 
                 
             time_ = pd.Series(time_lst)
+            freq_ = pd.Series(freq_lst)
             rDF_spec = pd.melt(rDF_spec)
 
             rDF_spec["L2_loss"] = L2_lst
             rDF_spec["R"] = R_lst
             rDF_spec["split"] = split_
-            rDF_spec["time"] = time_ 
+            if group_by == "time" :
+                rDF_spec["time"] = time_ 
+            else:
+                rDF_spec["freq"] = freq_ 
             rDF_spec["experiment #"] = i
-            rDF_spec.columns = ["model", "L1_loss", "L2_loss", "R", "split",  "time","experiment #"]
+            if group_by == "time":
+                rDF_spec.columns = ["model", "L1_loss", "L2_loss", "R", "split", "time", "experiment #"]
+            else:
+                rDF_spec.columns = ["model", "L1_loss", "L2_loss", "R", "split", "freq", "experiment #"]
 
             if i == 0:
                 rDF = rDF_spec
@@ -735,11 +809,16 @@ class EchoStateAnalysis:
                 
         if silent != True:
             display(rDF)
-        self.rDF = rDF
+        if group_by == "time":
+            self.rDF_time = rDF
+        elif group_by == "freq":
+            self.rDF_freq = rDF
 
     def loss_plot(self, rolling, split, loss = "R",
-                 relative = False, include_ip = True, hybrid = False):
-        rDF = self.rDF
+                 relative = False, include_ip = True, hybrid = False, group_by = "freq"):
+
+        rDF = self.rDF_time if group_by == "freq" else rDF_freq
+        
         if not hybrid:
             rDF = rDF[rDF.model != "hybrid"]
         if include_ip == False:
@@ -767,6 +846,7 @@ class EchoStateAnalysis:
         
             display(rDF)
             if rolling != None:
+
                 sns.lineplot( x = "time", y = LOSS.rolling(rolling).mean() , hue = "model" , data = rDF)
                 #sns.scatterplot( x = "time", y = "loss" , hue = "model" , data = rDF, alpha = 0.005, edgecolor= None)
             else:
@@ -778,7 +858,7 @@ class EchoStateAnalysis:
         """
         Let's visualize the hyper-parameter plots.
         """
-        log_vars = ["noise", "connectivity", "regularization", "llambda"]
+        log_vars = ["noise", "connectivity", "regularization", "llambda", "llamba2"]
         
         for i, experiment in enumerate(self.experiment_lst):
             df_spec_unif = pd.DataFrame(experiment["best arguments"]["uniform"], index = [0])
@@ -792,7 +872,7 @@ class EchoStateAnalysis:
                 df_exp = pd.concat([df_exp, df_spec_exp])
 
         unif_vars = ["connectivity", "regularization", "leaking_rate", "spectral_radius"]
-        exp_vars  = ["llambda", "noise"]
+        exp_vars  = ["llambda", "llambda2", "noise"]
         df_unif = df_unif[unif_vars]
         df_exp = df_exp[unif_vars + exp_vars]
         

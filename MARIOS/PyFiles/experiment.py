@@ -103,8 +103,8 @@ class EchoStateExperiment:
 				 target_hz = None, train_time_idx = None, test_time_idx = None, verbose = True,
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
-				 target_freqs = None, spectrogram_type = None, k = None, obs_idx = None, resp_idx = None
-				 #obs_idx = None,
+				 target_freqs = None, spectrogram_type = None, k = None, obs_idx = None, resp_idx = None,
+				 model = None
 				 ):
 		# Parameters
 		self.size = size
@@ -129,6 +129,8 @@ class EchoStateExperiment:
 		self.obs_freqs = obs_freqs
 		self.obs_idx = obs_idx
 		self.resp_idx = resp_idx
+		assert model in ["uniform", "exponential", "delay_line"]
+		self.model = model
 
 		if obs_freqs:
 			self.target_frequency =  float(np.mean(target_freqs))
@@ -151,7 +153,6 @@ class EchoStateExperiment:
 		
 		#order dependent attributes:
 		self.load_data()
-		print("obs_freqs" + str(self.obs_freqs))
 
 		#This deals with obs_freqs or obs_hz. We need a different method if we already have the exact index.
 		if self.prediction_type == "block":
@@ -994,6 +995,7 @@ class EchoStateExperiment:
 		
 		self.outfile = "experiment_results/" 
 
+
 		self.outfile += self.size
 
 		self.outfile += "/split_" + str(split)  +"/"
@@ -1002,6 +1004,8 @@ class EchoStateExperiment:
 			self.outfile += "column_"
 		elif self.prediction_type == "block":
 			self.outfile += "block_"
+		if self.model == "delay_line":
+			self.outfile += "DL"
 		
 		if self.method == "freq":
 			ctr = int(np.mean([int(self.f[idx]) for idx in self.resp_idx]))
@@ -1011,7 +1015,6 @@ class EchoStateExperiment:
 			self.outfile += "N_Targidx_" + str(len(self.resp_idx)) 
 			self.outfile += "N_Obsidx_" + str(len(self.obs_idx))
 
-		print("Finishing OBSERVERS")
 		#print("OUTFILE: " + str(self.outfile))
 
 
@@ -1032,6 +1035,7 @@ class EchoStateExperiment:
 			jsonMerge({"prediction" : ip_pred})
 			jsonMerge({"nrmse" : ip_nrmse})
 			jsonMerge({"best arguments" : {}})
+
 			self.json2be["obs_idx"] = self.obs_idx
 			self.json2be["resp_idx"] = self.resp_idx
 
@@ -1043,7 +1047,6 @@ class EchoStateExperiment:
 			self.json2be["experiment_inputs"] = { #this should be built into the initialization to avoid errors.
 				 "size" : self.size, 
 				 "target_frequency" : int(self.target_frequency),
-				 
 				 "verbose" : self.verbose,
 				 }
 			try:
@@ -1106,6 +1109,7 @@ class EchoStateExperiment:
 		elif self.model == "uniform":
 			assert not self.esn_cv.exp_weights# == False
 			args2export = ifdel(args2export, "llambda")
+			args2export = ifdel(args2export, "llambda2")
 			args2export = ifdel(args2export, "noise")
 
 		pred = self.prediction.tolist()
@@ -1141,22 +1145,24 @@ class EchoStateExperiment:
 		#esn_cv_spec equivalent: EchoStateNetworkCV
 		"""
 		self.model = model
-		assert self.model in ["uniform", "exponential", "hybrid"], self.model + " model not yet implimented"
+		print("." + self.model + ".")
+		assert self.model in ["uniform", "exponential", "delay_line", "hybrid"], self.model + " model not yet implimented"
 
-		if self.model in ["hybrid", "uniform"]:
-			exp = False
-			exp_w_ = {'exp_weights' : False}
-
-		elif self.model == "exponential":
+		if self.model in ["exponential"]:
 			self.exp = True
 			exp_w_ = {'exp_weights' : True}
+		else:
+			exp = False
+			exp_w_ = {'exp_weights' : False}
+			
 
 		### hacky intervention:
 		if self.prediction_type != "column":
 		
 			predetermined_args = {
 				'obs_index' : self.obs_idx,
-				'target_index' : self.resp_idx
+				'target_index' : self.resp_idx,
+				"model_type" : self.model
 			}
 			
 			input_dict = { **cv_args, 
@@ -1169,9 +1175,9 @@ class EchoStateExperiment:
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
 
+		if self.model in ["exponential", "uniform", "delay_line"]:
+				print(self.model + "rc cv set, ready to train ")
 
-		if self.model in ["exponential", "uniform"]:
-				print(self.model + "rc cv set, ready to train")
 		else:
 			print("training hybrid part one: finding unif parameters")
 		#print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
@@ -1218,6 +1224,7 @@ class EchoStateExperiment:
 		self.esn = self.esn_spec(**self.best_arguments, #you clearly aren't telling the network that this is expo.
 								 obs_idx  = self.obs_idx,
 								 resp_idx = self.resp_idx, 
+								 model_type = self.model,
 								 already_normalized = True)
 
 		self.esn.train(x = self.Train, y = self.xTr)
@@ -1241,14 +1248,18 @@ class EchoStateExperiment:
 
 
 	def already_trained(self, best_args, exponential):
-		#print("exp: " + str(exponential))
+		
 		self.best_arguments = best_args
-
 		if best_args:
-
+			if self.model == "delay_line":
+				print("DELAY LINE ALREADY TRAINED")
+				extra_args = {"model_type" : "delay_line",
+							  "activation_function" : "sin_sq"}
+				best_args = {**best_args, **extra_args}
 			self.esn = self.esn_spec(**self.best_arguments,
 									 obs_idx  = self.obs_idx,
 									 resp_idx = self.resp_idx,
+									 model_type = self.model,
 									 exponential = exponential)
 
 			self.esn.train(x = self.Train, y = self.xTr)
@@ -1494,14 +1505,13 @@ class EchoStateExperiment:
 				di   = di.reshape(self.xTe.shape)
 				diR  = nrmse(pred_ = di, truth = self.xTe, columnwise = columnwise)
 
-				self.ip_res = {"prediction" : di, 
-									"nrmse" : diR} 
+				self.ip_res = {"prediction" : di, "nrmse" : diR} 
+
 				print("FINISHED INTERPOLATION: R = " + str(diR))
 
 			else:
 				values_rbf_output = []
 				LEN = len(self.xs_unknown)
-				#print(LEN)
 				for i, xi in enumerate(self.xs_unknown):
 					print( i / LEN * 100)
 					yi = np.array(self.ys_unknown[i])
@@ -1515,59 +1525,3 @@ class EchoStateExperiment:
 				self.ip_res = {"prediction" : di, 
 									"nrmse" : diR} 
 				print("FINISHED INTERPOLATION: R = " + str(diR))
-"""
-#TODO THIS NEEDS EDITING, is mostly useless.
-complex_dict = {
-"small" : { 
-
-#target_frequencies
-"2k" : 101,
-"4k" : 206,
-"8k" : 307,
-
-#target spread sizes
-"no_spread" : None,
-"small_spread" : 4,
-"medium_spread" : 12,
-"large_spread" : 24,
-
-#observer values
-"small_obs" : 10,
-"medium_obs" : 25,
-"large_obs" : 50
-},
-"medium" : { 
-
-#target_frequencies
-"2k" : 101,
-"4k" : 206,
-"8k" : 307,
-
-#target spread sizes
-"no_spread" : None,
-"small_spread" : 4,
-"medium_spread" : 12,
-"large_spread" : 24,
-
-#observer values
-"small_obs" : 10,
-"medium_obs" : 25,
-"large_obs" : 50
-},
-
-"publish": {
-"2k" : 546,
-"4k" : 1089,
-"8k" : 2177,
-"0.5_sec" : 1371,
-"0.7_sec" : 1924
-}
-}
-
-	def currTime():
-		now = datetime.now()
-
-		current_time = now.strftime("%H:%M:%S")
-		print("Current Time =", current_time)
-	currTime()
-	"""

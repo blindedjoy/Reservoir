@@ -50,6 +50,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     'connectivity': (-3, 0),
     'n_nodes':  (100, 1000)
   }"""
+  model_type = inputs["model_type"]
   size = inputs["size"]
   if "k" in inputs:
     k = inputs["k"]
@@ -85,7 +86,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
                           "prediction_type" : inputs["prediction_type"],
                           "train_time_idx" : train_time_idx,
                           "test_time_idx" : test_time_idx,
-                          "k" : k, 
+                          "k" : k,
+                          "model" : model_type,
                           **librosa_args}
 
     print("experiment_inputs: " + str(experiment_inputs))
@@ -100,20 +102,21 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     if "obs_freqs" in inputs:
       AddEchoArgs = { "obs_freqs" : inputs["obs_freqs"],
                       "target_freqs" : inputs["target_freqs"],
-                      "prediction_type" : PREDICTION_TYPE
+                      "prediction_type" : PREDICTION_TYPE,
+                      "model" : model_type
                     }
       EchoArgs = Merge(EchoArgs, AddEchoArgs)
     else:
       AddEchoArgs = { "target_frequency" : inputs["target_frequency"],
                       "obs_hz" : inputs["obs_hz"],
-                      "target_hz" : inputs["target_hz"]
+                      "target_hz" : inputs["target_hz"],
+                      "model" : model_type
                     }
       EchoArgs = Merge( Merge(EchoArgs, AddEchoArgs), librosa_args)
     print(EchoArgs)
     experiment = EchoStateExperiment( **EchoArgs)
     ### NOW GET OBSERVERS
     method = "exact" if "obs_freqs" in inputs else "freq"
-
     experiment.get_observers(method = method, **obs_inputs)
 
   if size == "small":
@@ -152,11 +155,16 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       "plot" : False, 
       **default_presets
   }
+  if model_type == "delay_line":
+    cv_args = {**cv_args, "activation_function" : "sin_sq"}
 
   if TEACHER_FORCING:
     cv_args = Merge(cv_args, {"esn_feedback" : True})
-  experiment.RC_CV(cv_args = cv_args, model = "uniform")
-  experiment.RC_CV(cv_args = cv_args, model = "exponential")
+  if model_type == "delay_line":
+    experiment.RC_CV(cv_args = cv_args, model = "delay_line")
+  else:
+    experiment.RC_CV(cv_args = cv_args, model = "uniform")
+    experiment.RC_CV(cv_args = cv_args, model = "exponential")
   
   """
   models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"] #

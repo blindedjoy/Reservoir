@@ -47,16 +47,24 @@ class EchoStateNetwork:
     predict(n_steps, x=None, y_start=None)
         Predicts n values in advance
     predict_stepwise(y, x=None, steps_ahead=1, y_start=None)
+
         Predicts a specified number of steps into the future for every time point in y-values array
 
     """
 
     def __init__(self,
                  n_nodes=1000, input_scaling=0.5, feedback_scaling=0.5, spectral_radius=0.8, leaking_rate=1.0,
-                 connectivity = np.exp(-.23),#0.1,
+                 connectivity = np.exp(-.23),
                  regularization=1e-8, feedback=False, random_seed=123,
-                 exponential=False, obs_idx = None, resp_idx = None, llambda = None, llambda2 = None, 
-                 plot = False, noise = 0.0, already_normalized = False):
+                 activation_function = "tanh",
+                 already_normalized = False, exponential=False, llambda = None, 
+                 llambda2 = None, model_type = None, noise = 0.0, 
+                 obs_idx = None, plot = False, resp_idx = None, 
+                 cyclic_res_w = None, 
+                 cyclic_input_w = None, 
+                 cyclic_bias = None
+                 ):
+
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
@@ -76,6 +84,9 @@ class EchoStateNetwork:
         self.noise = noise
         self.already_normalized = already_normalized
 
+        self.model_type = model_type
+        assert self.model_type, "you must choose a model"
+        
         if llambda2:
             #print("dual lambda")
             self.llambda = [self.llambda, llambda2]
@@ -83,9 +94,31 @@ class EchoStateNetwork:
         else:
             self.dual_lambda = False
 
+        assert self.model_type in ["exponential", "uniform", "delay_line"]
 
-        self.generate_reservoir()
+        if self.model_type in ["exponential", "uniform"]:
+            #random RC reservoir
+            self.generate_reservoir()
 
+        elif self.model_type == "delay_line":
+            self.cyclic_res_w  = cyclic_res_w
+            self.cyclic_input_w = cyclic_input_w
+            self.cyclic_bias = cyclic_bias 
+            #delay line RC reservoir
+            self.generate_delay_line()
+
+        #activation function: (sin_sq if delay line)
+        def sin_sq(arr):
+            temp = np.sin(arr)
+            return(temp**2)
+
+        assert activation_function in ["tanh", "sin_sq"]
+
+        if activation_function == "tanh":
+            self.activation_function = np.tanh
+        elif activation_function == "sin_sq":
+            self.activation_function = sin_sq
+    
 
     def exp_w(self, verbose = False):
         """
@@ -253,20 +286,6 @@ class EchoStateNetwork:
 
             self.weights = random_state.uniform( -1., 1., size = (n, n))
             self.weights *= accept
-
-            """
-            ####
-            #if self.exponential == True:
-                
-                #here we use spectral_density in a new way. We use it to bend the exponential distrubution.
-                
-                #self.llambda = self.spectral_radius
-                #self.get_exp_weights()
-                #print("self.weights.shape: " + str(self.weights.shape))
-                #print("self.exp_weights.shape: "   + str(self.exp_weights.shape))
-                #self.weights = np.abs(np.random.choice(self.exp_weights, size = (n, n))) * self.weights
-            ####
-            """
             
             max_eigenvalue = np.abs( np.linalg.eigvals( self.weights)).max()
 
@@ -283,6 +302,26 @@ class EchoStateNetwork:
 
         # Set out to none to indicate untrained ESN
         self.out_weights = None
+
+    def generate_delay_line(self):
+        """Generates the simple delay line reservoir from ?parameters? set at initialization."""
+
+        # Initialize new random state
+        #random_state = np.random.RandomState(self.seed)
+        n = self.n_nodes
+        self.weights = np.zeros(shape = (n, n))
+        for i in range(self.n_nodes - 1):
+            #weights[i + 1, i] = cyclic_weight
+            self.weights[ i + 1, i] = self.cyclic_res_w
+
+        # Default state
+        self.state = np.zeros((1, self.n_nodes), dtype=np.float32)
+
+        # Set out to none to indicate untrained ESN
+        self.out_weights = None
+
+        # This is the only difference between the cyclic reservoir and the delay line.
+        # self.weights[0, -1] = cyclic_weight <-- 
 
 
     def draw_reservoir(self):
@@ -433,44 +472,71 @@ class EchoStateNetwork:
             self.get_exp_weights()
         
 
-        # Set and scale input weights (for memory length and non-linearity)
-        ###
-        #if self.exponential == True:
-        #    str1 = "orig input shape "
-        #    str2 = "exp_w shape: "
-        #    shape1 = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-        #    shape1 = str(shape1.shape)
-        #    shape2 = str(self.exp_weights.shape) 
+        if self.model_type == "random":
+            if self.exponential == True:
+                
+                self.in_weights = self.input_scaling * self.exp_weights 
+                ### What about this line?
+                
+                uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
 
-            #print(str1 + shape1)
-            #print(str2 + shape2)
-        #self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-    
-        #if inputs.shape[1] > 1:
-        if self.exponential == True:
-            
-            self.in_weights = self.input_scaling * self.exp_weights 
-            ### What about this line?
-            uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+                self.in_weights = np.hstack((uniform_bias, self.in_weights)) #This looks like the bias term. changed from 0.01 to 1.
+                ###
+            else:
+                self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
 
-            self.in_weights = np.hstack((self.in_weights, uniform_bias)) #This looks like the bias term. changed from 0.01 to 1.
-            ###
-        else:
-            self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-        #self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-         
-        ###
+        elif self.model_type == "delay_line":
+            """
+            SANDBOX RESULT:
+
+            beta = 3
+            alpha = 0.5
+            n_nodes = 5
+            n_inputs = 4
+            input_bias = np.full((1,), fill_value = alpha)
+            input_weights = np.full((n_inputs,), fill_value = beta)
+
+            input_weights = np.hstack((input_bias, input_weights))
+            input_weights_zeroes = np.zeros((n_nodes-1, n_inputs + 1))
+
+            input_weights = np.vstack((input_weights, input_weights_zeroes))
+            display(input_weights)
+            orig_inputs = np.random.uniform(-1, 1, size = 4)
+            inputs = np.hstack((1, orig_inputs))
+            print(inputs)
+            print(alpha + np.sum(orig_inputs)*beta)
+            input_weights @ inputs.T
+            """
+            #Build input weights matrix:
+
+            #linear terms
+            input_weight = np.full( shape = (inputs.shape[1] - 1, ), fill_value = self.cyclic_input_w, dtype=np.float32)
+            input_bias = np.full( shape = (1, ), fill_value = self.cyclic_bias, dtype=np.float32)
+            input_weights = np.hstack((input_bias, input_weight))
+            # add zeros
+            input_weights_zeroes = np.zeros((self.n_nodes - 1, inputs.shape[1]))
+            self.in_weights = np.vstack((input_weights, input_weights_zeroes))
+            self.in_weights *= self.input_scaling
 
         # Add feedback if requested, optionally with feedback scaling
         if self.feedback:
             inputs = np.hstack((inputs, y[:-1]))  # Add teacher forced signal (equivalent to y(t-1) as input)
-            feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
+            #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
+            feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
             self.in_weights = np.hstack((self.in_weights, feedback_weights))
 
         # Train iteratively
         for t in range(inputs.shape[0]):
+            #print("in_weights: "  + str(self.in_weights.shape))
+            #print("inputs[t].T: " + str(inputs[t].T.shape))
+           
+            #print("res: " + str(res.shape))
+
+            #CHANGE
+            f = self.activation_function
+            update = f(self.in_weights @ inputs[t].T + self.weights @ current_state)
             
-            update = np.tanh(self.in_weights @ inputs[t].T + self.weights @ current_state)
+            #print("update: " + str(update.shape))
             current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state  # Leaking separate
             self.state[t] = current_state
 
@@ -575,10 +641,10 @@ class EchoStateNetwork:
           y_predicted = np.zeros([n_steps, self.out_weights.shape[1]], dtype=np.float32)
         else:
           y_predicted = np.zeros(n_steps, dtype=np.float32)
-
+        previous_y = self.y_last
         if not self.already_normalized:
           # Get last states
-          previous_y = self.y_last
+          
           if not y_start is None:
             previous_y = self.normalize(outputs=y_start)[0]
 
@@ -592,7 +658,10 @@ class EchoStateNetwork:
             current_input = inputs[t] if not self.feedback else np.hstack((inputs[t], previous_y))
 
             # Update
-            update = np.tanh(self.in_weights @ current_input.T + self.weights @ current_state)
+
+            f = self.activation_function
+            update = f(self.in_weights @ current_input.T + self.weights @ current_state)
+
             current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
 
             # Prediction. Order of concatenation is [1, inputs, y(n-1), state]
