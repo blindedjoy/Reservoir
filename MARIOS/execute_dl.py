@@ -16,7 +16,7 @@ import multiprocessing.pool
 #load tests ect.
 from execute_scripts.column import *
 
-RUN_LITE = True
+RUN_LITE = False
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
@@ -67,31 +67,35 @@ def test(TEST, multiprocessing = False, gap = False):
       if PREDICTION_TYPE == "block":
         bounds = { 
                 'n_nodes': 1000,         #fixed
-                'cyclic_res_w': (-3, 3),       
-                'cyclic_input_w' : (-3, 3),
-                "cyclic_bias":(-5, 5),
+                'cyclic_res_w': (-4, 0.5),       
+                'cyclic_input_w' : (-4, 0.5),
+                "cyclic_bias": (-10, 10),
                 "leaking_rate" :   (0.001, 1)
                 }
         if gap: 
           print("HA")
         else:
           print("on track")
-          
-          experiment_set = [
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
+          if RUN_LITE == True:
+            experiment_set = [
+                  {'target_frequency': 150, "split" : 0.5, 'obs_hz': 50.0, 'target_hz': 30.0}]
 
-                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
-                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
-                #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
-                ]
+          else:
+            experiment_set = [
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
+
+                  #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                  #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                  #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                  #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
+                  #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
+                  #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
+                  ]
           
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
         set_specific_args = {"prediction_type": "block", 
@@ -139,18 +143,18 @@ def test(TEST, multiprocessing = False, gap = False):
       print("This is not a test")
       bounds = { 
                 'n_nodes': 1000,         #fixed
-                'cyclic_res_w': (-3, 3),       
-                'cyclic_input_w' : (-3, 3),
-                "cyclic_bias":(-5, 5),
+                'cyclic_res_w': (-4, 0.5),       
+                'cyclic_input_w' : (-4, 0.5),
+                "cyclic_bias": (-1, 1),
                 "leaking_rate" :   (0.001, 1)
                 }
 
       if RUN_LITE == True:
         bounds = { 
                 'n_nodes': 1000,         #fixed
-                'cyclic_res_w': (-3, 3),       
-                'cyclic_input_w' : (-3, 3),
-                "cyclic_bias":(-5, 5),
+                'cyclic_res_w': (-4, 0.5),       
+                'cyclic_input_w' : (-4, 0.5),
+                "cyclic_bias": (-1, 1),
                 "leaking_rate" :   (0.001, 1)
                 }
     
@@ -178,7 +182,10 @@ def test(TEST, multiprocessing = False, gap = False):
 
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-      experiment["size"] = "publish"
+      if RUN_LITE == True:
+        experiment["size"] = "small"
+      else:
+        experiment["size"] = "publish"
       experiment["model_type"] = "delay_line"
       experiment["activation_function"] = "sin_sq"
 

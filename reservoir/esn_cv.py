@@ -218,7 +218,7 @@ class EchoStateNetworkCV:
         if 'regularization' in arguments:
             arguments['regularization'] = 10. ** arguments['regularization']  # Log scale correction
 
-        log_vars = ["cyclic_res_w", "cyclic_input_w", "cyclic_bias"]
+        log_vars = ["cyclic_res_w", "cyclic_input_w"]
 
         for var in log_vars:
             arguments[var] = 10. ** arguments[var]  # Log scale correction

@@ -1244,7 +1244,7 @@ class EchoStateExperiment:
 		"""
 
 		self.save_json()
-		print("\n \n exp rc cv data saved @ : " + self.outfile +".txt")
+		print("\n \n exp rc cv data saved @ : " + self.outfile +".pickle")
 
 
 	def already_trained(self, best_args, exponential):
