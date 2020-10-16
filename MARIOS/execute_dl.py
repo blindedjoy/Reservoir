@@ -110,7 +110,7 @@ def test(TEST, multiprocessing = False, gap = False):
         train_width = gap_start
 
         #not actually a test, we need this asap.
-        zhizhuo_target1    = liang_idx_convert(gap_start, 289)  #249 -> 288 inclusive
+        zhizhuo_target1  = liang_idx_convert(gap_start, 289)  #249 -> 288 inclusive
         zhizhuo_train1   = liang_idx_convert(gap_start - train_width, gap_start - 1 ) #199 -> 248 inclusive
 
         subseq_len = int(np.array(zhizhuo_train1).shape[0] * 0.5)
@@ -134,31 +134,25 @@ def test(TEST, multiprocessing = False, gap = False):
                           #{'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 10, "subseq_len" : subseq_len},#, "k" : 100},
                           #{'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 10, "subseq_len" : subseq_len},#, "k" : 30},
                           ]
-        # {'llambda': 0.00938595717962852, 'llambda2': 0.002908498759116776, 'connectivity': 1.0, 'spectral_radius': 0.48154601180553436, 'regularization': 0.3676013152573216, 'leaking_rate': 0.7179883186221123, 'noise': 1.2589254117941673, 'n_nodes': 1000, 'random_seed': 123}
-
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
-        for experiment in experiment_set:
-          experiment["model_type"] = "delay_line"
-          experiment["activation_function"] = "sin_sq"
     else:
       print("This is not a test")
-      bounds = { #noise hyper-parameter.
-                'cyclic_res_w': (-100, 100),       # 0.5888436553555889, 
-                'n_nodes':         1000,          #(100, 1500),
-                'cyclic_input_w' : (-100, 100),
-                "cyclic_bias":(-100, 100)
+      bounds = { 
+                'n_nodes': 1000,         #fixed
+                'cyclic_res_w': (-3, 3),       
+                'cyclic_input_w' : (-3, 3),
+                "cyclic_bias":(-5, 5),
+                "leaking_rate" :   (0.001, 1)
                 }
 
       if RUN_LITE == True:
-        bounds = { #noise hyper-parameter.
-                'cyclic_res_w': (-100, 100),       # 0.5888436553555889, 
-                'n_nodes':         1000,          #(100, 1500),
-                'cyclic_input_w' : (-100, 100),
-                "cyclic_bias":(-100, 100)
+        bounds = { 
+                'n_nodes': 1000,         #fixed
+                'cyclic_res_w': (-3, 3),       
+                'cyclic_input_w' : (-3, 3),
+                "cyclic_bias":(-5, 5),
+                "leaking_rate" :   (0.001, 1)
                 }
-      #librosa_args = {"spectrogram_path" : "19th_century_male_stft",
-      #                "spectrogram_type" : "db",#"db", #power
-      #                "librosa": True}
     
       obs_freqs, resp_freqs   = get_frequencies(1)
       obs_freqs2, resp_freqs2 = get_frequencies(2)
@@ -169,27 +163,24 @@ def test(TEST, multiprocessing = False, gap = False):
       obs_freqs7, resp_freqs7 = get_frequencies(7)
 
       experiment_set = [
-             { 'split': 0.9, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
-             { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             { 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
+             #{ 'split': 0.9, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
+             #{ 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             #{ 'split': 0.9, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
-             { 'split': 0.7, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
-             { 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             { 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
+             #{ 'split': 0.7, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
+             #{ 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
+             #{ 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              
              { 'split': 0.5, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
 
-      #set_specific_args = {"prediction_type": "block"}
-      #experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
-
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-      experiment["prediction_type"] = "block" #"block"#PREDICTION_TYPE
-      experiment["size"] = "small"
+      experiment["size"] = "publish"
       experiment["model_type"] = "delay_line"
+      experiment["activation_function"] = "sin_sq"
 
     try:
       set_start_method('forkserver')
