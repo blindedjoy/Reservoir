@@ -64,7 +64,6 @@ class EchoStateNetwork:
                  cyclic_input_w = None, 
                  cyclic_bias = None
                  ):
-
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
@@ -94,17 +93,18 @@ class EchoStateNetwork:
         else:
             self.dual_lambda = False
 
-        assert self.model_type in ["exponential", "uniform", "delay_line"]
+        assert self.model_type in ["exponential", "uniform", "delay_line", "cyclic"], self.model_type + str(" not implimented")
 
         if self.model_type in ["exponential", "uniform"]:
             #random RC reservoir
             self.generate_reservoir()
 
-        elif self.model_type == "delay_line":
+        elif self.model_type in ["delay_line", "cyclic"]:
             self.cyclic_res_w  = cyclic_res_w
             self.cyclic_input_w = cyclic_input_w
             self.cyclic_bias = cyclic_bias 
-            #delay line RC reservoir
+
+            #cyclic / delay line RC reservoir
             self.generate_delay_line()
 
         #activation function: (sin_sq if delay line)
@@ -310,7 +310,8 @@ class EchoStateNetwork:
         #random_state = np.random.RandomState(self.seed)
         n = self.n_nodes
         self.weights = np.zeros(shape = (n, n))
-        for i in range(self.n_nodes - 1):
+
+        for i in range(n - 1):
             #weights[i + 1, i] = cyclic_weight
             self.weights[ i + 1, i] = self.cyclic_res_w
 
@@ -321,7 +322,8 @@ class EchoStateNetwork:
         self.out_weights = None
 
         # This is the only difference between the cyclic reservoir and the delay line.
-        # self.weights[0, -1] = cyclic_weight <-- 
+        if self.model_type == "cyclic":
+            self.weights[0, -1] = self.cyclic_res_w
 
 
     def draw_reservoir(self):
@@ -472,7 +474,7 @@ class EchoStateNetwork:
             self.get_exp_weights()
         
 
-        if self.model_type == "random":
+        if self.model_type in ["uniform", "exponential", "cyclic"]:
             if self.exponential == True:
                 
                 self.in_weights = self.input_scaling * self.exp_weights 
@@ -483,6 +485,7 @@ class EchoStateNetwork:
                 self.in_weights = np.hstack((uniform_bias, self.in_weights)) #This looks like the bias term. changed from 0.01 to 1.
                 ###
             else:
+
                 self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
 
         elif self.model_type == "delay_line":
@@ -521,20 +524,20 @@ class EchoStateNetwork:
         # Add feedback if requested, optionally with feedback scaling
         if self.feedback:
             inputs = np.hstack((inputs, y[:-1]))  # Add teacher forced signal (equivalent to y(t-1) as input)
-            #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
-            feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
+            feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
+            #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
             self.in_weights = np.hstack((self.in_weights, feedback_weights))
 
         # Train iteratively
         for t in range(inputs.shape[0]):
             #print("in_weights: "  + str(self.in_weights.shape))
             #print("inputs[t].T: " + str(inputs[t].T.shape))
-           
+            #res = self.in_weights @ inputs[t].T
             #print("res: " + str(res.shape))
 
             #CHANGE
-            f = self.activation_function
-            update = f(self.in_weights @ inputs[t].T + self.weights @ current_state)
+            #f = self.activation_function
+            update = self.activation_function(self.in_weights @ inputs[t].T + self.weights @ current_state)
             
             #print("update: " + str(update.shape))
             current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state  # Leaking separate

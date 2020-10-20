@@ -27,7 +27,7 @@ def get_frequencies(trial = 1):
   resp_list = list( range( lb_targ, ub_targ, 10))
   return obs_list, resp_list
   
-PREDICTION_TYPE = "block"
+PREDICTION_TYPE = "column"
 
 def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpolation_method = "griddata-linear"):
   """
@@ -148,6 +148,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   if PREDICTION_TYPE == "column":
     if "subseq_len" in inputs:
       default_presets['subsequence_length'] = inputs["subseq_len"]
+      default_presets['esn_feedback'] = True
+      print("FEEDBACK ENABLED")
     else:
       default_presets['subsequence_length'] = 75
 
@@ -164,8 +166,12 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
 
   if TEACHER_FORCING:
     cv_args = Merge(cv_args, {"esn_feedback" : True})
-  if model_type == "delay_line":
+
+  #Consider combining cyclic and delay line
+  if model_type in ["delay_line"]:
     experiment.RC_CV(cv_args = cv_args, model = "delay_line")
+  elif model_type in ["cyclic"]:
+    experiment.RC_CV(cv_args = cv_args, model = "cyclic")
   else:
     experiment.RC_CV(cv_args = cv_args, model = "uniform")
     experiment.RC_CV(cv_args = cv_args, model = "exponential")

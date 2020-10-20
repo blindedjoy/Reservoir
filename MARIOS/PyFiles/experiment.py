@@ -104,7 +104,7 @@ class EchoStateExperiment:
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
 				 target_freqs = None, spectrogram_type = None, k = None, obs_idx = None, resp_idx = None,
-				 model = None
+				 model = None, chop = None
 				 ):
 		# Parameters
 		self.size = size
@@ -129,7 +129,9 @@ class EchoStateExperiment:
 		self.obs_freqs = obs_freqs
 		self.obs_idx = obs_idx
 		self.resp_idx = resp_idx
-		assert model in ["uniform", "exponential", "delay_line"]
+		self.chop = 0.01/2
+
+		assert model in ["uniform", "exponential", "delay_line", "cyclic"]
 		self.model = model
 
 		if obs_freqs:
@@ -390,13 +392,18 @@ class EchoStateExperiment:
 		#copy the matrix
 		self.A = self.A_unnormalized.copy()
 
+		if self.chop:
+			n_timeseries = self.A.shape[1]
+			n_timeseries = int(self.chop * n_timeseries)
+			self.f = self.f[ : n_timeseries]
+			self.A = self.A[ : , : n_timeseries]
+
 		#normalize the matrix
 		self.A = (self.A - np.mean(self.A)) / np.std(self.A)
 
 		#gaussian smoothing
 		if self.smooth_bool:
 			self.smooth()
-
 
 		self.max_freq = int(np.max(self.f))
 		self.Freq2idx(self.target_frequency, init = True)
@@ -491,8 +498,6 @@ class EchoStateExperiment:
 		self.get_observers(method = "block", missing = ctr, split = split, aspect = aspect,
 			observer_range = self.bounds["observer_bounds"], 
 			response_range = self.bounds["response_bounds"])
-
-
 	
 	#TODO: horizontal display
 	def horiz_display(self, plot = False):
@@ -822,7 +827,11 @@ class EchoStateExperiment:
 			"""
 			
 			self.exact = True
-			response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
+			if self.resp_idx:
+				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
+			else:
+				response = dataset.copy()
+
 			response_idx = self.resp_idx
 			
 			if self.prediction_type == "block":
@@ -1006,6 +1015,8 @@ class EchoStateExperiment:
 			self.outfile += "block_"
 		if self.model == "delay_line":
 			self.outfile += "DL"
+		elif self.model == "cyclic":
+			self.outfile += "cyclic"
 		
 		if self.method == "freq":
 			ctr = int(np.mean([int(self.f[idx]) for idx in self.resp_idx]))
@@ -1146,7 +1157,7 @@ class EchoStateExperiment:
 		"""
 		self.model = model
 		print("." + self.model + ".")
-		assert self.model in ["uniform", "exponential", "delay_line", "hybrid"], self.model + " model not yet implimented"
+		assert self.model in ["uniform", "exponential", "delay_line", "hybrid", "cyclic"], self.model + " model not yet implimented"
 
 		if self.model in ["exponential"]:
 			self.exp = True
@@ -1165,17 +1176,20 @@ class EchoStateExperiment:
 				"model_type" : self.model
 			}
 			
-			input_dict = { **cv_args, 
-						   **predetermined_args,
-						   **exp_w_}
+			
 		else:
-			input_dict = { **cv_args, 
-						   **exp_w_}
+			predetermined_args = {
+				"model_type" : self.model
+			}
+
+		input_dict = { **cv_args, 
+					   **predetermined_args,
+					   **exp_w_}
 
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
 
-		if self.model in ["exponential", "uniform", "delay_line"]:
+		if self.model in ["exponential", "uniform", "delay_line", "cyclic"]:
 				print(self.model + "rc cv set, ready to train ")
 
 		else:

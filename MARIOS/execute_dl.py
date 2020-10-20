@@ -64,14 +64,15 @@ def test(TEST, multiprocessing = False, gap = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
-      if PREDICTION_TYPE == "block":
-        bounds = { 
+      bounds = { 
                 'n_nodes': 1000,         #fixed
                 'cyclic_res_w': (-4, 0.5),       
                 'cyclic_input_w' : (-4, 0.5),
                 "cyclic_bias": (-10, 10),
                 "leaking_rate" :   (0.001, 1)
                 }
+      if PREDICTION_TYPE == "block":
+        
         if gap: 
           print("HA")
         else:
@@ -82,12 +83,12 @@ def test(TEST, multiprocessing = False, gap = False):
 
           else:
             experiment_set = [
-                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
-                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
-                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
+                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
+                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 50.0,  'target_hz': 25.0},
 
                   #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
                   #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
@@ -100,7 +101,7 @@ def test(TEST, multiprocessing = False, gap = False):
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
         set_specific_args = {"prediction_type": "block", 
                              "size" : "publish",
-                             "model_type" : "delay_line",
+                             "model_type" : "cyclic",
                              "activation_function" : "sin_sq"}
 
         experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
@@ -125,14 +126,14 @@ def test(TEST, multiprocessing = False, gap = False):
 
 
         single_column_target = liang_idx_convert(100, 101)
-        single_column_train = liang_idx_convert(100 - 5, 100-1)
+        single_column_train = liang_idx_convert(100 - 50, 100-1)
 
         print("single column target" + str(single_column_target))
 
         set_specific_args = {"prediction_type": "column"}
         experiment_set = [
-                          {'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 10, "subseq_len" : 3},
-                          {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 10, "subseq_len" : subseq_len},
+                          {'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : None, "subseq_len" : 3},
+                          {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : None, "subseq_len" : subseq_len},
                           {'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 10, "subseq_len" : subseq_len},
                           #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 10, "subseq_len" : 3},
                           #{'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 10, "subseq_len" : subseq_len},#, "k" : 100},
@@ -185,8 +186,8 @@ def test(TEST, multiprocessing = False, gap = False):
       if RUN_LITE == True:
         experiment["size"] = "small"
       else:
-        experiment["size"] = "publish"
-      experiment["model_type"] = "delay_line"
+        experiment["size"] = "small"
+      experiment["model_type"] = "cyclic"
       experiment["activation_function"] = "sin_sq"
 
     try:
@@ -213,7 +214,7 @@ if __name__ == '__main__':
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
 
-  TEST = False #false for low frequencies, true for column, 1000 hz
+  TEST = True #false for low frequencies, true for column, 1000 hz
 
   start = timeit.default_timer()
   test(TEST = TEST)
