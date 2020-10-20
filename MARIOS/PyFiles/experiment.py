@@ -129,7 +129,7 @@ class EchoStateExperiment:
 		self.obs_freqs = obs_freqs
 		self.obs_idx = obs_idx
 		self.resp_idx = resp_idx
-		self.chop = chop
+		self.chop = 0.01/2
 
 		assert model in ["uniform", "exponential", "delay_line", "cyclic"]
 		self.model = model
@@ -868,7 +868,7 @@ class EchoStateExperiment:
 			self.obs_idx = []
 			self.xTr = dataset[ self.train_time_idx, : ]
 			self.xTe = dataset[ self.test_time_idx , : ]
-			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
+			self.Train, self.Test = None, None #np.ones(self.xTr.shape), np.ones(self.xTe.shape)
 
 			if k: # calculating 1 in k observers:
 				n_obs = A_shape_0 // k
@@ -885,9 +885,9 @@ class EchoStateExperiment:
 			#print("response_te shape: " + str(response_te.shape))
 			train_len = len(self.train_time_idx)
 			test_len = len(self.test_time_idx)
-
-		Shape([self.Train, "Train Region Train/Observers"])
-		Shape([self.Test, "Test Region Train/Observers"])
+		if self.prediction_type != "column":
+			Shape([self.Train, "Train Region Train/Observers"])
+			Shape([self.Test, "Test Region Train/Observers"])
 		Shape([self.xTr, "Train Region Target"])
 		Shape([self.xTe, "Test Region Target"])
 		### Visualize the train test split and the observers
@@ -1194,6 +1194,7 @@ class EchoStateExperiment:
 
 		else:
 			print("training hybrid part one: finding unif parameters")
+
 		#print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
 		self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		
