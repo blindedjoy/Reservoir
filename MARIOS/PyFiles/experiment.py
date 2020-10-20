@@ -129,7 +129,7 @@ class EchoStateExperiment:
 		self.obs_freqs = obs_freqs
 		self.obs_idx = obs_idx
 		self.resp_idx = resp_idx
-		self.chop = 0.01/2
+		self.chop = chop
 
 		assert model in ["uniform", "exponential", "delay_line", "cyclic"]
 		self.model = model
