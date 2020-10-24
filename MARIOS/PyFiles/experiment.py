@@ -1243,7 +1243,7 @@ class EchoStateExperiment:
 			else:
 				self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 
-		self.best_arguments['feedback': 'False']
+		self.best_arguments['feedback'] = 'False'
 		self.esn = self.esn_spec(**self.best_arguments, #you clearly aren't telling the network that this is expo.
 								 obs_idx  = self.obs_idx,
 								 resp_idx = self.resp_idx, 
