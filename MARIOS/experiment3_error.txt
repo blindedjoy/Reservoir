@@ -348,3 +348,4 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 AttributeError: 'EchoStateNetwork' object has no attribute 'already_normalized'
+slurmstepd: error: *** STEP 5449797.0 ON holy7c10610 CANCELLED AT 2020-10-24T10:18:06 ***
