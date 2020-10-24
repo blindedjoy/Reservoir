@@ -1,0 +1,61 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 2 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
+TEST
+on track
+{'size': 'small', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 500.0, 'model': 'cyclic'}
+block
+great success
+Train Region Train/Observers shape: (256, 48)
+Test Region Train/Observers shape: (256, 48)
+Train Region Target shape: (256, 25)
+Test Region Target shape: (256, 25)
+.cyclic.
+cyclicrc cv set, ready to train 
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b93e9168790>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['cyclic_res_w', 'cyclic_input_w', 'cyclic_bias', 'leaking_rate']
+Score: 0.9991315848869476
+Score: 0.9999992910524569
+Score: 0.9999116938634275
+Score: 0.9984827267053363
+Score: 0.9999990574005957
+Score: 0.9995923342794276
+Score: 0.9996230661615176
+Score: 0.9987365742737886
+Score: 0.9999913920114238
+Score: 0.9999199790191642
+Score: 0.9999281082208611
+Score: 0.9999985440508745
+Score: 0.9999288917013803
+Score: 0.9999999999989476
+Score: 0.9999318631914824
+Score: 0.999439808969802
+Score: 0.9989479984669826
+Score: 0.9999793086318008
+Score: 0.9999999997899215
+Score: 0.9999999999999901
+Score: 1.0
+Score: 0.9996074594174703
+Score: 0.9994593255538452
+Score: 0.999999729979475
+Score: 0.9999999996895849
+Score: 0.9994540369905444
+Score: 0.9997434490786085
+Score: 0.999080748921444
+Score: 0.9999994062021161
+Score: 0.9999996548095684
+Score: 0.9999293212339143
+Score: 0.9997243512374333
+Score: 0.9984117698429249
+Score: 0.9999984343077263
+Score: 0.9999885906551276
+Score: 0.9992046700643065
+Score: 0.9996265012372015
+Score: 0.9996455149375113
+Score: 0.9999999999999879
+Score: 0.9995005886389633
+Score: 0.9993390946000257
+Score: 0.9999953859469652
