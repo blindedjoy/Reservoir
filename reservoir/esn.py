@@ -62,7 +62,8 @@ class EchoStateNetwork:
                  obs_idx = None, plot = False, resp_idx = None, 
                  cyclic_res_w = None, 
                  cyclic_input_w = None, 
-                 cyclic_bias = None #already_normalized = False,
+                 cyclic_bias = None,
+                 already_normalized = False
                  ):
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
@@ -81,7 +82,7 @@ class EchoStateNetwork:
         self.llambda = llambda
         self.plot = plot
         self.noise = noise
-        #self.already_normalized = already_normalized
+        self.already_normalized = already_normalized
 
         self.model_type = model_type
         assert self.model_type, "you must choose a model"
