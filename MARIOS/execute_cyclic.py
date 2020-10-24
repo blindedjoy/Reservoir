@@ -84,6 +84,7 @@ def test(TEST, multiprocessing = False, gap = False):
 
           else:
             experiment_set = [
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 10.0, 'target_hz': 6.0},
                   {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
                   {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
                   {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
@@ -186,9 +187,9 @@ def test(TEST, multiprocessing = False, gap = False):
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       if RUN_LITE == True:
-        experiment["size"] = "small"
+        experiment["size"] = "publish"
       else:
-        experiment["size"] = "small"
+        experiment["size"] = "publish"
       experiment["model_type"] = "cyclic"
       experiment["activation_function"] = "sin_sq"
 
