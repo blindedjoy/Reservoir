@@ -261,3 +261,10 @@ Score: 2.380922863157704e-05
 Converged at iteration 330
 Done after 330 iterations.
 {'cyclic_res_w': 0.0001, 'cyclic_input_w': 0.0001, 'cyclic_bias': -1.0, 'leaking_rate': 0.001, 'n_nodes': 1000, 'random_seed': 123, 'feedback': 'False'}
+Score: 0.9423818614487012
+Score: 0.9594206111690922
+Score: 0.9754041060362872
+Score: 0.9495696085962532
+Score: 0.9844544341556878
+Score: 0.9194135935366047
+Score: 0.9818588814531172
