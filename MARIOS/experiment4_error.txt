@@ -10,7 +10,7 @@ Traceback (most recent call last):
     return list(map(*args))
   File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute_scripts/column.py", line 174, in run_experiment
     experiment.RC_CV(cv_args = cv_args, model = "cyclic")
-  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1254, in RC_CV
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1253, in RC_CV
     self.esn.train(x = self.Train, y = self.xTr)
   File "/n/home00/hjoy/.local/lib/python3.7/site-packages/reservoir/esn.py", line 543, in train
     update = self.activation_function(self.in_weights @ inputs[t].T + self.weights @ current_state)

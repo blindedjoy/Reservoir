@@ -10,9 +10,9 @@ Traceback (most recent call last):
     return list(map(*args))
   File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute_scripts/column.py", line 174, in run_experiment
     experiment.RC_CV(cv_args = cv_args, model = "cyclic")
-  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1262, in RC_CV
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1261, in RC_CV
     self.prediction = my_predict(self.Test)
-  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1260, in my_predict
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1259, in my_predict
     return self.esn.predict(n_steps, x = test[:n_steps,:])
   File "/n/home00/hjoy/.local/lib/python3.7/site-packages/reservoir/esn.py", line 680, in predict
     res = self.in_weights @ inputs[t].T
