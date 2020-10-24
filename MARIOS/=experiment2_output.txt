@@ -1,0 +1,19 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 2 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
+TEST
+on track
+{'size': 'small', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 500.0, 'model': 'cyclic'}
+block
+great success
+Train Region Train/Observers shape: (256, 48)
+Test Region Train/Observers shape: (256, 48)
+Train Region Target shape: (256, 25)
+Test Region Target shape: (256, 25)
+.cyclic.
+cyclicrc cv set, ready to train 
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b0f30532a10>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['cyclic_res_w', 'cyclic_input_w', 'cyclic_bias', 'leaking_rate']
