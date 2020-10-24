@@ -78,12 +78,13 @@ class EchoStateNetworkCV:
                  scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
-                 model_type = "random", activation_function = "tanh"):
+                 model_type = "random", activation_function = "tanh"): #, pure_prediction = False
         # Bookkeeping
         self.bounds = OrderedDict(bounds)  # Fix order
         self.parameters = list(self.bounds.keys())
         self.free_parameters = []
         self.fixed_parameters = []
+        #self.pure_prediction = pure_prediction
 
         # Store settings
         self.model = model
@@ -424,10 +425,13 @@ class EchoStateNetworkCV:
         # Get arguments
         arguments = self.construct_arguments(parameters)
         #print("args" + str(arguments))
+        #if pure_prediction = True:
+        
 
         # Build network
         esn = self.model(**arguments, exponential = self.exp_weights, activation_function = self.activation_function,
-                obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type)
+                obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type) 
+                #already_normalized = self.already_normalized
 
         # Train
         esn.train(x=train_x, y=train_y, burn_in=self.esn_burn_in)

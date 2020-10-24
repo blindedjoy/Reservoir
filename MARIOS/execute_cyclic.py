@@ -64,15 +64,16 @@ def test(TEST, multiprocessing = False, gap = False):
     assert type(TEST) == bool
     if TEST == True:
       print("TEST")
+
       bounds = { 
-                'n_nodes': 1000,         #fixed
+                'n_nodes': 1000, 
                 'cyclic_res_w': (-4, 0.5),       
                 'cyclic_input_w' : (-4, 0.5),
-                "cyclic_bias": (-10, 10),
+                "cyclic_bias": (-1, 1),
                 "leaking_rate" :   (0.001, 1)
                 }
+
       if PREDICTION_TYPE == "block":
-        
         if gap: 
           print("HA")
         else:
@@ -83,11 +84,11 @@ def test(TEST, multiprocessing = False, gap = False):
 
           else:
             experiment_set = [
-                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
-                  #{'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
                   {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 50.0,  'target_hz': 25.0},
 
                   #{'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},

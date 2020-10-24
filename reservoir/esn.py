@@ -57,12 +57,12 @@ class EchoStateNetwork:
                  connectivity = np.exp(-.23),
                  regularization=1e-8, feedback=False, random_seed=123,
                  activation_function = "tanh",
-                 already_normalized = False, exponential=False, llambda = None, 
+                 exponential=False, llambda = None, 
                  llambda2 = None, model_type = None, noise = 0.0, 
                  obs_idx = None, plot = False, resp_idx = None, 
                  cyclic_res_w = None, 
                  cyclic_input_w = None, 
-                 cyclic_bias = None
+                 cyclic_bias = None #already_normalized = False,
                  ):
         # Parameters
         self.n_nodes = int(np.round(n_nodes))
@@ -81,7 +81,7 @@ class EchoStateNetwork:
         self.llambda = llambda
         self.plot = plot
         self.noise = noise
-        self.already_normalized = already_normalized
+        #self.already_normalized = already_normalized
 
         self.model_type = model_type
         assert self.model_type, "you must choose a model"
@@ -440,9 +440,10 @@ class EchoStateNetwork:
             for diagnostic purposes  (e.g. vizualization of activations).
 
         """
-        # Checks
         if x is None and not self.feedback:
-            raise ValueError("Error: provide x or enable feedback")
+            self.already_normalized = True
+            x = np.ones(y.shape)
+            #raise ValueError("Error: provide x or enable feedback")
 
         # Initialize new random state
         random_state = np.random.RandomState(self.seed + 1)
@@ -524,8 +525,8 @@ class EchoStateNetwork:
         # Add feedback if requested, optionally with feedback scaling
         if self.feedback:
             inputs = np.hstack((inputs, y[:-1]))  # Add teacher forced signal (equivalent to y(t-1) as input)
-            #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
-            feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
+            feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
+            #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
             self.in_weights = np.hstack((self.in_weights, feedback_weights))
 
         # Train iteratively
@@ -534,6 +535,7 @@ class EchoStateNetwork:
             #print("inputs[t].T: " + str(inputs[t].T.shape))
             #res = self.in_weights @ inputs[t].T
             #print("res: " + str(res.shape))
+            #print("update: " + str(update.shape))
 
             #CHANGE
             #f = self.activation_function
@@ -588,6 +590,11 @@ class EchoStateNetwork:
             Error between prediction and knwon outputs
 
         """
+        if x is None and not self.feedback:
+            self.already_normalized = True
+            x = np.ones(y.shape)
+            #raise ValueError("Error: provide x or enable feedback")
+
         # Run prediction
         final_t = y.shape[0]
         if steps_ahead is None:
@@ -621,6 +628,11 @@ class EchoStateNetwork:
             Array of n_step predictions
 
         """
+        if x is None and not self.feedback:
+            self.already_normalized = True
+            x = np.ones(y.shape)
+            #raise ValueError("Error: provide x or enable feedback")
+
         # Check if ESN has been trained
         if self.out_weights is None or self.y_last is None:
             raise ValueError('Error: ESN not trained yet')
@@ -662,9 +674,15 @@ class EchoStateNetwork:
 
             # Update
 
+            #print("in_weights: "  + str(self.in_weights.shape))
+            #print("inputs[t].T: " + str(inputs[t].T.shape))
+            res = self.in_weights @ inputs[t].T
+            #print("res: " + str(res.shape))
+            
+
             f = self.activation_function
             update = f(self.in_weights @ current_input.T + self.weights @ current_state)
-
+            #print("update: " + str(update.shape))
             current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
 
             # Prediction. Order of concatenation is [1, inputs, y(n-1), state]

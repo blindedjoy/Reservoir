@@ -129,7 +129,7 @@ class EchoStateExperiment:
 		self.obs_freqs = obs_freqs
 		self.obs_idx = obs_idx
 		self.resp_idx = resp_idx
-		self.chop = 0.01/2
+		self.chop = None #0.01/2
 
 		assert model in ["uniform", "exponential", "delay_line", "cyclic"]
 		self.model = model
@@ -828,6 +828,8 @@ class EchoStateExperiment:
 			
 			self.exact = True
 			if self.resp_idx:
+				print("dataset shape" + str(dataset.shape))
+				print("resp_idx.shape " + str(self.resp_idx))
 				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
 			else:
 				response = dataset.copy()
@@ -868,7 +870,7 @@ class EchoStateExperiment:
 			self.obs_idx = []
 			self.xTr = dataset[ self.train_time_idx, : ]
 			self.xTe = dataset[ self.test_time_idx , : ]
-			self.Train, self.Test = None, None #np.ones(self.xTr.shape), np.ones(self.xTe.shape)
+			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
 
 			if k: # calculating 1 in k observers:
 				n_obs = A_shape_0 // k
@@ -885,9 +887,8 @@ class EchoStateExperiment:
 			#print("response_te shape: " + str(response_te.shape))
 			train_len = len(self.train_time_idx)
 			test_len = len(self.test_time_idx)
-		if self.prediction_type != "column":
-			Shape([self.Train, "Train Region Train/Observers"])
-			Shape([self.Test, "Test Region Train/Observers"])
+		Shape([self.Train, "Train Region Train/Observers"])
+		Shape([self.Test, "Test Region Train/Observers"])
 		Shape([self.xTr, "Train Region Target"])
 		Shape([self.xTe, "Test Region Target"])
 		### Visualize the train test split and the observers
@@ -1114,9 +1115,9 @@ class EchoStateExperiment:
 
 		#data assertions, cleanup
 		if self.model == "exp":
-			assert self.esn_cv.exp_weights# == True
+			assert self.esn_cv.exp_weights
 		elif self.model == "hybrid":
-			assert self.esn_cv.exp_weights# == True
+			assert self.esn_cv.exp_weights
 		elif self.model == "uniform":
 			assert not self.esn_cv.exp_weights# == False
 			args2export = ifdel(args2export, "llambda")
@@ -1196,7 +1197,10 @@ class EchoStateExperiment:
 			print("training hybrid part one: finding unif parameters")
 
 		#print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
-		self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
+		if self.prediction_type == "column":
+			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
+		else:
+			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		
 
 		if self.model == "hybrid":
@@ -1234,14 +1238,19 @@ class EchoStateExperiment:
 			
 			
 			#self.esn_cv = self.esn_cv_spec(**input_dict)
-			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
+			if self.prediction_type == "column":
+				self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr) 
+			else:
+				self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 
+		self.best_arguments['feedback': 'False']
 		self.esn = self.esn_spec(**self.best_arguments, #you clearly aren't telling the network that this is expo.
 								 obs_idx  = self.obs_idx,
 								 resp_idx = self.resp_idx, 
 								 model_type = self.model,
-								 already_normalized = True)
-
+								 already_normalized = True
+								 )
+		
 		self.esn.train(x = self.Train, y = self.xTr)
 		print(self.best_arguments)
 

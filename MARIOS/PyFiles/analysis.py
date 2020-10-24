@@ -99,7 +99,7 @@ class EchoStateAnalysis:
         obs_inputs["method"] = "exact"
 
         experiment_.obs_idx, experiment_.resp_idx  = json_obj["obs_idx"], json_obj["resp_idx"]
-
+        print("obs_inputs" + str(obs_inputs))
         experiment_.get_observers(**obs_inputs, plot_split = plot_split)
         
         if verbose == True:

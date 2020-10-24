@@ -146,9 +146,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       "initial_samples" : 300}
 
   if PREDICTION_TYPE == "column":
+    default_presets['esn_feedback'] = True
     if "subseq_len" in inputs:
       default_presets['subsequence_length'] = inputs["subseq_len"]
-      default_presets['esn_feedback'] = True
       print("FEEDBACK ENABLED")
     else:
       default_presets['subsequence_length'] = 75
