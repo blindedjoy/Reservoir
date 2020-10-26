@@ -1200,10 +1200,10 @@ class EchoStateExperiment:
 		else:
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		self.best_arguments['feedback'] = False
-		
+
 		print("Bayesian Optimization complete. Now running saving data, getting prediction etc. ")
 		print(input_dict)
-		print(cv_arguments)
+		print(cv_args)
 		
 		self.esn = self.esn_spec(**self.best_arguments,
 								 obs_idx  = self.obs_idx,
