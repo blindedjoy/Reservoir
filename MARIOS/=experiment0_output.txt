@@ -1,0 +1,21 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 0 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
+This is not a test
+{'size': 'publish', 'verbose': False, 'obs_freqs': [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650], 'target_freqs': [130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520], 'prediction_type': 'block', 'model': 'cyclic'}
+block
+OBS IDX: [0, 3, 6, 9, 11, 14, 17, 20, 23, 26, 29, 31, 34, 152, 154, 157, 160, 163, 166, 169, 172, 174, 177, 180, 183, 186]
+RESP IDX: [37, 40, 43, 46, 49, 51, 54, 57, 60, 63, 66, 69, 71, 74, 77, 80, 83, 86, 89, 91, 94, 97, 100, 103, 106, 109, 111, 114, 117, 120, 123, 126, 129, 132, 134, 137, 140, 143, 146, 149]
+dataset shape(3153, 3153)
+resp_idx.shape [37, 40, 43, 46, 49, 51, 54, 57, 60, 63, 66, 69, 71, 74, 77, 80, 83, 86, 89, 91, 94, 97, 100, 103, 106, 109, 111, 114, 117, 120, 123, 126, 129, 132, 134, 137, 140, 143, 146, 149]
+Train Region Train/Observers shape: (1576, 26)
+Test Region Train/Observers shape: (1577, 26)
+Train Region Target shape: (1576, 40)
+Test Region Target shape: (1577, 40)
+.cyclic.
+cyclicrc cv set, ready to train 
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b1c2ef9f910>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['cyclic_res_w', 'cyclic_input_w', 'cyclic_bias', 'leaking_rate']
