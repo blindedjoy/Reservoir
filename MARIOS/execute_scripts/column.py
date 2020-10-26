@@ -161,7 +161,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       "plot" : False, 
       **default_presets
   }
-  if model_type == "delay_line":
+  if model_type in ["delay_line", "cyclic"]:
     cv_args = {**cv_args, "activation_function" : "sin_sq"}
 
   if TEACHER_FORCING:

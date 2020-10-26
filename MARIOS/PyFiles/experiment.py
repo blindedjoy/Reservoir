@@ -1167,20 +1167,17 @@ class EchoStateExperiment:
 			exp = False
 			exp_w_ = {'exp_weights' : False}
 			
+		predetermined_args = {
+				"model_type" : self.model,
+				"feedback" : False
+			}
 
 		### hacky intervention:
 		if self.prediction_type != "column":
-		
-			predetermined_args = {
+			predetermined_args = { 
+			    **predetermined_args,
 				'obs_index' : self.obs_idx,
-				'target_index' : self.resp_idx,
-				"model_type" : self.model
-			}
-			
-			
-		else:
-			predetermined_args = {
-				"model_type" : self.model
+				'target_index' : self.resp_idx
 			}
 
 		input_dict = { **cv_args, 
@@ -1196,52 +1193,17 @@ class EchoStateExperiment:
 		else:
 			print("training hybrid part one: finding unif parameters")
 
-		#print("Train shape, xTr shape" + str(self.Train.shape) + " , " + str(self.xTr.shape))
+		self.best_arguments['feedback'] = False
+
 		if self.prediction_type == "column":
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
 		else:
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		
-
-		if self.model == "hybrid":
-			print("old input dict: ")
-			print(input_dict)
-			old_bounds, old_bounds_keys  = cv_args["bounds"], list(cv_args["bounds"].keys())
-			
-			new_bounds = {}
-			not_log_adjusted = ["n_nodes", "spectral_radius"]
-			for i in old_bounds_keys:
-				if i not in not_log_adjusted:
-					print("adjusting " + i)
-					new_bounds[i] = float(np.log(self.best_arguments[i])/np.log(10))
-				else:
-					new_bounds[i] = self.best_arguments[i]
-
-			new_bounds['llambda'] = hybrid_llambda_bounds
-			
-
-			cv_args["bounds"] = new_bounds
-
-			#print("HYBRID, New Bounds: " + str(cv_args["bounds"]))
-			#print(cv_args)
-
-
-			self.exp = True
-			self.esn_cv.exp_weights = True
-			exp_w_ = {'exp_weights' : True}
-
-			input_dict = {**cv_args, **predetermined_args, **exp_w_}
-			print("new input dict: ")
-			print(input_dict)
-			print(cv_arguments) ### <-- RUN LITE ON THIS
-			
-			#self.esn_cv = self.esn_cv_spec(**input_dict)
-			if self.prediction_type == "column":
-				self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr) 
-			else:
-				self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
-
-		self.best_arguments['feedback'] = 'False'
+		print("Bayesian Optimization complete. Now running saving data, getting prediction etc. ")
+		print(input_dict)
+		print(cv_arguments)
+		
 		self.esn = self.esn_spec(**self.best_arguments,
 								 obs_idx  = self.obs_idx,
 								 resp_idx = self.resp_idx, 
@@ -1258,12 +1220,6 @@ class EchoStateExperiment:
 			return self.esn.predict(n_steps, x = test[:n_steps,:])
 
 		self.prediction = my_predict(self.Test)
-		"""
-		esn_obs = EchoStateNetwork(**exp_best_args, exponential = True, 
-						   resp_idx = dat["resp_idx"], obs_idx = dat['obs_idx'], plot = True)
-		#esn_obs.llambda = 0.01
-		esn_obs.train(x = Train, y = xTr)
-		"""
 
 		self.save_json()
 		print("\n \n exp rc cv data saved @ : " + self.outfile +".pickle")
@@ -1547,3 +1503,37 @@ class EchoStateExperiment:
 				self.ip_res = {"prediction" : di, 
 									"nrmse" : diR} 
 				print("FINISHED INTERPOLATION: R = " + str(diR))
+""" Hybrid: vestigal
+		if self.model == "hybrid":
+			print("old input dict: ")
+			print(input_dict)
+			old_bounds, old_bounds_keys  = cv_args["bounds"], list(cv_args["bounds"].keys())
+			
+			new_bounds = {}
+			not_log_adjusted = ["n_nodes", "spectral_radius"]
+			for i in old_bounds_keys:
+				if i not in not_log_adjusted:
+					print("adjusting " + i)
+					new_bounds[i] = float(np.log(self.best_arguments[i])/np.log(10))
+				else:
+					new_bounds[i] = self.best_arguments[i]
+
+			new_bounds['llambda'] = hybrid_llambda_bounds
+			
+
+			cv_args["bounds"] = new_bounds
+
+			#print("HYBRID, New Bounds: " + str(cv_args["bounds"]))
+			#print(cv_args)
+
+
+			self.exp = True
+			self.esn_cv.exp_weights = True
+			exp_w_ = {'exp_weights' : True}
+
+			#self.esn_cv = self.esn_cv_spec(**input_dict)
+			if self.prediction_type == "column":
+				self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr) 
+			else:
+				self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
+		"""
