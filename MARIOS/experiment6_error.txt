@@ -4,34 +4,3 @@ Traceback (most recent call last):
   File "execute_cyclic.py", line 202, in test
     exper_ = [experiment_set[experiment_specification]]
 IndexError: list index out of range
-reconstraining parameters Mat52.lengthscale
-reconstraining parameters Mat52.variance
-reconstraining parameters GP_regression.Gaussian_noise.variance
-multiprocessing.pool.RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 121, in worker
-    result = (True, func(*args, **kwds))
-  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 44, in mapstar
-    return list(map(*args))
-  File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute_scripts/column.py", line 174, in run_experiment
-    experiment.RC_CV(cv_args = cv_args, model = "cyclic")
-  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1253, in RC_CV
-    self.esn.train(x = self.Train, y = self.xTr)
-  File "/n/home00/hjoy/.local/lib/python3.7/site-packages/reservoir/esn.py", line 543, in train
-    update = self.activation_function(self.in_weights @ inputs[t].T + self.weights @ current_state)
-ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 22 is different from 16)
-"""
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "execute_cyclic.py", line 223, in <module>
-    test(TEST = TEST)
-  File "execute_cyclic.py", line 207, in test
-    pool.map(run_experiment, exper_)
-  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 268, in map
-    return self._map_async(func, iterable, mapstar, chunksize).get()
-  File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
-    raise self._value
-ValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 22 is different from 16)
