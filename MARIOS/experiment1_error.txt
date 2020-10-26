@@ -24,3 +24,5 @@ Traceback (most recent call last):
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
 NameError: name 'cv_arguments' is not defined
+slurmstepd: error: *** STEP 5583007.0 ON holy7c10302 CANCELLED AT 2020-10-25T23:52:03 ***
+slurmstepd: error: *** STEP 5577890.0 ON holy7c06409 CANCELLED AT 2020-10-25T23:52:03 ***
