@@ -1230,12 +1230,10 @@ class EchoStateExperiment:
 			self.esn_cv.exp_weights = True
 			exp_w_ = {'exp_weights' : True}
 
-
-
 			input_dict = {**cv_args, **predetermined_args, **exp_w_}
 			print("new input dict: ")
 			print(input_dict)
-			
+			print(cv_arguments) ### <-- RUN LITE ON THIS
 			
 			#self.esn_cv = self.esn_cv_spec(**input_dict)
 			if self.prediction_type == "column":
@@ -1249,9 +1247,10 @@ class EchoStateExperiment:
 								 resp_idx = self.resp_idx, 
 								 model_type = self.model
 								 )
-		
-		self.esn.train(x = self.Train, y = self.xTr)
+
 		print(self.best_arguments)
+		self.esn.train(x = self.Train, y = self.xTr)
+		
 
 		def my_predict(test, n_steps = None):
 			if not n_steps:
