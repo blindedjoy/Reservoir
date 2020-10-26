@@ -7,9 +7,9 @@ Traceback (most recent call last):
     return list(map(*args))
   File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute_scripts/column.py", line 174, in run_experiment
     experiment.RC_CV(cv_args = cv_args, model = "cyclic")
-  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1188, in RC_CV
-    self.esn_cv = self.esn_cv_spec(**input_dict)
-TypeError: __init__() got an unexpected keyword argument 'feedback'
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1196, in RC_CV
+    self.best_arguments['feedback'] = False
+AttributeError: 'EchoStateExperiment' object has no attribute 'best_arguments'
 """
 
 The above exception was the direct cause of the following exception:
@@ -23,4 +23,4 @@ Traceback (most recent call last):
     return self._map_async(func, iterable, mapstar, chunksize).get()
   File "/n/sw/eb/apps/centos7/Anaconda3/2019.10/lib/python3.7/multiprocessing/pool.py", line 657, in get
     raise self._value
-TypeError: __init__() got an unexpected keyword argument 'feedback'
+AttributeError: 'EchoStateExperiment' object has no attribute 'best_arguments'
