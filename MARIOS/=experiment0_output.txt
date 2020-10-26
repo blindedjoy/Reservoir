@@ -37,3 +37,14 @@ Score: 0.9999702379416917
 Score: 0.9999373945877228
 Score: 0.9999974345472182
 Score: 0.9999903103712985
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 0.9992366547609308
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
