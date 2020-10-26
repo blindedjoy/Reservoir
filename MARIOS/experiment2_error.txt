@@ -1,2 +1,0 @@
-slurmstepd: error: *** STEP 5577891.0 ON holy7c04505 CANCELLED AT 2020-10-25T23:52:03 ***
-slurmstepd: error: *** STEP 5575804.0 ON holy7c04107 CANCELLED AT 2020-10-25T23:52:03 ***

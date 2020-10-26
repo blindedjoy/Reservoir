@@ -1,5 +1,0 @@
-reconstraining parameters Mat52.lengthscale
-reconstraining parameters Mat52.variance
-reconstraining parameters GP_regression.Gaussian_noise.variance
-slurmstepd: error: *** STEP 5583006.0 ON holy7c10108 CANCELLED AT 2020-10-25T23:52:03 ***
-slurmstepd: error: *** STEP 5575803.0 ON holy7c18110 CANCELLED AT 2020-10-25T23:52:03 ***
