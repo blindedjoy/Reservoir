@@ -1126,7 +1126,7 @@ class EchoStateExperiment:
 
 		#pred = self.prediction.tolist()
 		#self.json2be["prediction"]= Merge(self.json2be["prediction"], {self.model: pred}) #Merge(self.json2be["prediction"], )
-		self.json2be["nrmse"][self.model] = nrmse(pred, self.xTe, columnwise = False)
+		#self.json2be["nrmse"][self.model] = nrmse(pred, self.xTe, columnwise = False)
 		self.json2be["best arguments"] = Merge(self.json2be["best arguments"], {self.model: args2export}) 
 
 	
