@@ -87,3 +87,12 @@ Score: 1.0
 Score: 1.0
 Score: 1.0
 Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 1.0
+Score: 0.9999999999997001
+Score: 0.9999994573327428
