@@ -1193,12 +1193,13 @@ class EchoStateExperiment:
 		else:
 			print("training hybrid part one: finding unif parameters")
 
-		self.best_arguments['feedback'] = False
+		
 
 		if self.prediction_type == "column":
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
 		else:
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
+		self.best_arguments['feedback'] = False
 		
 		print("Bayesian Optimization complete. Now running saving data, getting prediction etc. ")
 		print(input_dict)
