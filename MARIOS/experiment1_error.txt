@@ -1,0 +1,1 @@
+slurmstepd: error: *** STEP 5585844.0 ON holy7c18110 CANCELLED AT 2020-10-26T00:10:41 ***
