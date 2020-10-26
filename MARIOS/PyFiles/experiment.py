@@ -1124,8 +1124,8 @@ class EchoStateExperiment:
 			args2export = ifdel(args2export, "llambda2")
 			args2export = ifdel(args2export, "noise")
 
-		pred = self.prediction.tolist()
-		self.json2be["prediction"]= Merge(self.json2be["prediction"], {self.model: pred}) #Merge(self.json2be["prediction"], )
+		#pred = self.prediction.tolist()
+		#self.json2be["prediction"]= Merge(self.json2be["prediction"], {self.model: pred}) #Merge(self.json2be["prediction"], )
 		self.json2be["nrmse"][self.model] = nrmse(pred, self.xTe, columnwise = False)
 		self.json2be["best arguments"] = Merge(self.json2be["best arguments"], {self.model: args2export}) 
 
@@ -1220,10 +1220,10 @@ class EchoStateExperiment:
 				n_steps = test.shape[0]
 			return self.esn.predict(n_steps, x = test[:n_steps,:])
 
-		self.prediction = my_predict(self.Test)
+		#self.prediction = my_predict(self.Test)
 
 		self.save_json()
-		print("\n \n exp rc cv data saved @ : " + self.outfile +".pickle")
+		print("\n \n rc cv data saved @ : " + self.outfile +".pickle")
 
 
 	def already_trained(self, best_args, exponential):
