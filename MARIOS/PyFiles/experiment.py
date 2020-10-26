@@ -1169,7 +1169,7 @@ class EchoStateExperiment:
 			
 		predetermined_args = {
 				"model_type" : self.model,
-				"feedback" : False
+				"esn_feedback" : False
 			}
 
 		### hacky intervention:
