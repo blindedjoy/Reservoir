@@ -16,3 +16,12 @@ Starting optimization...
 Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2ac191e77a10>
 Hayden edit: fixed_parameters: ['n_nodes']
 Hayden edit: free_parameters: ['cyclic_res_w', 'cyclic_input_w', 'cyclic_bias', 'leaking_rate']
+Score: 1.0
+Score: 0.9151608713034858
+Score: 0.999999805679683
+Score: 0.8930681804329549
+Score: 0.9444192918633115
+Score: 0.9988003023403792
+Score: 0.9986238018896438
+Score: 0.9590784681580906
+Score: 0.999652627833644
