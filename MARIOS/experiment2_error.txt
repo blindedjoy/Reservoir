@@ -1,6 +1,11 @@
-reconstraining parameters Mat52.lengthscale
-reconstraining parameters Mat52.variance
-reconstraining parameters GP_regression.Gaussian_noise.variance
-reconstraining parameters Mat52.lengthscale
-reconstraining parameters Mat52.variance
-reconstraining parameters GP_regression.Gaussian_noise.variance
+Traceback (most recent call last):
+  File "execute_cyclic.py", line 7, in <module>
+    from PyFiles.experiment import *
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 3, in <module>
+    from reservoir import *
+  File "/n/home00/hjoy/.local/lib/python3.7/site-packages/reservoir/__init__.py", line 1, in <module>
+    from .esn import *
+  File "/n/home00/hjoy/.local/lib/python3.7/site-packages/reservoir/esn.py", line 520
+    if bias_phi
+              ^
+SyntaxError: invalid syntax
