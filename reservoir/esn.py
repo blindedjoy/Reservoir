@@ -513,14 +513,24 @@ class EchoStateNetwork:
             input_weights @ inputs.T
             """
             #Build input weights matrix:
+            bias_phi = True
 
-            #linear terms
-            input_weight = np.full( shape = (inputs.shape[1] - 1, ), fill_value = self.cyclic_input_w, dtype=np.float32)
-            input_bias = np.full( shape = (1, ), fill_value = self.cyclic_bias, dtype=np.float32)
-            input_weights = np.hstack((input_bias, input_weight))
-            # add zeros
-            input_weights_zeroes = np.zeros((self.n_nodes - 1, inputs.shape[1]))
-            self.in_weights = np.vstack((input_weights, input_weights_zeroes))
+
+            #Bias term like phi
+            if bias_phi
+                input_weight = np.full( shape = (inputs.shape[1] - 1, ), fill_value = self.cyclic_input_w, dtype=np.float32)
+                input_weights_zeroes = np.zeros((self.n_nodes - 1, inputs.shape[1] -1 ))
+                in_weights = np.vstack((input_weight, input_weights_zeroes))
+                input_bias = np.full( shape = (self.n_nodes, ), fill_value = self.cyclic_bias, dtype=np.float32).reshape(-1,1)
+                self.in_weights = np.hstack((input_bias, in_weights))
+            #original bias
+            else:
+                input_weight = np.full( shape = (inputs.shape[1] - 1, ), fill_value = self.cyclic_input_w, dtype=np.float32)
+                input_bias = np.full( shape = (1, ), fill_value = self.cyclic_bias, dtype=np.float32)
+                input_weights = np.hstack((input_bias, input_weight))
+                # add zeros
+                input_weights_zeroes = np.zeros((self.n_nodes - 1, inputs.shape[1]))
+                self.in_weights = np.vstack((input_weights, input_weights_zeroes))
             self.in_weights *= self.input_scaling
 
         # Add feedback if requested, optionally with feedback scaling

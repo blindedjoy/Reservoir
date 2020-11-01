@@ -84,7 +84,7 @@ def test(TEST, multiprocessing = False, gap = False):
 
           else:
             experiment_set = [
-                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 10.0, 'target_hz': 6.0},
+                  {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 50.0, 'target_hz': 6.0},
                   {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
                   {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
                   {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
@@ -183,13 +183,13 @@ def test(TEST, multiprocessing = False, gap = False):
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
-
+    size_ = "publish"
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       if RUN_LITE == True:
-        experiment["size"] = "publish"
+        experiment["size"] = size_
       else:
-        experiment["size"] = "publish"
+        experiment["size"] = size_
       experiment["model_type"] = "cyclic"
       experiment["activation_function"] = "sin_sq"
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
 
-  TEST = False #false for low frequencies, true for column, 1000 hz
+  TEST = True #False for low frequencies, true for column, 1000 hz
 
   start = timeit.default_timer()
   test(TEST = TEST)

@@ -147,7 +147,8 @@ class EchoStateExperiment:
 
 		if self.prediction_type == "column":
 			self.target_frequency = 100
-		print(self.prediction_type)
+
+		#print(self.prediction_type)
 		assert self.target_frequency, "you must enter a target frequency"
 		assert is_numeric(self.target_frequency), "you must enter a numeric target frequency"
 		assert size in ["small", "medium", "publish", "librosa"], "Please choose a size from ['small', 'medium', 'publish']"
@@ -168,8 +169,8 @@ class EchoStateExperiment:
 					for i in self.resp_idx:
 						if i in self.obs_idx:
 							self.obs_idx.remove(i)
-					print("OBS IDX: " + str(self.obs_idx))
-					print("RESP IDX: " + str(self.resp_idx))
+					#print("OBS IDX: " + str(self.obs_idx))
+					#print("RESP IDX: " + str(self.resp_idx))
 				if obs_hz and target_hz:
 					assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 					assert is_numeric(target_hz), "you must enter a numeric target frequency range"
@@ -184,8 +185,8 @@ class EchoStateExperiment:
 			for i in self.resp_idx:
 				if i in self.obs_idx:
 					self.obs_idx.remove(i)
-			print("OBS IDX: " + str(self.obs_idx))
-			print("RESP IDX: " + str(self.resp_idx))
+			#print("OBS IDX: " + str(self.obs_idx))
+			#print("RESP IDX: " + str(self.resp_idx))
 		
 		self.horiz_display()
 		self.k = k
@@ -415,8 +416,8 @@ class EchoStateExperiment:
 		if self.verbose:
 			for file_name_ in files2import:
 				str2print += "successfully loaded: " + file_name_ + ".mat, "
-			print("maximum frequency: " + str(self.max_freq))
-			print("dataset shape: " + str(self.A.shape))
+			#print("maximum frequency: " + str(self.max_freq))
+			#print("dataset shape: " + str(self.A.shape))
 
 		self.key_freq_idxs = {}
 		for i in (2000, 4000, 8000):
@@ -829,7 +830,7 @@ class EchoStateExperiment:
 			self.exact = True
 			if self.resp_idx:
 				print("dataset shape" + str(dataset.shape))
-				print("resp_idx.shape " + str(self.resp_idx))
+				print("resp_idx.shape " + str(np.array(self.resp_idx).shape))
 				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
 			else:
 				response = dataset.copy()
@@ -1123,10 +1124,12 @@ class EchoStateExperiment:
 			args2export = ifdel(args2export, "llambda")
 			args2export = ifdel(args2export, "llambda2")
 			args2export = ifdel(args2export, "noise")
-
-		#pred = self.prediction.tolist()
-		#self.json2be["prediction"]= Merge(self.json2be["prediction"], {self.model: pred}) #Merge(self.json2be["prediction"], )
-		#self.json2be["nrmse"][self.model] = nrmse(pred, self.xTe, columnwise = False)
+		try:
+			pred = self.prediction.tolist()
+			self.json2be["prediction"]= Merge(self.json2be["prediction"], {self.model: pred}) #Merge(self.json2be["prediction"], )
+			self.json2be["nrmse"][self.model] = nrmse(pred, self.xTe, columnwise = False)
+		except:
+			print("object doesn't have the prediction attribute.")
 		self.json2be["best arguments"] = Merge(self.json2be["best arguments"], {self.model: args2export}) 
 
 	

@@ -48,7 +48,7 @@ class EchoStateAnalysis:
         self.model = model
         self.data_type = data_type
 
-        assert model in ["uniform", "exponential", "delay_line"]
+        assert model in ["uniform", "exponential", "delay_line", "cyclic"]
 
         if data_type == "json":
             self.change_interpolation_json()
@@ -57,14 +57,14 @@ class EchoStateAnalysis:
 
         models = ["uniform", "exponential", "ip: linear"]
 
-        if self.model == "delay_line":
-            models = ["delay_line", "ip: linear"]
+        if self.model in ["delay_line", "cyclic"]:
+            models = [self.model, "ip: linear"]
 
-        self.build_loss_df(models = models, group_by = "freq", columnwise = False)
-        self.build_loss_df(models = models, group_by = "time", columnwise = False)
+        #self.build_loss_df(models = models, group_by = "freq", columnwise = False)
+        #self.build_loss_df(models = models, group_by = "time", columnwise = False)
         
         
-    def get_experiment(self, json_obj, compare_ = False, plot_split = False, librosa = False, verbose = False):
+    def get_experiment(self, json_obj, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
         """ This function retrieves, from a json dictionary file, an EchoStateExperiment object.
 
         Args:
@@ -78,6 +78,7 @@ class EchoStateAnalysis:
         """
         
         print(json_obj["get_observer_inputs"])
+        print(json_obj["experiment_inputs"])
         if self.data_type == "json":
             print("DATA TYPE JSON")
             experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], librosa = librosa)
@@ -89,8 +90,8 @@ class EchoStateAnalysis:
                              "resp_idx" : pickle_obj["resp_idx"],
                              "prediction_type" : "exact"
                         }
-            if self.model == "delay_line":
-                extra_inputs = {**extra_inputs, "model" : "delay_line" }
+            #if self.model in ["delay_line", "cyclic"]:
+            extra_inputs = {**extra_inputs, "model" : model}
 
             experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
 
@@ -108,15 +109,15 @@ class EchoStateAnalysis:
             print("Train.shape: " + str(experiment_.Train.shape))
             print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
 
-        if self.model == "uniform":
+        if model == "uniform":
             experiment_.already_trained(json_obj["best arguments"]["uniform"], exponential = False)
 
-        elif self.model == "exponential": 
+        elif model == "exponential": 
             experiment_.already_trained(json_obj["best arguments"]["exponential"], exponential = True)
 
-        elif self.model == "delay_line":
+        elif model in ["delay_line", "cyclic"]:
             print(json_obj["best arguments"].keys())
-            experiment_.already_trained(json_obj["best arguments"]["delay_line"], exponential = False)
+            experiment_.already_trained(json_obj["best arguments"][self.model], exponential = False)
 
 
         experiment_.Train, experiment_.Test = experiment_.xTr, experiment_.xTe#self.recover_test_set(json_obj)
@@ -293,10 +294,11 @@ class EchoStateAnalysis:
             if not i:
                 experiment_list_temp, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
             
-            if self.model != "delay_line":
+            if self.model not in ["delay_line", "cyclic"]:
                 try:
                     experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
                     models_spec = list(experiment_dict["prediction"].keys())
+                    print("models_spec: " + str(models_spec))
                     assert "exponential" in models_spec, print(models_spec)
                     try:
                         assert len(models_spec) >= 3
@@ -308,14 +310,13 @@ class EchoStateAnalysis:
                     print("NOT YET RUN")
                     NOT_YET_RUN += [i]
             else:
-                print("debug loc 2: " + str(path_lst))
                 experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
                 experiment_list_temp.append(experiment_dict)
 
 
         #in this loop we actually get the experiment.
 
-        print("debug loc alpha: " + str(len(experiment_list_temp)))
+        
         for i in trange( len(experiment_list_temp), desc='experiment list, fixing interpolation...'): 
 
             if not i:
@@ -345,7 +346,7 @@ class EchoStateAnalysis:
                 dict_tmp = experiment_dict[key]
                 dict_tmp = ifdel(dict_tmp, "interpolation")
                 experiment_dict[key] = dict_tmp
-                print("debug loc 3: " + str(path_lst) + " " + str(key))
+
 
             results_tmp.append(experiment_dict["nrmse"])
             experiment_list.append(experiment_dict)
@@ -560,19 +561,24 @@ class EchoStateAnalysis:
         """
         # we can get most of our information from either model, we just have to fix the exponential predictions at the end.
         
-        if self.model == "delay_line":
-            exper_dl = self.get_experiment(exper_, verbose = False, plot_split = False, compare_ = False)
+        if self.model in ["delay_line", "cyclic"]:
+            exper_dl = self.get_experiment(exper_, self.model, verbose = False, plot_split = False, compare_ = False)
             #TODO
             exper_spec = exper_dl
+            exper_["prediction"][self.model] = exper_spec.prediction
+
+            exper_["nrmse"][self.model] = nrmse(exper_spec.prediction, exper_spec.xTe)
         else:
             self.model = "uniform"
-            exper_unif = self.get_experiment(exper_, verbose = False, plot_split = False, compare_ = False)
+            exper_unif = self.get_experiment(exper_, "uniform", verbose = False, plot_split = False, compare_ = False)
+            print("Michael Jackson: " + str(exper_unif.model))
             unif_nrmse = nrmse(exper_unif.prediction, exper_unif.xTe)
             exper_["prediction"]["uniform"] = exper_unif.prediction
             exper_["nrmse"]["uniform"] = unif_nrmse
 
             self.model = "exponential"
-            exper_exp = self.get_experiment(exper_, verbose = False, plot_split = False, compare_ = False)
+            exper_exp = self.get_experiment(exper_, "exponential", verbose = False, plot_split = False, compare_ = False)
+            print("Michael Barry: " + str(exper_exp.model))
             exp_nrmse = nrmse(exper_exp.prediction, exper_exp.xTe)
             exper_["prediction"]["exponential"] = exper_exp.prediction
             exper_["nrmse"]["exponential"] = exp_nrmse
@@ -858,23 +864,32 @@ class EchoStateAnalysis:
         """
         Let's visualize the hyper-parameter plots.
         """
-        log_vars = ["noise", "connectivity", "regularization", "llambda", "llamba2"]
+        log_vars = ["noise", "connectivity", "regularization", "llambda", "llamba2", "cyclic_res_w", "cyclic_input_w"]
         
         for i, experiment in enumerate(self.experiment_lst):
             df_spec_unif = pd.DataFrame(experiment["best arguments"]["uniform"], index = [0])
             df_spec_exp  = pd.DataFrame(experiment["best arguments"]["exponential"], index = [0])
+            #if "cyclic" in list(experiment["best arguments"].keys()):
+            df_spec_cyclic  = pd.DataFrame(experiment["best arguments"]["cyclic"], index = [0])
             
             if not i:
                 df_unif = df_spec_unif
                 df_exp = df_spec_exp
+                df_cyclic = df_spec_cyclic
             else:
                 df_unif = pd.concat([df_unif, df_spec_unif])
                 df_exp = pd.concat([df_exp, df_spec_exp])
+                df_cyclic = pd.concat([df_cyclic, df_spec_cyclic])
 
         unif_vars = ["connectivity", "regularization", "leaking_rate", "spectral_radius"]
         exp_vars  = ["llambda", "llambda2", "noise"]
+        display(df_spec_cyclic)
+        cyclic_vars = ["cyclic_res_w", "cyclic_input_w", "cyclic_bias", "leaking_rate"]
+        #cyclic_vars  = list(experiment["best arguments"]["cyclic"].keys())
         df_unif = df_unif[unif_vars]
         df_exp = df_exp[unif_vars + exp_vars]
+        df_cyclic = df_cyclic[cyclic_vars]
+
         
         for i in list(df_unif.columns):
             if i in log_vars:
@@ -883,6 +898,10 @@ class EchoStateAnalysis:
         for i in list(df_exp.columns):
             if i in log_vars:
                 df_exp[i] = np.log(df_exp[i])/np.log(10)
+
+        for i in list(df_cyclic.columns):
+            if i in log_vars:
+                df_cyclic[i] = np.log(df_cyclic[i])/np.log(10)
         
         
         #display(df_unif)
@@ -893,6 +912,11 @@ class EchoStateAnalysis:
         
         
         sns.catplot(data = df_exp)
+        plt.title("exponential RC hyper-parameters")
+        plt.xticks(rotation=45)
+        plt.show()
+
+        sns.catplot(data = df_cyclic)
         plt.title("exponential RC hyper-parameters")
         plt.xticks(rotation=45)
         plt.show()
