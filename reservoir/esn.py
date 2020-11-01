@@ -489,6 +489,8 @@ class EchoStateNetwork:
             else:
 
                 self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
+                if self.model_type == "cyclic":
+                    self.in_weights = self.in_weights * self.cyclic_input_w + self.cyclic_bias
 
         elif self.model_type == "delay_line":
             """
@@ -517,7 +519,7 @@ class EchoStateNetwork:
 
 
             #Bias term like phi
-            if bias_phi
+            if bias_phi:
                 input_weight = np.full( shape = (inputs.shape[1] - 1, ), fill_value = self.cyclic_input_w, dtype=np.float32)
                 input_weights_zeroes = np.zeros((self.n_nodes - 1, inputs.shape[1] -1 ))
                 in_weights = np.vstack((input_weight, input_weights_zeroes))
