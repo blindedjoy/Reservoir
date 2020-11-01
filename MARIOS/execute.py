@@ -90,6 +90,7 @@ def test(TEST, multiprocessing = False, gap = False):
           print("on track")
           
           experiment_set = [
+                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 50.0, 'target_hz': 6.0},
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
                 {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
@@ -217,6 +218,7 @@ def test(TEST, multiprocessing = False, gap = False):
       experiment["bounds"] = bounds
       experiment["prediction_type"] = "block" #"block"#PREDICTION_TYPE
       experiment["size"] = "publish"
+      experiment["model_type"] = "uniform"
 
     try:
       set_start_method('forkserver')

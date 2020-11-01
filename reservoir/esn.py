@@ -476,21 +476,27 @@ class EchoStateNetwork:
             self.get_exp_weights()
         
 
-        if self.model_type in ["uniform", "exponential", "cyclic"]:
+        if self.model_type in ["uniform", "exponential"]:
             if self.exponential == True:
-                
-                self.in_weights = self.input_scaling * self.exp_weights 
-                ### What about this line?
-                
-                uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
-
-                self.in_weights = np.hstack((uniform_bias, self.in_weights)) #This looks like the bias term. changed from 0.01 to 1.
-                ###
+                self.in_weights = self.input_scaling * self.exp_weights
             else:
+                self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
 
-                self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1]))
-                if self.model_type == "cyclic":
-                    self.in_weights = self.in_weights * self.cyclic_input_w + self.cyclic_bias
+            uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+            self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
+
+        elif self.model_type == "cyclic":
+            # Set and scale input weights (for memory length and non-linearity)
+            self.in_weights = np.full(shape=(self.n_nodes, inputs.shape[1] - 1), fill_value=self.cyclic_input_w, dtype=np.float32)
+            self.in_weights *= np.sign(random_state.uniform(low=-1.0, high=1.0, size=self.in_weights.shape))
+            self.in_weights *= self.input_scaling 
+            
+            #add input bias
+            cyclic_bias = np.full(shape=(self.n_nodes, 1), fill_value=self.cyclic_bias, dtype=np.float32)
+            cyclic_bias *= np.sign(random_state.uniform(low=-1.0, high=1.0, size=self.cyclic_bias.shape))
+            
+            self.in_weights = np.hstack((cyclic_bias, self.in_weights)) 
+
 
         elif self.model_type == "delay_line":
             """
@@ -552,6 +558,7 @@ class EchoStateNetwork:
 
             #CHANGE
             #f = self.activation_function
+
             update = self.activation_function(self.in_weights @ inputs[t].T + self.weights @ current_state)
             
             #print("update: " + str(update.shape))

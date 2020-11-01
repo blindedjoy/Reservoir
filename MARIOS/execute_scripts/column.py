@@ -127,7 +127,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     default_presets = {
       "cv_samples" : 6,
       "max_iterations" : 1000,
-      "eps" : 1e-8,
+      "eps" : 1e-5,
       'subsequence_length' : 180,
       "initial_samples" : 100}
   elif size == "medium":

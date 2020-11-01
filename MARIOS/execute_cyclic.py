@@ -67,9 +67,9 @@ def test(TEST, multiprocessing = False, gap = False):
 
       bounds = { 
                 'n_nodes': 1000, 
-                'cyclic_res_w': (-1, 1),       
-                'cyclic_input_w' : (-1, 1),
-                "cyclic_bias": (-1, 1),
+                'cyclic_res_w': (-4, 1),       
+                'cyclic_input_w' : (-4, 1),
+                "cyclic_bias": (-4, 1),
                 "leaking_rate" :   (0.001, 1)
                 }
 
@@ -183,7 +183,7 @@ def test(TEST, multiprocessing = False, gap = False):
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
-    size_ = "publish"
+    size_ = "small"
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       if RUN_LITE == True:
@@ -217,7 +217,7 @@ if __name__ == '__main__':
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
 
-  TEST = False #False for low frequencies, true for column, 1000 hz
+  TEST = True #False for low frequencies, true for column, 1000 hz
 
   start = timeit.default_timer()
   test(TEST = TEST)
