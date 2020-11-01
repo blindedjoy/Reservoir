@@ -1,218 +1,67 @@
 Total cpus available: 10
 RUNNING EXPERIMENT 0 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
 This is not a test
-{'size': 'small', 'verbose': False, 'obs_freqs': [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650], 'target_freqs': [130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520], 'prediction_type': 'block', 'model': 'cyclic'}
-dataset shape(512, 552)
-resp_idx.shape (21,)
-Train Region Train/Observers shape: (256, 12)
-Test Region Train/Observers shape: (256, 12)
-Train Region Target shape: (256, 21)
-Test Region Target shape: (256, 21)
+{'size': 'publish', 'verbose': False, 'obs_freqs': [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650], 'target_freqs': [130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520], 'prediction_type': 'block', 'model': 'cyclic'}
+dataset shape(3153, 3153)
+resp_idx.shape (40,)
+Train Region Train/Observers shape: (1576, 26)
+Test Region Train/Observers shape: (1577, 26)
+Train Region Target shape: (1576, 40)
+Test Region Target shape: (1577, 40)
 .cyclic.
 cyclicrc cv set, ready to train 
 Model initialization and exploration run...
 Starting optimization... 
 
-Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b5d201da910>
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2ae475b3c9d0>
 Hayden edit: fixed_parameters: ['n_nodes']
 Hayden edit: free_parameters: ['cyclic_res_w', 'cyclic_input_w', 'cyclic_bias', 'leaking_rate']
-Score: 0.9609580241921977
-Score: 0.9998385109224514
-Score: 0.9983600693721341
-Score: 0.983884045330932
-Score: 0.9410987605368507
-Score: 0.9094554776427812
-Score: 0.9989142553973256
-Score: 0.8039537230392639
-Score: 0.9694836504302999
-Score: 0.8577175593071447
-Score: 0.47772573244816086
-Score: 0.9999999738859089
-Score: 0.9678908795851177
-Score: 0.8964535654272258
-Score: 0.6013784220102739
+Score: 0.9979672707286543
+Score: 0.9605800098665057
+Score: 0.3683770109440215
 Score: 1.0
-Score: 0.9982347681253613
+Score: 0.9998425181325068
+Score: 0.9814591781816675
+Score: 0.9999427257247199
+Score: 0.9822333298798167
 Score: 1.0
-Score: 0.9915724217241167
-Score: 0.9581650657670402
-Score: 0.9780796176262063
+Score: 0.9995996768354274
+Score: 0.9644879428903614
+Score: 0.9398502984811918
+Score: 0.9949152618071689
+Score: 0.38724175334559874
+Score: 0.47241286510823716
+Score: 0.9401775899039485
+Score: 0.999947104850891
+Score: 0.9919613383300442
+Score: 0.423186822511971
+Score: 0.6284632823846092
+Score: 0.9999999999999993
+Score: 0.9195648236741709
+Score: 0.9999999998914093
+Score: 0.9999999931144072
+Score: 0.9576752706256135
+Score: 0.9406097881707449
+Score: 0.9858124359475926
+Score: 0.9974797506736586
+Score: 0.9444259659360412
+Score: 0.9877815093787895
+Score: 0.9882357775921516
+Score: 0.548824060944952
+Score: 0.9995562592884617
+Score: 0.9984091015316618
+Score: 0.9870499494343165
+Score: 0.8991828463137258
+Score: 0.5079771011607591
+Score: 0.6860209087574525
+Score: 0.9999998709450665
+Score: 0.9999870726913656
+Score: 0.8359837106074947
+Score: 0.6882962345589918
 Score: 1.0
-Score: 0.8829127830461159
-Score: 0.9905193137018742
-Score: 0.9954792126286073
-Score: 0.5904804651469162
-Score: 0.48459491958833045
-Score: 0.8300568509988709
-Score: 0.9999898509008524
-Score: 0.9917734443976565
-Score: 0.999902317568716
-Score: 0.9996492580037388
-Score: 0.9999970000835721
-Score: 0.920938658503483
-Score: 0.9617843261176073
-Score: 0.8640277292084381
-Score: 0.9920985287746246
-Score: 0.675254441867713
-Score: 0.8138752180673016
-Score: 0.9997344739884059
-Score: 0.9831725914489788
-Score: 0.9756918999132208
-Score: 1.0
-Score: 0.6174868746846164
-Score: 0.7982434490368298
-Score: 0.8433226843167902
-Score: 0.5119775153157963
-Score: 1.0
-Score: 0.9439785109255135
-Score: 0.9663380888959957
-Score: 0.999989570406357
-Score: 0.9999998488400502
-Score: 0.9989967497442732
-Score: 0.9166898694046871
-Score: 0.999999965488538
-Score: 0.9999999999999909
-Score: 0.94384148628694
-Score: 0.971606038417914
-Score: 0.988430933225431
-Score: 1.0
-Score: 1.0
-Score: 0.8906319451010781
-Score: 0.9999999989399715
-Score: 0.9998967000901385
-Score: 0.9349186684138457
-Score: 0.979870062858759
-Score: 0.929239906729606
-Score: 0.9505664170520608
-Score: 0.7409185102720329
-Score: 0.9676737868680173
-Score: 1.0
-Score: 0.9461434565604968
-Score: 0.9999693072096836
-Score: 0.6849467687003439
-Score: 0.6586922016994575
-Score: 0.9965085185328633
-Score: 1.0
-Score: 0.983704879798102
-Score: 0.993464587661921
-Score: 0.9876437262442549
-Score: 0.9999995869234821
-Score: 1.0
-Score: 0.8754782424716414
-Score: 0.9967883517409083
-Score: 1.0
-Score: 0.9999999535031632
-Score: 0.9970676582901465
-Score: 0.9999999999999707
-Score: 0.9999187228832365
-Score: 0.979749684442934
-Score: 0.9997698889268625
-Score: 0.9764111801872657
-Score: 0.8993305858000357
-Score: 0.9981648799099799
-Score: 0.8738793577137411
-Score: 0.3619081130194653
-Score: 0.9999892130791103
-Score: 0.9940265231533686
-Score: 0.6701601802622652
-Score: 0.9766579120762189
-Model initialization done. 
-
-
-Name : GP regression
-Objective : 146.6337220466771
-Number of Parameters : 6
-Number of Optimization Parameters : 6
-Updates : True
-Parameters:
-  [1mGP_regression.         [0;0m  |                value  |  constraints  |       priors      
-  [1mMat52.variance         [0;0m  |    0.927448169735935  |      +ve      |  iGa(0.001, 0.001)
-  [1mMat52.lengthscale      [0;0m  |                 (4,)  |      +ve      |  iGa(0.001, 0.001)
-  [1mGaussian_noise.variance[0;0m  |  0.08713178911891227  |      +ve      |  iGa(0.001, 0.001) 
-
-  [1mindex[0;0m  |  GP_regression.Mat52.lengthscale  |  constraints  |       priors      
-  [1m[0]  [0;0m  |                       0.34977352  |      +ve      |  iGa(0.001, 0.001)
-  [1m[1]  [0;0m  |                       0.21501659  |      +ve      |  iGa(0.001, 0.001)
-  [1m[2]  [0;0m  |                       0.50608936  |      +ve      |  iGa(0.001, 0.001)
-  [1m[3]  [0;0m  |                       0.46274093  |      +ve      |  iGa(0.001, 0.001) 
-
-Score: 0.9921273827305337
-Score: 0.4209346245708075
-Score: 0.21160760388378472
-Score: 0.08772388177137305
-Score: 0.08667046665628239
-Score: 0.06593824480330586
-Score: 0.08488511103743632
-Score: 0.08707989842406491
-Score: 0.11202171637579184
-Score: 0.1145120978494227
-Score: 0.11398425960908176
-Score: 0.16272402912467415
-Score: 0.1105095170742715
-Score: 0.06217795029541107
-Score: 0.11766274654697492
-Score: 0.19445389646931208
-Score: 0.12231296079763997
-Score: 0.08128739003146063
-Score: 0.12452337084485744
-Score: 0.08931963376026167
-Score: 0.08582377041390007
-Score: 0.08100294266717445
-Score: 0.14820510580149998
-Score: 0.13181685474343605
-Score: 0.1102559019639257
-Score: 0.19766887022124685
-Score: 0.19092631365340537
-Score: 0.053100586143560946
-Score: 0.21885130549047724
-Score: 0.14124027317791227
-Score: 0.10927105465412719
-Score: 0.06636031759255658
-Score: 0.25200225724683195
-Score: 0.10724964106423722
-Score: 0.10190561570402047
-Score: 0.21226891574681317
-Score: 0.07550472052596507
-Score: 0.06369283075377713
-Score: 0.10589463753345571
-Score: 0.21533386910050853
-Score: 0.06845250481372663
-Score: 0.1080835063094422
-Score: 0.07849518549084135
-Score: 0.06626172698043681
-Score: 0.08227532860394922
-Score: 0.08088399790622458
-Score: 0.12855982432389532
-Score: 0.08702501584320808
-Score: 0.11669844241277116
-Score: 0.09651490822281981
-Score: 0.12460120691055426
-Score: 0.10066795176658319
-Score: 0.09069661188075301
-Score: 0.08497436236934175
-Score: 0.15332825680344095
-Score: 0.04798980555765693
-Score: 0.08991734536473037
-Score: 0.24704149291392485
-Score: 0.054969530247283724
-Score: 0.12919254040186856
-Score: 0.06026021380732281
-Score: 0.09909628091878456
-Score: 0.0910416257566313
-Converged at iteration 163
-Done after 163 iterations.
-Bayesian Optimization complete. Now running saving data, getting prediction etc. 
-{'bounds': {'n_nodes': 1000, 'cyclic_res_w': (-4, 0.5), 'cyclic_input_w': (-4, 0.5), 'cyclic_bias': (-1, 1), 'leaking_rate': (0.001, 1)}, 'scoring_method': 'tanh', 'n_jobs': 10, 'verbose': True, 'plot': False, 'cv_samples': 6, 'max_iterations': 1000, 'eps': 1e-05, 'subsequence_length': 180, 'initial_samples': 100, 'activation_function': 'sin_sq', 'model_type': 'cyclic', 'esn_feedback': False, 'obs_index': [0, 1, 2, 3, 4, 5, 27, 28, 29, 30, 31, 32], 'target_index': [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26], 'exp_weights': False}
-{'bounds': {'n_nodes': 1000, 'cyclic_res_w': (-4, 0.5), 'cyclic_input_w': (-4, 0.5), 'cyclic_bias': (-1, 1), 'leaking_rate': (0.001, 1)}, 'scoring_method': 'tanh', 'n_jobs': 10, 'verbose': True, 'plot': False, 'cv_samples': 6, 'max_iterations': 1000, 'eps': 1e-05, 'subsequence_length': 180, 'initial_samples': 100, 'activation_function': 'sin_sq'}
-{'cyclic_res_w': 0.0001, 'cyclic_input_w': 0.0001, 'cyclic_bias': 1.1698710754072696, 'leaking_rate': 0.001, 'n_nodes': 1000, 'random_seed': 123, 'feedback': False}
-initialiazing json2be
-
-
-object doesn't have the prediction attribute.
-
-
-object doesn't have the prediction attribute.
-
- 
- rc cv data saved @ : experiment_results/small/split_0.5/block_cyclicN_Targidx_21N_Obsidx_12.pickle
-Time:  433.3306837999262
+Score: 0.9999416543947003
+Score: 0.8352510882425367
+Score: 0.9999991207110739
+Score: 0.9589581580039498
+Score: 0.9986623807213215
+Score: 0.8404588597699683
