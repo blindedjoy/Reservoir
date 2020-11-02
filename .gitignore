@@ -44,3 +44,6 @@ docs/api/*
 docs/_build/*
 cover/*
 MANIFEST
+
+# combined_analysis
+MARIOS/final_results/combined_analysis.pickle

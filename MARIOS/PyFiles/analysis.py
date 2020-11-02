@@ -917,7 +917,7 @@ class EchoStateAnalysis:
         plt.show()
 
         sns.catplot(data = df_cyclic)
-        plt.title("exponential RC hyper-parameters")
+        plt.title("Cyclic RC hyper-parameters")
         plt.xticks(rotation=45)
         plt.show()
 

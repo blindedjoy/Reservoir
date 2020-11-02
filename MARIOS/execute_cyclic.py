@@ -147,18 +147,18 @@ def test(TEST, multiprocessing = False, gap = False):
       print("This is not a test")
       bounds = { 
                 'n_nodes': 1000,         #fixed
-                'cyclic_res_w': (-4, 0.5),       
-                'cyclic_input_w' : (-4, 0.5),
-                "cyclic_bias": (-1, 1),
+                'cyclic_res_w': (-5, 1),       
+                'cyclic_input_w' : (-5, 1),
+                "cyclic_bias": (-5, 1),
                 "leaking_rate" :   (0.001, 1)
                 }
 
       if RUN_LITE == True:
         bounds = { 
                 'n_nodes': 1000,         #fixed
-                'cyclic_res_w': (-4, 0.5),       
-                'cyclic_input_w' : (-4, 0.5),
-                "cyclic_bias": (-1, 1),
+                'cyclic_res_w': (-5, 1),       
+                'cyclic_input_w' : (-5, 1),
+                "cyclic_bias": (-5, 1),
                 "leaking_rate" :   (0.001, 1)
                 }
     
