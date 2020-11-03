@@ -26,8 +26,6 @@ def get_frequencies(trial = 1):
   obs_list += list( range( ub_targ, ub_targ + obs_hz, 10))
   resp_list = list( range( lb_targ, ub_targ, 10))
   return obs_list, resp_list
-  
-PREDICTION_TYPE = "block"
 
 def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpolation_method = "griddata-linear"):
   """
@@ -81,7 +79,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
 
   obs_inputs = {"split" : inputs["split"], "aspect": 0.9, "plot_split": False}
 
-  if PREDICTION_TYPE == "column":
+  if inputs["prediction_type"] == "column":
     train_time_idx, test_time_idx = inputs["train_time_idx"], inputs["test_time_idx"]
 
     experiment_inputs = { "size" : inputs["size"],
@@ -102,11 +100,11 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     print("obs_inputs: " + str(obs_inputs))
     experiment.get_observers(**obs_inputs)
 
-  elif PREDICTION_TYPE == "block":
+  elif inputs["prediction_type"] == "block":
     if "obs_freqs" in inputs:
       AddEchoArgs = { "obs_freqs" : inputs["obs_freqs"],
                       "target_freqs" : inputs["target_freqs"],
-                      "prediction_type" : PREDICTION_TYPE,
+                      "prediction_type" : inputs["prediction_type"],
                       "model" : model_type
                     }
       EchoArgs = Merge(EchoArgs, AddEchoArgs)
@@ -145,11 +143,10 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       'subsequence_length' : 700,
       "initial_samples" : 300}
 
-  if PREDICTION_TYPE == "column":
-    default_presets['esn_feedback'] = True
+  if inputs["prediction_type"] == "column":
+    #default_presets['esn_feedback'] = True
     if "subseq_len" in inputs:
       default_presets['subsequence_length'] = inputs["subseq_len"]
-      print("FEEDBACK ENABLED")
     else:
       default_presets['subsequence_length'] = 75
 
@@ -164,8 +161,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   if model_type in ["delay_line", "cyclic"]:
     cv_args = {**cv_args, "activation_function" : "sin_sq"}
 
-  if TEACHER_FORCING:
-    cv_args = Merge(cv_args, {"esn_feedback" : True})
+  #if TEACHER_FORCING:
+  #  cv_args = Merge(cv_args, {"esn_feedback" : True})
 
   #Consider combining cyclic and delay line
   if model_type in ["delay_line"]:

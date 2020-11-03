@@ -17,6 +17,7 @@ import multiprocessing.pool
 from execute_scripts.column import *
 
 RUN_LITE = False
+PREDICTION_TYPE = "column"
 
 # necessary to add cwd to path when script run 
 # by slurm (since it executes a copy)
@@ -101,7 +102,7 @@ def test(TEST, multiprocessing = False, gap = False):
                   ]
           
           #experiment_set = [ Merge(experiment, librosa_args) for experiment in experiment_set]
-        set_specific_args = {"prediction_type": "block", 
+        set_specific_args = {"prediction_type": "column", 
                              "size" : "publish",
                              "model_type" : "cyclic",
                              "activation_function" : "sin_sq"}
@@ -183,7 +184,7 @@ def test(TEST, multiprocessing = False, gap = False):
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
-    size_ = "publish"
+    size_ = "small"
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       if RUN_LITE == True:

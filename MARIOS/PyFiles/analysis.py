@@ -108,7 +108,7 @@ class EchoStateAnalysis:
             print("get_obs_inputs: " + str(obs_inputs))
             print("Train.shape: " + str(experiment_.Train.shape))
             print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
-
+        print(model)
         if model == "uniform":
             experiment_.already_trained(json_obj["best arguments"]["uniform"], exponential = False)
 
@@ -201,6 +201,9 @@ class EchoStateAnalysis:
             except:
                 NOT_YET_RUN += [i]
 
+        #fix RC predictions and find the best interpolation method.
+
+
         for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
 
             if not i:
@@ -213,8 +216,11 @@ class EchoStateAnalysis:
             else:
                 ip_methods_ = [self.ip_method]
 
+            #fix RCs
+            experiment_dict, experiment_obj = self.fix_Rcs(experiment_dict)
+
             for ip_method_ in ip_methods_:
-                tmp_dict = self.fix_interpolation(experiment_dict, method = ip_method_)
+                tmp_dict = self.fix_interpolation(experiment_dict, experiment_obj, method = ip_method_)
                 experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
                 experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
 
@@ -551,24 +557,13 @@ class EchoStateAnalysis:
             b = pickle.load(handle)
         return(b)
 
+    def fix_Rcs(self, exper_, method):
+        for model in list(exper_["best_args"].keys()):
+            exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
+            exper_["prediction"][model] = exper_spec.prediction
+            exper_["nrmse"][model] = nrmse(exper_spec.prediction, exper_spec.xTe)
 
-    def fix_interpolation(self, exper_, method):
-        """ Change the interpolation method of the inputed experiment.
-
-        Args:
-            exper_: the json experiment dictionary which you will to alter.
-            method: the type of interpolation method (chosen from 'linear', 'cubic', 'nearest')
-        """
-        # we can get most of our information from either model, we just have to fix the exponential predictions at the end.
-        
-        if self.model in ["delay_line", "cyclic"]:
-            exper_dl = self.get_experiment(exper_, self.model, verbose = False, plot_split = False, compare_ = False)
-            #TODO
-            exper_spec = exper_dl
-            exper_["prediction"][self.model] = exper_spec.prediction
-
-            exper_["nrmse"][self.model] = nrmse(exper_spec.prediction, exper_spec.xTe)
-        else:
+        hi = """
             self.model = "uniform"
             exper_unif = self.get_experiment(exper_, "uniform", verbose = False, plot_split = False, compare_ = False)
             print("Michael Jackson: " + str(exper_unif.model))
@@ -583,7 +578,28 @@ class EchoStateAnalysis:
             exper_["prediction"]["exponential"] = exper_exp.prediction
             exper_["nrmse"]["exponential"] = exp_nrmse
 
-            exper_spec = exper_unif
+            exper_spec = exper_unif"""
+
+        #get important pieces of information for later, to avoid running get_experiment over and over and over.
+        exper_["xTe"] = exper_spec.xTe
+        exper_["xTr"] = exper_spec.xTr
+        exper_["f"]   = exper_spec.f
+        exper_["T"]   = exper_spec.T
+        exper_["A"]   = exper_spec.A
+        exper_dict = exper_
+        exper_obj = exper_spec
+
+        return(exper_dict, exper_spec)
+
+    def fix_interpolation(self, exper_, exper_spec, method):
+        """ Change the interpolation method of the inputed experiment.
+
+        Args:
+            exper_: the json experiment dictionary which you will to alter.
+            exper_spec: the echoStateExperiment object from which to run the interpolation method.
+            method: the type of interpolation method (chosen from 'linear', 'cubic', 'nearest')
+        """
+        # we can get most of our information from either model, we just have to fix the exponential predictions at the end.
 
         #interpolation:
         if method == "cubic":
@@ -593,13 +609,6 @@ class EchoStateAnalysis:
         exper_spec.runInterpolation(use_obs = self.ip_use_observers)
         exper_["prediction"]["interpolation"] = exper_spec.ip_res["prediction"]
         exper_["nrmse"]["interpolation"] = exper_spec.ip_res["nrmse"]
-
-        #get important pieces of information for later, to avoid running get_experiment over and over and over.
-        exper_["xTe"] = exper_spec.xTe
-        exper_["xTr"] = exper_spec.xTr
-        exper_["f"]   = exper_spec.f
-        exper_["T"]   = exper_spec.T
-        exper_["A"]   = exper_spec.A
 
         #now repair the exponential predictions.
         return(exper_)
