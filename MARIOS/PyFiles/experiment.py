@@ -829,8 +829,8 @@ class EchoStateExperiment:
 			
 			self.exact = True
 			if self.resp_idx:
-				print("dataset shape" + str(dataset.shape))
-				print("resp_idx.shape " + str(np.array(self.resp_idx).shape))
+				#print("dataset shape" + str(dataset.shape))
+				#print("resp_idx.shape " + str(np.array(self.resp_idx).shape))
 				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
 			else:
 				response = dataset.copy()
@@ -888,10 +888,10 @@ class EchoStateExperiment:
 			#print("response_te shape: " + str(response_te.shape))
 			train_len = len(self.train_time_idx)
 			test_len = len(self.test_time_idx)
-		Shape([self.Train, "Train Region Train/Observers"])
-		Shape([self.Test, "Test Region Train/Observers"])
-		Shape([self.xTr, "Train Region Target"])
-		Shape([self.xTe, "Test Region Target"])
+		#Shape([self.Train, "Train Region Train/Observers"])
+		#Shape([self.Test, "Test Region Train/Observers"])
+		#Shape([self.xTr, "Train Region Target"])
+		#Shape([self.xTe, "Test Region Target"])
 		### Visualize the train test split and the observers
 		if plot_split:
 			red, yellow, blue, black = [255, 0, 0], [255, 255, 0], [0, 255, 255], [0, 0, 0]
@@ -1115,7 +1115,7 @@ class EchoStateExperiment:
 		args2export = self.best_arguments
 
 		#data assertions, cleanup
-		if self.model == "exp":
+		if self.model == "exponential":
 			assert self.esn_cv.exp_weights
 		elif self.model == "hybrid":
 			assert self.esn_cv.exp_weights
@@ -1184,8 +1184,7 @@ class EchoStateExperiment:
 			}
 
 		input_dict = { **cv_args, 
-					   **predetermined_args,
-					   **exp_w_}
+					   **predetermined_args}
 
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
@@ -1229,20 +1228,22 @@ class EchoStateExperiment:
 		print("\n \n rc cv data saved @ : " + self.outfile +".pickle")
 
 
-	def already_trained(self, best_args, exponential):
+	def already_trained(self, best_args, model):
 		
 		self.best_arguments = best_args
 		if best_args:
-			if self.model == "delay_line":
-				print("DELAY LINE ALREADY TRAINED")
-				extra_args = {"model_type" : "delay_line",
+			extra_args = {}
+			if self.model in ["delay_line", "cyclic"]:
+				extra_args = {**extra_args,
 							  "activation_function" : "sin_sq"}
 				best_args = {**best_args, **extra_args}
+
+
 			self.esn = self.esn_spec(**self.best_arguments,
+									 **extra_args,
 									 obs_idx  = self.obs_idx,
 									 resp_idx = self.resp_idx,
-									 model_type = self.model,
-									 exponential = exponential)
+									 model_type = model)
 
 			self.esn.train(x = self.Train, y = self.xTr)
 

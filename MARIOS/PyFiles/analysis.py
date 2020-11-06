@@ -38,8 +38,8 @@ class EchoStateAnalysis:
         target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
 
     """
-    def __init__(self, path_list, model = "uniform", ip_method = "linear",
-                 bp = None, force = False, ip_use_observers = True, data_type = "pickle"):
+    def __init__(self, path_list, ip_method = "linear", bp = None, 
+                 force = False, ip_use_observers = True, data_type = "pickle", model = None):
         self.path_list = path_list
         self.bp = bp
         self.force = force
@@ -77,10 +77,10 @@ class EchoStateAnalysis:
 
         """
         
-        print(json_obj["get_observer_inputs"])
+        #print(json_obj["get_observer_inputs"])
         print(json_obj["experiment_inputs"])
         if self.data_type == "json":
-            print("DATA TYPE JSON")
+            #print("DATA TYPE JSON")
             experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], librosa = librosa)
             assert 1==0, "json is no longer supported"
         elif self.data_type == "pickle":
@@ -88,41 +88,18 @@ class EchoStateAnalysis:
             pickle_obj = json_obj
             extra_inputs = { "obs_idx" : pickle_obj["obs_idx"],
                              "resp_idx" : pickle_obj["resp_idx"],
-                             "prediction_type" : "exact"
+                             "prediction_type" : "exact",
+                             "model" : model
                         }
-            #if self.model in ["delay_line", "cyclic"]:
-            extra_inputs = {**extra_inputs, "model" : model}
-
-            experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
-
-
         obs_inputs = json_obj["get_observer_inputs"]
         obs_inputs["method"] = "exact"
 
+        experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
         experiment_.obs_idx, experiment_.resp_idx  = json_obj["obs_idx"], json_obj["resp_idx"]
-        print("obs_inputs" + str(obs_inputs))
         experiment_.get_observers(**obs_inputs, plot_split = plot_split)
-        
-        if verbose == True:
-            print("experiment inputs: " + str(json_obj["experiment_inputs"]))
-            print("get_obs_inputs: " + str(obs_inputs))
-            print("Train.shape: " + str(experiment_.Train.shape))
-            print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
-        print(model)
-        if model == "uniform":
-            experiment_.already_trained(json_obj["best arguments"]["uniform"], exponential = False)
+        experiment_.already_trained(json_obj["best arguments"][model], model = model)
 
-        elif model == "exponential": 
-            experiment_.already_trained(json_obj["best arguments"]["exponential"], exponential = True)
-
-        elif model in ["delay_line", "cyclic"]:
-            print(json_obj["best arguments"].keys())
-            experiment_.already_trained(json_obj["best arguments"][self.model], exponential = False)
-
-
-        experiment_.Train, experiment_.Test = experiment_.xTr, experiment_.xTe#self.recover_test_set(json_obj)
-
-        ### what is the range of the test set?
+        #experiment_.Train, experiment_.Test = experiment_.xTr, experiment_.xTe
         xx = range(experiment_.xTe.shape[0])
 
         #experiment_.plot_timeseries(method = "avg")
@@ -143,15 +120,6 @@ class EchoStateAnalysis:
             unif_w_pred, exp_w_pred = json_obj["prediction"]["uniform"], json_obj["prediction"]["exponential"]
             ip_pred = json_obj["prediction"]["interpolation"]
             unif_w_pred, exp_w_pred, ip_pred = [np.array(i) for i in [unif_w_pred, exp_w_pred, ip_pred]]
-            """
-            if verbose == True:
-                for i in [[unif_w_pred, "unif pred"],
-                          [exp_w_pred, "exp pred"],
-                          [ip_pred, "ip pred"],
-                          [np.array(experiment_.Test), "Test" ]]:
-                    Shape(i)
-            """
-            ### make this flexible. if uniform isn't there, don't break. IF exp ditto.
 
             compare( truth = np.array(experiment_.Test), unif_w_pred = unif_w_pred, ip_pred = ip_pred,
                 exp_w_pred  = exp_w_pred, columnwise  = False, verbose = False)
@@ -163,120 +131,21 @@ class EchoStateAnalysis:
                     exp_w_pred  = None,#np.array(json_obj["prediction"]["exponential"]), 
                     columnwise  = False,
                     verbose = False)
+        if verbose == True:
+            """
+            for i in [[unif_w_pred, "unif pred"],
+                      [exp_w_pred, "exp pred"],
+                      [ip_pred, "ip pred"],
+                      [np.array(experiment_.Test), "Test" ]]:
+                Shape(i)
+            """
+            print("experiment inputs: " + str(json_obj["experiment_inputs"]))
+            print("get_obs_inputs: " + str(obs_inputs))
+            print("Train.shape: " + str(experiment_.Train.shape))
+            print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
         return(experiment_)
     
-    def change_interpolation_json(self):
-        """ Imports a set of experiments and returns an altered list of jsons with a new interpolation method.
-            Also plots the comparison.
-
-        Args: 
-            path_lst: a path list to the json experiments.
-            ip_method: the interpolation method, a string chosen from the following set
-                options: { "linear", "cubic", "nearest"}
-
-        """
-        
-        path_lst = self.path_list
-
-        if self.ip_use_observers == False:
-            self.ip_method = "nearest"
-
-        
-
-        for i in trange(len(path_lst), desc='experiment list, loading data...'): 
-            if not i:
-                experiment_lst, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
-            
-            try:
-                experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
-                models_spec = list(experiment_dict["prediction"].keys())
-                assert "exponential" in models_spec, print(models_spec)
-                try:
-                    assert len(models_spec) >= 3
-                    assert "exponential" in models_spec, print(models_spec)
-
-                    experiment_lst.append(experiment_dict)
-                except:
-                    NOT_INCLUDED += [i]
-            except:
-                NOT_YET_RUN += [i]
-
-        #fix RC predictions and find the best interpolation method.
-
-
-        for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
-
-            if not i:
-                print("initializing loop 2")
-                results_tmp, results_rel = [], []
-
-            experiment_dict = experiment_lst[i]
-            if self.ip_method == "all":
-                ip_methods_ = ["linear", "cubic", "nearest"]
-            else:
-                ip_methods_ = [self.ip_method]
-
-            #fix RCs
-            experiment_dict, experiment_obj = self.fix_Rcs(experiment_dict)
-
-            for ip_method_ in ip_methods_:
-                tmp_dict = self.fix_interpolation(experiment_dict, experiment_obj, method = ip_method_)
-                experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
-                experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
-
-            try:
-                rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["ip: linear"] 
-                            for key in experiment_dict["nrmse"].keys()}
-            except:
-                rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["interpolation"] 
-                            for key in experiment_dict["nrmse"].keys()}
-            
-            results_rel.append(rel_spec)
-            
-            #removing interpolation
-            for key in ["prediction", "nrmse"]:
-                dict_tmp = experiment_dict[key]
-                dict_tmp = ifdel(dict_tmp, "interpolation")
-                experiment_dict[key] = dict_tmp
-
-            results_tmp.append(experiment_dict["nrmse"])
-            experiment_lst.append(experiment_dict)
-
-            
-        results_df = pd.DataFrame(results_tmp)
-        results_df = results_df.melt()
-        results_df.columns = ["model", "R"]
-
-        results_df_rel = pd.DataFrame(results_rel)
-        results_df_rel = results_df_rel.melt()
-        results_df_rel.columns = ["model", "R"]
-        
-        self.experiment_lst = experiment_lst
-        self.R_results_df = results_df
-        self.R_results_df_rel = results_df_rel
-        #return(experiment_lst, results_df, results_df_rel)
-
-        #print(NOT_YET_RUN)
-        if NOT_YET_RUN:
-            print("the following paths have not yet been run: ")
-            print(np.array(path_lst)[NOT_YET_RUN])
-           
-                
-        if NOT_INCLUDED:
-            print("the following paths contain incomplete experiments: (only unif finished)")
-            #print(np.array(path_lst_unq)[NOT_INCLUDED])
-            print(np.array(path_lst)[NOT_INCLUDED])
-            
-
-        NOT_INCLUDED = check_for_duplicates(NOT_INCLUDED)
-        NOT_YET_RUN = check_for_duplicates(NOT_YET_RUN)
-        print("total experiments completed: " + str(len(experiment_lst)))
-        print("total experiments half complete: " + str(len(NOT_INCLUDED)))
-        print("total experiments not yet run: " + str(len(NOT_YET_RUN)))
-        pct_complete = (len(experiment_lst))/(len(experiment_lst)+len(NOT_INCLUDED)*0.5 + len(NOT_YET_RUN)) * 100
-        pct_complete  = str(round(pct_complete, 1))
-        print("Percentage of tests completed: " + str(pct_complete) + "%")
-
+   
     def change_interpolation_pickle(self):
         """ Imports a set of experiments and returns an altered list of jsons with a new interpolation method.
             Also plots the comparison.
@@ -329,13 +198,15 @@ class EchoStateAnalysis:
                 results_tmp, results_rel, experiment_list = [], [], []
 
             experiment_dict = experiment_list_temp[i]
+
+            experiment_dict, experiment_obj = self.fix_Rcs(experiment_dict)
             if self.ip_method == "all":
                 ip_methods_ = ["linear", "cubic", "nearest"]
             else:
                 ip_methods_ = [self.ip_method]
 
             for ip_method_ in ip_methods_:
-                tmp_dict = self.fix_interpolation(experiment_dict, method = ip_method_)
+                tmp_dict = self.fix_interpolation(experiment_dict, experiment_obj, method = ip_method_)
                 experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
                 experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
             try:
@@ -557,28 +428,12 @@ class EchoStateAnalysis:
             b = pickle.load(handle)
         return(b)
 
-    def fix_Rcs(self, exper_, method):
-        for model in list(exper_["best_args"].keys()):
+    def fix_Rcs(self, exper_):
+        for model in list(exper_['best arguments'].keys()):
             exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
+            
             exper_["prediction"][model] = exper_spec.prediction
             exper_["nrmse"][model] = nrmse(exper_spec.prediction, exper_spec.xTe)
-
-        hi = """
-            self.model = "uniform"
-            exper_unif = self.get_experiment(exper_, "uniform", verbose = False, plot_split = False, compare_ = False)
-            print("Michael Jackson: " + str(exper_unif.model))
-            unif_nrmse = nrmse(exper_unif.prediction, exper_unif.xTe)
-            exper_["prediction"]["uniform"] = exper_unif.prediction
-            exper_["nrmse"]["uniform"] = unif_nrmse
-
-            self.model = "exponential"
-            exper_exp = self.get_experiment(exper_, "exponential", verbose = False, plot_split = False, compare_ = False)
-            print("Michael Barry: " + str(exper_exp.model))
-            exp_nrmse = nrmse(exper_exp.prediction, exper_exp.xTe)
-            exper_["prediction"]["exponential"] = exper_exp.prediction
-            exper_["nrmse"]["exponential"] = exp_nrmse
-
-            exper_spec = exper_unif"""
 
         #get important pieces of information for later, to avoid running get_experiment over and over and over.
         exper_["xTe"] = exper_spec.xTe
@@ -675,33 +530,6 @@ class EchoStateAnalysis:
             loss_arr = np.mean(loss_arr, axis = axis)
 
         return(loss_arr)
-
-
-    def get_prediction(self, model, json_obj):
-        
-        experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"])
-        
-        obs_inputs = json_obj["get_observer_inputs"]
-        obs_inputs["method"] = "exact"
-        
-        experiment_.obs_idx, experiment_.resp_idx  = json_obj["obs_idx"], json_obj["resp_idx"]
-        
-        experiment_.get_observers(**obs_inputs)
-        
-        #print(json_obj.keys())
-        best_args =  json_obj['best arguments'][model]
-
-        esn = EchoStateNetwork(**best_args,
-            obs_idx  = json_obj['obs_idx'],
-            resp_idx = json_obj['resp_idx'])
-        Train, Test = recover_test_set(json_obj)
-        if model == "uniform":
-            esn.exp_weights = False
-        else:
-            esn.exp_weights = True
-        
-        experiment_.already_trained(json_obj["best arguments"][model], exponential = False)
-        return(experiment_.prediction)
 
 
     def build_loss_df(self, group_by = "time", columnwise = True, relative = True,
@@ -1155,3 +983,113 @@ class EchoStateAnalysis:
         self.plot_nrmse_kde_2d(xx = "obs hz", **additional_arguments, log = False, 
                            models = models, #{"exponential" : "Reds", "uniform" : "Blues", "interpolation" : "Greens"},
                            enforce_bounds = True)
+    def change_interpolation_json(self):
+        """ Imports a set of experiments and returns an altered list of jsons with a new interpolation method.
+            Also plots the comparison.
+
+        Args: 
+            path_lst: a path list to the json experiments.
+            ip_method: the interpolation method, a string chosen from the following set
+                options: { "linear", "cubic", "nearest"}
+
+        """
+        
+        path_lst = self.path_list
+
+        if self.ip_use_observers == False:
+            self.ip_method = "nearest"
+
+        
+
+        for i in trange(len(path_lst), desc='experiment list, loading data...'): 
+            if not i:
+                experiment_lst, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
+            
+            try:
+                experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
+                models_spec = list(experiment_dict["prediction"].keys())
+                assert "exponential" in models_spec, print(models_spec)
+                try:
+                    assert len(models_spec) >= 3
+                    assert "exponential" in models_spec, print(models_spec)
+
+                    experiment_lst.append(experiment_dict)
+                except:
+                    NOT_INCLUDED += [i]
+            except:
+                NOT_YET_RUN += [i]
+
+        #fix RC predictions and find the best interpolation method.
+        for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
+
+            if not i:
+                print("initializing loop 2")
+                results_tmp, results_rel = [], []
+
+            experiment_dict = experiment_lst[i]
+            if self.ip_method == "all":
+                ip_methods_ = ["linear", "cubic", "nearest"]
+            else:
+                ip_methods_ = [self.ip_method]
+
+            #fix RCs
+            experiment_dict, experiment_obj = self.fix_Rcs(experiment_dict)
+
+            for ip_method_ in ip_methods_:
+                tmp_dict = self.fix_interpolation(experiment_dict, exper_spec, experiment_obj, method = ip_method_)
+                experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
+                experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
+
+            try:
+                rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["ip: linear"] 
+                            for key in experiment_dict["nrmse"].keys()}
+            except:
+                rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["interpolation"] 
+                            for key in experiment_dict["nrmse"].keys()}
+            
+            results_rel.append(rel_spec)
+            
+            #removing interpolation
+            for key in ["prediction", "nrmse"]:
+                dict_tmp = experiment_dict[key]
+                dict_tmp = ifdel(dict_tmp, "interpolation")
+                experiment_dict[key] = dict_tmp
+
+            results_tmp.append(experiment_dict["nrmse"])
+            experiment_lst.append(experiment_dict)
+
+            
+        results_df = pd.DataFrame(results_tmp)
+        results_df = results_df.melt()
+        results_df.columns = ["model", "R"]
+
+        results_df_rel = pd.DataFrame(results_rel)
+        results_df_rel = results_df_rel.melt()
+        results_df_rel.columns = ["model", "R"]
+        
+        self.experiment_lst = experiment_lst
+        self.R_results_df = results_df
+        self.R_results_df_rel = results_df_rel
+        #return(experiment_lst, results_df, results_df_rel)
+
+        #print(NOT_YET_RUN)
+        if NOT_YET_RUN:
+            print("the following paths have not yet been run: ")
+            print(np.array(path_lst)[NOT_YET_RUN])
+           
+                
+        if NOT_INCLUDED:
+            print("the following paths contain incomplete experiments: (only unif finished)")
+            #print(np.array(path_lst_unq)[NOT_INCLUDED])
+            print(np.array(path_lst)[NOT_INCLUDED])
+            
+
+        NOT_INCLUDED = check_for_duplicates(NOT_INCLUDED)
+        NOT_YET_RUN = check_for_duplicates(NOT_YET_RUN)
+        print("total experiments completed: " + str(len(experiment_lst)))
+        print("total experiments half complete: " + str(len(NOT_INCLUDED)))
+        print("total experiments not yet run: " + str(len(NOT_YET_RUN)))
+        pct_complete = (len(experiment_lst))/(len(experiment_lst)+len(NOT_INCLUDED)*0.5 + len(NOT_YET_RUN)) * 100
+        pct_complete  = str(round(pct_complete, 1))
+        print("Percentage of tests completed: " + str(pct_complete) + "%")
+

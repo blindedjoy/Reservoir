@@ -77,8 +77,6 @@ class EchoStateNetwork:
         self.seed = random_seed
         self.obs_idx = obs_idx
         self.resp_idx = resp_idx
-        self.exponential = exponential
-        self.exp_weights = None
         self.llambda = llambda
         self.plot = plot
         self.noise = noise
@@ -170,11 +168,6 @@ class EchoStateNetwork:
                 exp_np[:, :nn] = random_state.uniform(-1, 1, size=(self.n_nodes, nn))
             if self.llambda[1] < 10 ** (-4):
                 exp_np[:, nn:] = random_state.uniform(-1, 1, size=(self.n_nodes, nn))
-
-
-        ### Now add the noise. Make it two dimensional.
-        
-
         self.exp_weights = exp_np
 
        
@@ -226,20 +219,6 @@ class EchoStateNetwork:
                 for i in self.distance_np:
                     plt.imshow(i)
                     plt.show()
-            hi = """
-            for i, resp_seq in enumerate(self.resp_idx):
-                DistsToTarg = abs(resp_seq - np.array(self.obs_idx)).reshape(1, -1)
-                if i == 0:
-                    distance_np = DistsToTarg
-                else:
-                    distance_np = np.concatenate([distance_np, DistsToTarg], axis = 0)
-            #if verbose == True:
-            #    display(pd.DataFrame(distance_np))
-            self.distance_np = distance_np
-            if verbose == True:
-                print("distance_matrix completed " + str(self.distance_np.shape))
-                display(self.distance_np)
-            """
 
     def get_exp_weights(self):
         """
@@ -471,15 +450,14 @@ class EchoStateNetwork:
         # Add data inputs if present
         if not x is None:
             inputs = np.hstack((inputs, x[start_index:]))  # Add data inputs
-
-        if self.exponential == True:
-            self.get_exp_weights()
-        
-
+                    
         if self.model_type in ["uniform", "exponential"]:
-            if self.exponential == True:
+            if self.model_type == "exponential":
+                print("EXP")
+                self.get_exp_weights()
                 self.in_weights = self.input_scaling * self.exp_weights
             else:
+                print("unif")
                 self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
 
             uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
