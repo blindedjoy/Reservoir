@@ -173,10 +173,4 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     experiment.RC_CV(cv_args = cv_args, model = "uniform")
     experiment.RC_CV(cv_args = cv_args, model = "exponential")
   
-  """
-  models = ["exponential", "uniform"] if PREDICTION_TYPE == "block" else ["uniform"] #
-  for model_ in models:
-    print("Train shape: " + str(experiment.Train.shape))
-    print("Test shape: " +  str(experiment.Test.shape))
-    experiment.RC_CV(cv_args = cv_args, model = model_)
-  """
+

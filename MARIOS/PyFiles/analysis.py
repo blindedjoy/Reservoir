@@ -78,7 +78,7 @@ class EchoStateAnalysis:
         """
         
         #print(json_obj["get_observer_inputs"])
-        print(json_obj["experiment_inputs"])
+        #print(json_obj["experiment_inputs"])
         if self.data_type == "json":
             #print("DATA TYPE JSON")
             experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], librosa = librosa)
@@ -146,7 +146,7 @@ class EchoStateAnalysis:
         return(experiment_)
     
    
-    def change_interpolation_pickle(self):
+    def change_interpolation_pickle(self, verbose = False):
         """ Imports a set of experiments and returns an altered list of jsons with a new interpolation method.
             Also plots the comparison.
 
@@ -165,24 +165,26 @@ class EchoStateAnalysis:
         #What is the point of this loop? If model is random -->  make sure uniform and exponential are successfully run.
         #also a vestigal part of this loop is to check if it is even possible to load this.
         for i in trange(len(path_lst), desc='experiment list, loading data...'): 
-
             if not i:
                 experiment_list_temp, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
-            
+            experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
+            if verbose:
+                print(list(experiment_dict["prediction"].keys()))
             if self.model not in ["delay_line", "cyclic"]:
+
                 try:
-                    experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
                     models_spec = list(experiment_dict["prediction"].keys())
-                    print("models_spec: " + str(models_spec))
                     assert "exponential" in models_spec, print(models_spec)
                     try:
                         assert len(models_spec) >= 3
                         experiment_list_temp.append(experiment_dict)
                     except:
-                        print("NOT INCLUDED")
+                        if verbose:
+                            print("NOT INCLUDED")
                         NOT_INCLUDED += [i]
                 except:
-                    print("NOT YET RUN")
+                    if verbose:
+                        print("NOT YET RUN")
                     NOT_YET_RUN += [i]
             else:
                 experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
@@ -486,7 +488,7 @@ class EchoStateAnalysis:
         ax[0].set_ylim(0, 1.05)
         ax[1].set_ylim(0.5, 2.0)
 
-    def loss(self, pred_, truth, axis, columnwise = True, typee = "L1"):
+    def loss(self, pred_, truth, typee = "L1"):
         """
         inputs should be numpy arrays
         variables:
@@ -524,10 +526,6 @@ class EchoStateAnalysis:
             f = R_
             
         loss_arr = f(pred_, truth )  
-        if columnwise == True:
-            if typee == "R":
-                loss_arr = loss_arr * loss_arr.shape[axis]
-            loss_arr = np.mean(loss_arr, axis = axis)
 
         return(loss_arr)
 
@@ -543,8 +541,30 @@ class EchoStateAnalysis:
         columnwise == False means don't take the mean.
         """
 
+        def flatten_loss_dict(loss_dict, model, time_lst, freq_lst, experiment_num = 0):
+            """
+
+            """
+            new_dict = {"freq" : [],
+                        "time" : [],
+                        "experiment #" : experiment_num,
+                        "model" : model}
+            
+            for key in loss_dict.keys():
+                new_dict[key] = []
+
+            for j, (loss_key, loss_Arr) in enumerate(loss_dict.items()):
+                for i in range(loss_Arr.shape[1]):
+                    spec_ = loss_Arr[:,i].reshape(-1,)
+                    if not j:
+                        new_dict["freq"] += list(np.full(spec_.shape, fill_value = freq_lst[i]))
+                        new_dict["time"] += list(time_lst)
+                    new_dict[loss_key] += list(spec_)
+            pd_ = pd.DataFrame(new_dict)
+            return(pd_)
+
         experiment_list = self.experiment_lst
-        
+        count = 0
         for i in trange(len(experiment_list), desc='processing path list...'):
 
             experiment_ = experiment_list[i]
@@ -573,89 +593,43 @@ class EchoStateAnalysis:
 
             time_lst_one_run = list(T[train_len:].reshape(-1,))
             freq_lst_one_run = list(f[resp_idx].reshape(-1,))
-            
-            if columnwise ==  False:
-                time_lst_one_run *= test_.shape[1]
-                freq_lst_one_run *= test_.shape[0]
             ###################################################
 
             existing_models = experiment_["nrmse"].keys()
             
 
             for j, model in enumerate(models):
+
                 
-                #R is new name for nrmseccccc
-                axis = 0 if group_by == "time" else 1
                 shared_args = {
                     "pred_" : experiment_["prediction"][model],
-                    "truth": test_,
-                    "columnwise" : columnwise,
-                    "axis" : axis
-                }
+                    "truth": test_}
 
-                L1_spec = self.loss(**shared_args, typee = "L1")
-                L2_spec = self.loss(**shared_args, typee = "L2")
-                R_spec  = self.loss(**shared_args, typee = "R")
+                self.L1_entire_df = self.loss(**shared_args, typee = "L1")
+                self.L2_entire_df = self.loss(**shared_args, typee = "L2")
+                self.R_entire_df  = self.loss(**shared_args, typee = "R")
 
-                self.L2_entire_df = L2_spec
-                self.L1_entire_df = L1_spec
-                self.R_entire_df  = R_spec
+                loss_arr_dict = {}
 
-                #what does columnwise = True even mean?
-                if columnwise == False:
-                    
-                    L1_spec = np.mean(L1_spec.T, axis = axis)
-                    L2_spec = np.mean(L2_spec.T, axis = axis)
-                    R_spec  = np.mean(R_spec.T,  axis = axis)
-
-                L2_spec = list(L2_spec.reshape(-1,))
-                R_spec = list(R_spec.reshape(-1,))
-
-                #idx_lst = list(range(test_len)
-
-                L1_spec = pd.DataFrame({model : L1_spec})
-                time_lst += time_lst_one_run
-                freq_lst += freq_lst_one_run
-
-                if j == 0:
-                    rDF_spec = L1_spec
-                    L2_lst = L2_spec 
-                    R_lst = R_spec 
+                for loss_metric in ["L1", "L2", "R"]:
+                    loss_arr_dict[loss_metric] = self.loss(**shared_args, 
+                                                           typee = loss_metric)
+                
+                rDF_spec = flatten_loss_dict(loss_arr_dict, 
+                                              model = model,
+                                              time_lst = list(np.linspace(time_lst_one_run[0],
+                                                                          time_lst_one_run[-1],
+                                                                          test_len)),
+                                              freq_lst = freq_lst_one_run,  
+                                              experiment_num = i)
+                if count == 0:
+                    self.rDF = rDF_spec
                 else:
-                    rDF_spec = pd.concat([rDF_spec, L1_spec], axis = 1)
-                    L2_lst += L2_spec
-                    R_lst += R_spec
-                
-                
-            time_ = pd.Series(time_lst)
-            freq_ = pd.Series(freq_lst)
-            rDF_spec = pd.melt(rDF_spec)
-
-            rDF_spec["L2_loss"] = L2_lst
-            rDF_spec["R"] = R_lst
-            rDF_spec["split"] = split_
-            if group_by == "time" :
-                rDF_spec["time"] = time_ 
-            else:
-                rDF_spec["freq"] = freq_ 
-            rDF_spec["experiment #"] = i
-            if group_by == "time":
-                rDF_spec.columns = ["model", "L1_loss", "L2_loss", "R", "split", "time", "experiment #"]
-            else:
-                rDF_spec.columns = ["model", "L1_loss", "L2_loss", "R", "split", "freq", "experiment #"]
-
-            if i == 0:
-                rDF = rDF_spec
-            else:
-                rDF = pd.concat([rDF, rDF_spec], axis = 0)
-                #count+=1
-                
+                    self.rDF = pd.concat([self.rDF, rDF_spec], axis = 0)
+                count += 1 
         if silent != True:
             display(rDF)
-        if group_by == "time":
-            self.rDF_time = rDF
-        elif group_by == "freq":
-            self.rDF_freq = rDF
+        
 
     def loss_plot(self, rolling, split, loss = "R",
                  relative = False, include_ip = True, hybrid = False, group_by = "freq"):
