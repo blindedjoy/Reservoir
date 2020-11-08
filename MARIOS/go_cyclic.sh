@@ -7,7 +7,7 @@ do
 	echo "experiment${x}_error.txt"
 	echo "experiment${x}_output.txt"
 
-	srun -t 10070 -n 1 -p shared --cpus-per-task=$cpus_per_task --error="experiment${x}_error.txt" -o="\=experiment${x}_output.txt" --mem-per-cpu=11gb  bash -c "python execute_cyclic.py '$x' $cpus_per_task" & #-c 30 -N 1 
+	srun -t 10070 -n 1 -p shared --cpus-per-task=$cpus_per_task --error="cyclic_experiment${x}_error.txt" -o="\=cyclic_experiment${x}_output.txt" --mem-per-cpu=11gb  bash -c "python execute_cyclic.py '$x' $cpus_per_task" & #-c 30 -N 1 
 done
 
 #srun  -t 5760  -n 16 -p shared --mem=64gb bash -c "python execute.py '$x'" & 
