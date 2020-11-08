@@ -36,7 +36,7 @@ assert experiment_specification in accept_Specs
 
 def liang_idx_convert(lb, ub, small = True):
     if small:
-      lb = lb - 1 #// 2
+      lb = max(lb - 1, 0) #// 2
       ub = ub - 1 # // 2
     idx_list = list(range(lb, ub + 1))
     return idx_list
