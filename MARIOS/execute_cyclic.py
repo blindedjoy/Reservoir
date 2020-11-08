@@ -184,7 +184,7 @@ def test(TEST, multiprocessing = False, gap = False):
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
-    size_ = "medium"
+    size_ = "small"
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       if RUN_LITE == True:
