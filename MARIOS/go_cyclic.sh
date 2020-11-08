@@ -2,7 +2,7 @@
 
 module load Anaconda3/2019.10; 
 cpus_per_task=10
-for x in {0..7}
+for x in {0..2}
 do
 	echo "experiment${x}_error.txt"
 	echo "experiment${x}_output.txt"
