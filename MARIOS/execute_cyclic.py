@@ -30,6 +30,10 @@ except KeyError:
     ncpus = multiprocessing.cpu_count()
 
 experiment_specification = int(sys.argv[1])
+size = sys.argv[3]
+model_type = sys.argv[4]
+activation_function = sys.argv[5]
+
 accept_Specs = list(range(100))#[1, 2, 3, 4, 5, 100, 200, 300, 400, 500]
 
 assert experiment_specification in accept_Specs
@@ -184,15 +188,12 @@ def test(TEST, multiprocessing = False, gap = False):
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
-    size_ = "small"
+    #size_ = "small"
     for experiment in experiment_set:
       experiment["bounds"] = bounds
-      if RUN_LITE == True:
-        experiment["size"] = size_
-      else:
-        experiment["size"] = size_
-      experiment["model_type"] = "cyclic"
-      experiment["activation_function"] = "sin_sq"
+      experiment["size"] = size
+      experiment["model_type"] = model_type
+      experiment["activation_function"] = activation_function
 
     try:
       set_start_method('forkserver')
