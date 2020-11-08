@@ -1,6 +1,1 @@
-Traceback (most recent call last):
-  File "execute_cyclic.py", line 224, in <module>
-    test(TEST = TEST)
-  File "execute_cyclic.py", line 203, in test
-    exper_ = [experiment_set[experiment_specification]]
-IndexError: list index out of range
+slurmstepd: error: *** STEP 7066364.0 ON holy7c12612 CANCELLED AT 2020-11-08T14:08:15 ***
