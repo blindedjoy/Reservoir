@@ -2,7 +2,7 @@
 
 module load Anaconda3/2019.10; 
 cpus_per_task=10
-size="small"
+size="medium"
 model_type="cyclic"
 activation="sin_sq"
 for x in {0..2}
