@@ -2254,3 +2254,91 @@ Score: 0.05002947934375695
 Score: 0.05375256036604676
 Score: 0.06344214228626062
 Score: 0.06451771847351707
+Score: 0.1292775813485215
+Score: 0.08000782760229616
+Score: 0.07728634606479788
+Score: 0.09167787983034689
+Score: 0.10520121847435833
+Score: 0.07703645090179691
+Score: 0.11124763944372457
+Score: 0.050922297365621774
+Score: 0.051868619997486765
+Score: 0.08552690694816263
+Score: 0.05951860941303889
+Score: 0.0393020561215765
+Score: 0.11838370596776279
+Score: 0.06905882457595124
+Score: 0.06028029817619671
+Score: 0.056261843260864614
+Score: 0.09925107661142898
+Score: 0.12321697431194417
+Score: 0.061675627548693934
+Score: 0.08930628733709653
+Score: 0.05612463013087235
+Score: 0.0706728689197442
+Score: 0.0717371876716208
+Score: 0.06587182253426296
+Score: 0.09114300504802528
+Score: 0.04342762114619297
+Score: 0.08692940118233161
+Score: 0.07771885121059705
+Score: 0.08075664153442104
+Score: 0.057770923881156865
+Score: 0.0657022509054009
+Score: 0.10531475741321603
+Score: 0.10550428147324246
+Score: 0.04399210611120854
+Score: 0.05760993484329748
+Score: 0.08101501959229082
+Score: 0.08709547546049126
+Score: 0.062426160109541474
+Score: 0.05720283175525329
+Score: 0.07468541407015276
+Score: 0.06727279138352998
+Score: 0.06999384121502243
+Score: 0.05122878976864163
+Score: 0.06664140211607378
+Score: 0.11563050684212137
+Score: 0.043964553056481
+Score: 0.09296849080778627
+Score: 0.06006030419864409
+Score: 0.040005082090254926
+Score: 0.0923647060446733
+Score: 0.07053321018337567
+Score: 0.052689207806418184
+Score: 0.04774259952023506
+Score: 0.04445398434146216
+Score: 0.06520066646274059
+Score: 0.13568978366847506
+Score: 0.0633928731259082
+Score: 0.07530503186507269
+Score: 0.07012919497780999
+Score: 0.05326012576213325
+Score: 0.04372288176241592
+Score: 0.10300196342259249
+Score: 0.09314556737799909
+Score: 0.0645765447254145
+Score: 0.0564638419739689
+Score: 0.0704433849204354
+Score: 0.06983189023203729
+Score: 0.04711124508056774
+Score: 0.0972502705859267
+Score: 0.06693979160892036
+Score: 0.06872437573286803
+Converged at iteration 1427
+Done after 1427 iterations.
+Bayesian Optimization complete. Now running saving data, getting prediction etc. 
+{'bounds': {'n_nodes': 1000, 'cyclic_res_w': (-5, 1), 'cyclic_input_w': (-5, 1), 'cyclic_bias': (-5, 1), 'leaking_rate': (0.001, 1)}, 'scoring_method': 'tanh', 'n_jobs': 10, 'verbose': True, 'plot': False, 'cv_samples': 5, 'max_iterations': 4000, 'eps': 1e-05, 'subsequence_length': 3, 'initial_samples': 100, 'activation_function': 'sin_sq', 'model_type': 'cyclic', 'esn_feedback': False}
+{'bounds': {'n_nodes': 1000, 'cyclic_res_w': (-5, 1), 'cyclic_input_w': (-5, 1), 'cyclic_bias': (-5, 1), 'leaking_rate': (0.001, 1)}, 'scoring_method': 'tanh', 'n_jobs': 10, 'verbose': True, 'plot': False, 'cv_samples': 5, 'max_iterations': 4000, 'eps': 1e-05, 'subsequence_length': 3, 'initial_samples': 100, 'activation_function': 'sin_sq'}
+{'cyclic_res_w': 1e-05, 'cyclic_input_w': 0.00012713768601045497, 'cyclic_bias': 1e-05, 'leaking_rate': 0.27094205060601234, 'n_nodes': 1000, 'random_seed': 123, 'feedback': False}
+initialiazing json2be
+
+
+object doesn't have the prediction attribute.
+
+
+object doesn't have the prediction attribute.
+
+ 
+ rc cv data saved @ : experiment_results/medium/split_0.5/column_cyclicN_Targidx_1103N_Obsidx_0.pickle
+Time:  48219.02004604299
