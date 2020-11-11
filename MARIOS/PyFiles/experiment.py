@@ -1332,15 +1332,13 @@ class EchoStateExperiment:
 		"""
 		#2D interpolation
 		#observer coordinates
-		
-		if self.prediction_type == "block" or self.prediction_type == "exact":
-		
-			#Training points
-			resp_idx = self.resp_idx
-			obs_idx  = self.obs_idx
 
-			total_zone_idx = resp_idx + obs_idx
-			#print("TZONE: " + str(total_zone_idx))
+		
+		#if self.prediction_type == "block" or self.prediction_type == "exact":
+		if type(self.resp_idx) == range:
+			print("resp_idx: " + str(self.resp_idx))
+			self.resp_idx = list(self.resp_idx)
+		
 		#missing_ = 60
 		assert self.interpolation_method in ["griddata-linear", "rbf", "griddata-cubic", "griddata-nearest"]
 
@@ -1349,6 +1347,13 @@ class EchoStateExperiment:
 			points_to_predict, values, point_lst = [], [], []
 
 			if self.prediction_type == "block" or self.prediction_type == "exact":
+
+				#Training points
+				resp_idx = self.resp_idx
+				obs_idx  = self.obs_idx
+				#print("pred type: " + str(self.prediction_type))
+				
+				total_zone_idx = resp_idx + obs_idx
 			
 				#Train zone
 				for x in range(self.xTr.shape[0]):

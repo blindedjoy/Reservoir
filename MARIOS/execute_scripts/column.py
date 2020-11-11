@@ -165,7 +165,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   #  cv_args = Merge(cv_args, {"esn_feedback" : True})
 
   #Consider combining cyclic and delay line
-  if model_type in ["delay_line", "cyclic"]:
+  if model_type == "uniform" and prediction_type == "column":
+    experiment.RC_CV(cv_args = cv_args, model = "uniform")
+  elif model_type in ["delay_line", "cyclic"]:
     experiment.RC_CV(cv_args = cv_args, model = model_type)
   else:
     experiment.RC_CV(cv_args = cv_args, model = "uniform")
