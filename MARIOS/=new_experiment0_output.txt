@@ -2,3 +2,52 @@ Total cpus available: 10
 RUNNING EXPERIMENT 0 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
 TEST
 on track
+{'size': 'publish', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 50.0, 'target_hz': 6.0, 'model': 'uniform'}
+great success
+.uniform.
+uniformrc cv set, ready to train 
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2aade354d950>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['noise', 'llambda', 'llambda2', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+Score: 0.00016034410159569787
+Score: 2.3490682039141378e-05
+Score: 0.037110251987149
+Score: 2.3199812097477253e-05
+Score: 0.00010224766292995159
+Score: 2.1644621984863914e-05
+Score: 1.7183640319267882e-05
+Score: 0.026824109216632773
+Score: 0.010624363462735409
+Score: 0.0033412176171866747
+Score: 8.825359505888704e-05
+Score: 0.00029844219536289904
+Score: 6.84296194490069e-05
+Score: 1.9291601797918663e-05
+Score: 3.7595703381119464e-05
+Score: 0.0035445807012922763
+Score: 0.00021561403049710293
+Score: 0.010117220722253668
+Score: 2.379472154610712e-05
+Score: 1.8408388536269707e-05
+Score: 5.955935533086142e-05
+Score: 0.00019472150893601648
+Score: 0.0146815272181026
+Score: 1.4579746471838188e-05
+Score: 0.012201729250449229
+Score: 1.2816723197649258e-05
+Score: 0.028743086974124213
+Score: 0.2073102332876487
+Score: 0.0015487687295490408
+Score: 0.0002749702612428141
+Score: 2.0135071843210295e-05
+Score: 0.03595426398545125
+Score: 0.001905159574218216
+Score: 4.116541046085034e-05
+Score: 0.0023414083522483465
+Score: 0.00039251329480078897
+Score: 0.00010302251920829427
+Score: 3.4203236376496404e-05
+Score: 0.000685412400540217
