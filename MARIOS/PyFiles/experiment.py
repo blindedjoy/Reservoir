@@ -165,7 +165,9 @@ class EchoStateExperiment:
 					self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
 					self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
 					self.resp_idx = list(np.unique(np.array(self.resp_idx)))
+					print("RESP_IDX", self.resp_idx)
 					self.obs_idx = list(np.unique(np.array(self.obs_idx)))
+					print("OBS_IDX", self.obs_idx)
 					for i in self.resp_idx:
 						if i in self.obs_idx:
 							self.obs_idx.remove(i)
