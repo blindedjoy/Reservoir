@@ -22,6 +22,8 @@ RUN_LITE = False
 # by slurm (since it executes a copy)
 sys.path.append(os.getcwd()) 
 
+PREDICTION_TYPE = "block"
+
 # get number of cpus available to job
 try:
     ncpus = os.environ["SLURM_JOB_CPUS_PER_NODE"]
