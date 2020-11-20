@@ -1,14 +1,12 @@
 Total cpus available: 10
 RUNNING EXPERIMENT 1 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
-TEST
-on track
-{'size': 'publish', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 1000.0, 'model': 'uniform'}
-great success
+This is not a test
+{'size': 'publish', 'verbose': False, 'obs_freqs': [320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369], 'target_freqs': [340, 341, 342, 343, 344, 345, 346, 347, 348, 349], 'prediction_type': 'block', 'model': 'uniform'}
 .uniform.
 uniformrc cv set, ready to train 
 Model initialization and exploration run...
 Starting optimization... 
 
-Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b72f49d8710>
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b7b65d4e990>
 Hayden edit: fixed_parameters: ['n_nodes']
 Hayden edit: free_parameters: ['noise', 'llambda', 'llambda2', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']

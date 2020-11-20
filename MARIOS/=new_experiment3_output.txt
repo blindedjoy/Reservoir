@@ -1,14 +1,3 @@
 Total cpus available: 10
 RUNNING EXPERIMENT 3 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
-TEST
-on track
-{'size': 'publish', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 1000.0, 'target_hz': 500.0, 'model': 'uniform'}
-great success
-.uniform.
-uniformrc cv set, ready to train 
-Model initialization and exploration run...
-Starting optimization... 
-
-Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b41038ddb10>
-Hayden edit: fixed_parameters: ['n_nodes']
-Hayden edit: free_parameters: ['noise', 'llambda', 'llambda2', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+This is not a test
