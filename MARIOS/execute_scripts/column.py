@@ -54,6 +54,9 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   }"""
   model_type = inputs["model_type"]
   size = inputs["size"]
+
+
+  prediction_type = inputs["prediction_type"] 
   if "k" in inputs:
     k = inputs["k"]
   else:
