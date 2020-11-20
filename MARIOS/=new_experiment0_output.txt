@@ -14,3 +14,7 @@ Hayden edit: fixed_parameters: ['n_nodes']
 Hayden edit: free_parameters: ['noise', 'llambda', 'llambda2', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
 Score: 0.19683426353645742
 Score: 0.21741750482302016
+Score: 0.23775877121375297
+Score: 0.21794155697517953
+Score: 0.19245934929493683
+Score: 0.11174598787415503
