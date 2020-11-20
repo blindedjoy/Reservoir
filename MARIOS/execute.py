@@ -246,7 +246,7 @@ if __name__ == '__main__':
   print("RUNNING EXPERIMENT " + str(experiment_specification) + " YOU ARE NOT RUNNING EXP TESTS RIGHT NOW")
 
 
-  TEST = True #false for low frequencies, true for column.
+  TEST = False #false for low frequencies, true for column.
 
   start = timeit.default_timer()
   test(TEST = TEST)
