@@ -855,3 +855,111 @@ Score: 1.5615639258058304e-07
 Score: 1.0642496972080485e-06
 Score: 0.0005086994890334279
 Score: 7.345152022272366e-06
+Score: 9.934997289301082e-06
+Score: 3.484888038595443e-06
+Score: 6.693343572931102e-06
+Score: 5.992250730555768e-06
+Score: 9.766290352267099e-05
+Score: 1.278025431198644e-06
+Score: 6.254132619877595e-06
+Score: 0.0001804310727138342
+Score: 9.319202109905107e-05
+Score: 7.99943801051138e-06
+Score: 9.197341983773998e-05
+Score: 0.00017867907979932698
+Score: 1.4164191577471458e-06
+Score: 9.17127297470331e-05
+Score: 4.060096365317606e-06
+Score: 2.8035880538177014e-06
+Score: 6.128670246262228e-06
+Score: 0.00017768092810150802
+Score: 8.889429606338314e-06
+Score: 3.3084936080268284e-06
+Score: 9.067293559964524e-05
+Score: 1.515966069967461e-07
+Score: 6.852218402159389e-06
+Score: 5.357199598639771e-06
+Score: 4.0848483658362374e-07
+Score: 0.00042918159986271776
+Score: 9.215127840674954e-05
+Score: 4.754064325313124e-06
+Score: 3.2758034271672016e-06
+Score: 8.904126572535734e-05
+Score: 8.748860326146253e-05
+Score: 5.614532757511527e-06
+Score: 6.08621675206949e-06
+Score: 9.747752845316128e-05
+Score: 8.874489831997478e-05
+Score: 2.1820089699601926e-06
+Score: 2.4753312431638363e-06
+Score: 3.231830703958111e-06
+Score: 0.00041917489180506943
+Score: 0.00017485086386699874
+Score: 8.82206238832071e-05
+Score: 2.308557844394641e-06
+Score: 9.247134109797584e-05
+Score: 9.082443697683117e-05
+Score: 7.474009189014277e-06
+Score: 5.8036352027486605e-06
+Score: 5.572783609913781e-06
+Score: 0.0001773468720901465
+Score: 6.130475727718902e-06
+Score: 9.301942549771006e-05
+Score: 3.3175817649838674e-06
+Score: 3.410860584927191e-06
+Score: 9.29462486013322e-05
+Score: 3.249901181599598e-07
+Score: 5.447450880157916e-07
+Score: 9.384455923989382e-05
+Score: 2.9118196731101493e-06
+Score: 8.989064441249699e-05
+Score: 1.11638607099429e-05
+Score: 0.00032669194542731667
+Score: 0.00017619535958852695
+Score: 0.000176755211480476
+Score: 9.0873714498214e-05
+Score: 5.2567685715074285e-06
+Score: 8.787675772484313e-05
+Score: 5.899470382028984e-06
+Score: 4.603190921203443e-06
+Score: 0.00041077609391868724
+Score: 5.699627461000701e-06
+Score: 3.958511317461312e-06
+Score: 4.621060376617514e-06
+Score: 4.773808131455856e-06
+Score: 2.0835093185662303e-06
+Score: 1.3290896011857278e-06
+Score: 3.235760676693446e-06
+Score: 2.8137021417356865e-06
+Converged at iteration 896
+Done after 896 iterations.
+Bayesian Optimization complete. Now running saving data, getting prediction etc. 
+{'bounds': {'noise': (-5, -0.5), 'llambda': (-5, 0), 'llambda2': (-5, 0), 'connectivity': (-5, 0), 'n_nodes': 1000, 'spectral_radius': (0.001, 0.999), 'regularization': (-3, 4), 'leaking_rate': (0.001, 1)}, 'scoring_method': 'tanh', 'n_jobs': 10, 'verbose': True, 'plot': False, 'cv_samples': 8, 'max_iterations': 2000, 'eps': 1e-06, 'subsequence_length': 700, 'initial_samples': 300, 'model_type': 'uniform', 'esn_feedback': False, 'obs_index': [91, 92, 93, 94, 95, 96, 101, 102, 103, 104, 105], 'target_index': [97, 98, 99, 100]}
+{'bounds': {'noise': (-5, -0.5), 'llambda': (-5, 0), 'llambda2': (-5, 0), 'connectivity': (-5, 0), 'n_nodes': 1000, 'spectral_radius': (0.001, 0.999), 'regularization': (-3, 4), 'leaking_rate': (0.001, 1)}, 'scoring_method': 'tanh', 'n_jobs': 10, 'verbose': True, 'plot': False, 'cv_samples': 8, 'max_iterations': 2000, 'eps': 1e-06, 'subsequence_length': 700, 'initial_samples': 300}
+{'noise': 1e-05, 'llambda': 1.0, 'llambda2': 0.0008273633848167189, 'connectivity': 1.0, 'spectral_radius': 0.001, 'regularization': 0.016664224136674427, 'leaking_rate': 0.001, 'n_nodes': 1000, 'random_seed': 123, 'feedback': False}
+initialiazing json2be
+
+
+object doesn't have the prediction attribute.
+
+
+object doesn't have the prediction attribute.
+
+ 
+ rc cv data saved @ : experiment_results/publish/split_0.5/block_N_Targidx_4N_Obsidx_11.pickle
+.exponential.
+exponentialrc cv set, ready to train 
+Model initialization and exploration run...
+Starting optimization... 
+
+Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b4ed2df8990>
+Hayden edit: fixed_parameters: ['n_nodes']
+Hayden edit: free_parameters: ['noise', 'llambda', 'llambda2', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+Score: 0.009033986740470464
+Score: 0.08695474107701426
+Score: 0.205522076150716
+Score: 3.9770397698215065e-05
+Score: 0.0003981056371695634
+Score: 0.006081005038114235
+Score: 0.040614921198944776
+Score: 0.053002564360899965
