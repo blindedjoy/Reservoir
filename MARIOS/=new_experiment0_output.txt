@@ -12,3 +12,4 @@ Starting optimization...
 Hayden edit: space: <GPyOpt.core.task.space.Design_space object at 0x2b9a33917a10>
 Hayden edit: fixed_parameters: ['n_nodes']
 Hayden edit: free_parameters: ['noise', 'llambda', 'llambda2', 'connectivity', 'spectral_radius', 'regularization', 'leaking_rate']
+Score: 0.19683426353645742
