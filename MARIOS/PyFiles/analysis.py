@@ -1,5 +1,7 @@
 from tqdm.notebook import trange, tqdm
-
+import pickle
+import pandas as pd
+from PyFiles.experiment import *
 def check_for_duplicates(lst, UnqLst = True, verbose = True):
     """ return the duplicate items in a list
     Args:
@@ -21,6 +23,11 @@ def check_for_duplicates(lst, UnqLst = True, verbose = True):
 def build_string(message, *values, sep = ""): 
     """
     example_usage: build_string("bp_", 5, 6, 7, "blah", sep = "/")
+    ARGUMENTS:
+        message:
+        values:
+        sep:
+
     """
     if not values:
         return message
@@ -30,16 +37,23 @@ def build_string(message, *values, sep = ""):
 class EchoStateAnalysis:
     """ #Spectrogram analysis class for analyzing the output of neural networks.
     
-    Args: #TODO Incomplete
+    Args:
         bounds:
         size: a string in ["small", "medium", "publish"] that refer to different dataset sizes.
         file_path: a string that describes the directory where the data is located. (load from)
         out_path: where to save the data
         target_frequency: in Hz which frequency we want to target as the center of a block experiment or the only frequency in the case of a simple prediction.
+        bp: the base path
+        force:
+        path_lst:
+        bp:
+        data_type:
+        model:
+
 
     """
     def __init__(self, path_list, ip_method = "linear", bp = None, 
-                 force = False, ip_use_observers = True, data_type = "pickle", model = None):
+                 force = False, ip_use_observers = True, data_type = "pickle", model = None, force_random_expers = False):
         self.path_list = path_list
         self.bp = bp
         self.force = force
@@ -48,12 +62,11 @@ class EchoStateAnalysis:
         self.model = model
         self.data_type = data_type
 
-        assert model in ["uniform", "exponential", "delay_line", "cyclic"]
+        self.force_random_expers = force_random_expers
 
-        if data_type == "json":
-            self.change_interpolation_json()
-        else:
-            self.change_interpolation_pickle()
+        assert model in ["uniform", "exponential","random", "delay_line", "cyclic"]
+
+        self.change_interpolation_pickle()
 
         models = ["uniform", "exponential", "ip: linear"]
 
@@ -65,9 +78,14 @@ class EchoStateAnalysis:
         
         
     def get_experiment(self, json_obj, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
-        """ This function retrieves, from a json dictionary file, an EchoStateExperiment object.
+        """ 
+
+        This function retrieves, from a json dictionary file, an EchoStateExperiment object.
 
         Args:
+            json_obj: This variable name doesn't make sense. Change it.
+            model: The model type. This needs to be adjusted.
+            librosa:
             compare_: if True run the compare function above (plot the NRMSE comparison)
 
             plot_split: if True plot the 2D train-test split
@@ -76,46 +94,38 @@ class EchoStateAnalysis:
                 the spectrograms that were created with the librosa package.
 
         """
-        
-        #print(json_obj["get_observer_inputs"])
-        #print(json_obj["experiment_inputs"])
-        if self.data_type == "json":
-            #print("DATA TYPE JSON")
-            experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], librosa = librosa)
-            assert 1==0, "json is no longer supported"
-        elif self.data_type == "pickle":
-            
-            pickle_obj = json_obj
-            extra_inputs = { "obs_idx" : pickle_obj["obs_idx"],
-                             "resp_idx" : pickle_obj["resp_idx"],
-                             "prediction_type" : "exact",
-                             "model" : model
-                        }
+        pickle_obj = json_obj
+        extra_inputs = { "obs_idx" : pickle_obj["obs_idx"],
+                         "resp_idx" : pickle_obj["resp_idx"],
+                         "prediction_type" : "exact",
+                         "model" : "random",
+                         "input_weight_type" : "uniform"
+                    }
+
         obs_inputs = json_obj["get_observer_inputs"]
-        obs_inputs["method"] = "exact"
+        obs_inputs["method"] = "exact" #https://towardsdatascience.com/design-optimization-with-ax-in-python-957b1fec776f
+        print("CYCLIC DISABLED")
+
+        vals = json_obj["best arguments"][model]
 
         experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
         experiment_.obs_idx, experiment_.resp_idx  = json_obj["obs_idx"], json_obj["resp_idx"]
         experiment_.get_observers(**obs_inputs, plot_split = plot_split)
-        experiment_.already_trained(json_obj["best arguments"][model], model = model)
+        experiment_.already_trained(vals, model = "random")#self.model)
 
-        #experiment_.Train, experiment_.Test = experiment_.xTr, experiment_.xTe
         xx = range(experiment_.xTe.shape[0])
 
-        #experiment_.plot_timeseries(method = "avg")
         if compare_:
-
             compare_inputs = {}
 
             #this is a hacky solution.
             changing_terminology = {"uniform" : "unif_w_pred", "exponential" : "exp_w_pred"}
 
             for model in list(json_obj["prediction"].keys()):
-
                 specific_prediction = json_obj[model]
                 specific_key = changing_terminology[model]
                 compare_inputs[specific_key] = json_obj["prediction"][model]
-            #print(compare_inputs)
+
 
             unif_w_pred, exp_w_pred = json_obj["prediction"]["uniform"], json_obj["prediction"]["exponential"]
             ip_pred = json_obj["prediction"]["interpolation"]
@@ -147,13 +157,8 @@ class EchoStateAnalysis:
     
    
     def change_interpolation_pickle(self, verbose = False):
-        """ Imports a set of experiments and returns an altered list of jsons with a new interpolation method.
-            Also plots the comparison.
-
-        Args: 
-            path_lst: a path list to the json experiments.
-            ip_method: the interpolation method, a string chosen from the following set
-                options: { "linear", "cubic", "nearest"}
+        """
+        Force_random__expers: added 11/21, this will not allow the model to build random experiments if they don't include exponential weights.
 
         """
         path_lst = self.path_list
@@ -164,14 +169,20 @@ class EchoStateAnalysis:
 
         #What is the point of this loop? If model is random -->  make sure uniform and exponential are successfully run.
         #also a vestigal part of this loop is to check if it is even possible to load this.
-        for i in trange(len(path_lst), desc='experiment list, loading data...'): 
-            if not i:
+        
+        for i, _ in enumerate(trange(len(path_lst), desc='experiment list, loading data...')): 
+            
+
+            if i == 0:
+                results_tmp, results_rel = [], []
                 experiment_list_temp, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
-            experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
+
+            experiment_dict = self.load_data(path_lst[i], bp = self.bp, verbose = False)
             if verbose:
                 print(list(experiment_dict["prediction"].keys()))
-            if self.model not in ["delay_line", "cyclic"]:
-
+            if self.model in ["delay_line", "cyclic"] or self.force_random_expers:
+                experiment_list_temp.append(experiment_dict)
+            else:
                 try:
                     models_spec = list(experiment_dict["prediction"].keys())
                     assert "exponential" in models_spec, print(models_spec)
@@ -186,15 +197,7 @@ class EchoStateAnalysis:
                     if verbose:
                         print("NOT YET RUN")
                     NOT_YET_RUN += [i]
-            else:
-                experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
-                experiment_list_temp.append(experiment_dict)
-
-
-        #in this loop we actually get the experiment.
-
-        
-        for i in trange( len(experiment_list_temp), desc='experiment list, fixing interpolation...'): 
+        for i, _ in enumerate(trange( len(experiment_list_temp), desc='experiment list, fixing interpolation...')): 
 
             if not i:
                 results_tmp, results_rel, experiment_list = [], [], []
@@ -265,7 +268,15 @@ class EchoStateAnalysis:
     def load_data(self, file = "default", print_lst = None, bp = None, verbose = False, enforce_exp = False):
         """
         print_lst can contain a list of keys to print, for example ["nrmse"]
+
+        Args:
+            file:
+            print_lst:
+            bp:
+            verbose:
+            enforce_exp:
         """
+
         if bp != None:
             file = bp + file
         if file == "default":
@@ -280,8 +291,6 @@ class EchoStateAnalysis:
                 datt = json.load(json_file)
             print(datt["nrmse"])
             
-        #assert len(list(datt["nrmse"].keys())) >= 3, "at least one model not found: " + file
-        
         if verbose:
             print(datt["nrmse"])
         
@@ -395,29 +404,6 @@ class EchoStateAnalysis:
             ax.set_ylabel("nrmse")
             ax.set_xlabel("Test idx")
 
-    def recover_test_set(self, json_obj):
-        """ Recover the test_set. This function is probably vestigal.
-
-        """
-
-        experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"])
-
-        obs_inputs = json_obj["get_observer_inputs"]
-        obs_inputs["method"] = "exact"
-
-        obs_idx, resp_idx = json_obj["obs_idx"], json_obj["resp_idx"]
-        A_subset = experiment_.A.copy()
-
-        # pred shape
-        pred_shape = np.array(json_obj["prediction"]["interpolation"]); pred_shape = pred_shape.shape[0]                   
-
-        A = experiment_.A
-
-        train_len = (A.shape[0] - pred_shape)
-        Train_Tmp, Test_Tmp  = A[:train_len, resp_idx], A[train_len:, resp_idx]
-
-        return(Train_Tmp, Test_Tmp)
-
     def load_p_result (path : str, bp = ""):
         """ Load a pickle spectrogram result.
 
@@ -431,6 +417,12 @@ class EchoStateAnalysis:
         return(b)
 
     def fix_Rcs(self, exper_):
+        """
+        this properly fixes the RC predictions after the output from experiment.py. FIX THIS UPSTREAM DAMNIT
+
+        Args:
+            exper_: the experiment dict being fed in.
+        """
         for model in list(exper_['best arguments'].keys()):
             exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
             
@@ -957,113 +949,3 @@ class EchoStateAnalysis:
         self.plot_nrmse_kde_2d(xx = "obs hz", **additional_arguments, log = False, 
                            models = models, #{"exponential" : "Reds", "uniform" : "Blues", "interpolation" : "Greens"},
                            enforce_bounds = True)
-    def change_interpolation_json(self):
-        """ Imports a set of experiments and returns an altered list of jsons with a new interpolation method.
-            Also plots the comparison.
-
-        Args: 
-            path_lst: a path list to the json experiments.
-            ip_method: the interpolation method, a string chosen from the following set
-                options: { "linear", "cubic", "nearest"}
-
-        """
-        
-        path_lst = self.path_list
-
-        if self.ip_use_observers == False:
-            self.ip_method = "nearest"
-
-        
-
-        for i in trange(len(path_lst), desc='experiment list, loading data...'): 
-            if not i:
-                experiment_lst, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
-            
-            try:
-                experiment_dict = self.load_data("./" + path_lst[i], bp = self.bp, verbose = False)
-                models_spec = list(experiment_dict["prediction"].keys())
-                assert "exponential" in models_spec, print(models_spec)
-                try:
-                    assert len(models_spec) >= 3
-                    assert "exponential" in models_spec, print(models_spec)
-
-                    experiment_lst.append(experiment_dict)
-                except:
-                    NOT_INCLUDED += [i]
-            except:
-                NOT_YET_RUN += [i]
-
-        #fix RC predictions and find the best interpolation method.
-        for i in trange(len(experiment_lst), desc='experiment list, fixing interpolation...'): 
-
-            if not i:
-                print("initializing loop 2")
-                results_tmp, results_rel = [], []
-
-            experiment_dict = experiment_lst[i]
-            if self.ip_method == "all":
-                ip_methods_ = ["linear", "cubic", "nearest"]
-            else:
-                ip_methods_ = [self.ip_method]
-
-            #fix RCs
-            experiment_dict, experiment_obj = self.fix_Rcs(experiment_dict)
-
-            for ip_method_ in ip_methods_:
-                tmp_dict = self.fix_interpolation(experiment_dict, exper_spec, experiment_obj, method = ip_method_)
-                experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
-                experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
-
-            try:
-                rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["ip: linear"] 
-                            for key in experiment_dict["nrmse"].keys()}
-            except:
-                rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["interpolation"] 
-                            for key in experiment_dict["nrmse"].keys()}
-            
-            results_rel.append(rel_spec)
-            
-            #removing interpolation
-            for key in ["prediction", "nrmse"]:
-                dict_tmp = experiment_dict[key]
-                dict_tmp = ifdel(dict_tmp, "interpolation")
-                experiment_dict[key] = dict_tmp
-
-            results_tmp.append(experiment_dict["nrmse"])
-            experiment_lst.append(experiment_dict)
-
-            
-        results_df = pd.DataFrame(results_tmp)
-        results_df = results_df.melt()
-        results_df.columns = ["model", "R"]
-
-        results_df_rel = pd.DataFrame(results_rel)
-        results_df_rel = results_df_rel.melt()
-        results_df_rel.columns = ["model", "R"]
-        
-        self.experiment_lst = experiment_lst
-        self.R_results_df = results_df
-        self.R_results_df_rel = results_df_rel
-        #return(experiment_lst, results_df, results_df_rel)
-
-        #print(NOT_YET_RUN)
-        if NOT_YET_RUN:
-            print("the following paths have not yet been run: ")
-            print(np.array(path_lst)[NOT_YET_RUN])
-           
-                
-        if NOT_INCLUDED:
-            print("the following paths contain incomplete experiments: (only unif finished)")
-            #print(np.array(path_lst_unq)[NOT_INCLUDED])
-            print(np.array(path_lst)[NOT_INCLUDED])
-            
-
-        NOT_INCLUDED = check_for_duplicates(NOT_INCLUDED)
-        NOT_YET_RUN = check_for_duplicates(NOT_YET_RUN)
-        print("total experiments completed: " + str(len(experiment_lst)))
-        print("total experiments half complete: " + str(len(NOT_INCLUDED)))
-        print("total experiments not yet run: " + str(len(NOT_YET_RUN)))
-        pct_complete = (len(experiment_lst))/(len(experiment_lst)+len(NOT_INCLUDED)*0.5 + len(NOT_YET_RUN)) * 100
-        pct_complete  = str(round(pct_complete, 1))
-        print("Percentage of tests completed: " + str(pct_complete) + "%")
-

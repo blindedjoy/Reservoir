@@ -78,7 +78,8 @@ class EchoStateNetworkCV:
                  scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
-                 model_type = "random", activation_function = "tanh"): #, pure_prediction = False
+                 model_type = "random", activation_function = "tanh", input_weight_type = "uniform"): #, pure_prediction = False
+        
         # Bookkeeping
         self.bounds = OrderedDict(bounds)  # Fix order
         self.parameters = list(self.bounds.keys())
@@ -121,6 +122,7 @@ class EchoStateNetworkCV:
         self.scaled_bounds, self.bound_scalings, self.bound_intercepts = self.normalize_bounds(self.bounds)
 
         self.activation_function = activation_function
+        self.input_weight_type = input_weight_type
 
     def normalize_bounds(self, bounds):
         """Makes sure all bounds feeded into GPyOpt are scaled to the domain [0, 1],
@@ -138,7 +140,6 @@ class EchoStateNetworkCV:
         scaled_bounds, scalings, intercepts : tuple
             Contains scaled bounds (list of dicts in GPy style), the scaling applied (numpy array)
             and an intercept (numpy array) to transform values back to their original domain
-
         """
         scaled_bounds = []
         scalings = []
@@ -205,6 +206,7 @@ class EchoStateNetworkCV:
             Arguments that can be fed into an ESN
 
         """
+
         # Denormalize free parameters
         denormalized_values = self.denormalize_bounds(x)
         arguments = dict(zip(self.free_parameters, denormalized_values))
@@ -363,7 +365,8 @@ class EchoStateNetworkCV:
         # Build optimizer
         self.optimizer = EchoStateBO(model=model, space=space, objective=objective,
                                      acquisition=acquisition, evaluator=evaluator,
-                                     X_init=initial_parameters, model_update_interval=self.update_interval)
+                                     X_init=initial_parameters, 
+                                     model_update_interval=self.update_interval)
 
         # Optimize
         self.iterations_taken = self.optimizer.run_target_optimization(target_score=self.target_score,
@@ -430,7 +433,8 @@ class EchoStateNetworkCV:
 
         # Build network
         esn = self.model(**arguments, exponential = self.exp_weights, activation_function = self.activation_function,
-                obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type) 
+                obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type,
+                input_weight_type = self.input_weight_type) 
                 #already_normalized = self.already_normalized
 
         # Train
@@ -561,7 +565,7 @@ class EchoStateNetworkCV:
         # Inform user
         if self.verbose:
             #print(parameters)
-            print('Score:', mean_score)
+            print('Score:' + str(mean_score))
             # pars = self.construct_arguments(parameters)
 
         # Return scores
