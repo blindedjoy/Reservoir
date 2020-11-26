@@ -23,7 +23,7 @@ RUN_LITE = False
 sys.path.append(os.getcwd()) 
 
 PREDICTION_TYPE = "block"
-RUN_LITE = True
+
 
 # get number of cpus available to job
 try:
@@ -163,7 +163,7 @@ def test(TEST, multiprocessing = False, gap = False):
                  #llambda -> wider net: (-3.5, 0.5), noise -> larger (more general solution then): (-5, -0.5),
                  # connectivity needs to be wider as well: (-5, 0)
                  #unif adj:
-                 # not going to impliment these, but connectivity clustered around 1, leaking rate around 1, spectral radius around 1
+                 # not going to impliment these, but connectivity clustered around 1, leaking rate RUNaround 1, spectral radius around 1
                 'noise' :          (-5, -0.5),
                 'llambda' :        (-5, 0),
                 'llambda2' :       (-5, 0), 
@@ -220,8 +220,8 @@ def test(TEST, multiprocessing = False, gap = False):
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       experiment["prediction_type"] = "block" #"block"#PREDICTION_TYPE
-      experiment["size"] = "small" #"publish"
-      experiment["model_type"] = "uniform"
+      experiment["size"] = "publish"
+      experiment["model_type"] = "exponential"
 
     try:
       set_start_method('forkserver')
