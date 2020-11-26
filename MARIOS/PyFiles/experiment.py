@@ -1,9 +1,12 @@
 #Herein we shall create a new file, similar to esn.py 
 #where we transform the notebook into an object oriented approach worthy of Reinier's library.
-from reservoir import *
 import pickle
-from PyFiles.imports import *
 from scipy.interpolate import Rbf
+from reservoir import *
+from PyFiles.imports import *
+
+
+
 
 def Merge(dict1, dict2): 
 	res = {**dict1, **dict2} 
@@ -104,12 +107,13 @@ class EchoStateExperiment:
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
 				 target_freqs = None, spectrogram_type = None, k = None, obs_idx = None, resp_idx = None,
-				 model = None, chop = None
+				 model = None, chop = None, input_weight_type = "uniform"
 				 ):
 		# Parameters
 		self.size = size
 		self.flat = flat
 		self.spectrogram_type = spectrogram_type
+		self.input_weight_type = input_weight_type 
 
 		self.bounds = {"observer_bounds" : None, "response_bounds" : None} 
 		self.esn_cv_spec = class_copy(EchoStateNetworkCV)
@@ -131,7 +135,7 @@ class EchoStateExperiment:
 		self.resp_idx = resp_idx
 		self.chop = None #0.01/2
 
-		assert model in ["uniform", "exponential", "delay_line", "cyclic"]
+		assert model in ["uniform", "random",  "exponential", "delay_line", "cyclic"]
 		self.model = model
 
 		if obs_freqs:
@@ -165,14 +169,16 @@ class EchoStateExperiment:
 					self.obs_idx  = [self.Freq2idx(freq) for freq in obs_freqs]
 					self.resp_idx = [self.Freq2idx(freq) for freq in target_freqs]
 					self.resp_idx = list(np.unique(np.array(self.resp_idx)))
-					print("RESP_IDX", self.resp_idx)
+					
 					self.obs_idx = list(np.unique(np.array(self.obs_idx)))
-					print("OBS_IDX", self.obs_idx)
+					
 					for i in self.resp_idx:
 						if i in self.obs_idx:
 							self.obs_idx.remove(i)
-					#print("OBS IDX: " + str(self.obs_idx))
-					#print("RESP IDX: " + str(self.resp_idx))
+
+					print("RESP_IDX", self.resp_idx)
+					print("OBS_IDX", self.obs_idx)
+
 				if obs_hz and target_hz:
 					assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 					assert is_numeric(target_hz), "you must enter a numeric target frequency range"
@@ -1017,11 +1023,19 @@ class EchoStateExperiment:
 			self.outfile += "column_"
 		elif self.prediction_type == "block":
 			self.outfile += "block_"
+
 		if self.model == "delay_line":
 			self.outfile += "DL"
 		elif self.model == "cyclic":
 			self.outfile += "cyclic"
-		
+		elif self.model == "random":
+			self.outfile += "cyclic"
+
+		if self.input_weight_type == "uniform":
+			self.outfile += "_unif_W_"
+		elif self.input_weight_type == "exponential":
+			self.outfile += "_expo_W_"
+
 		if self.method == "freq":
 			ctr = int(np.mean([int(self.f[idx]) for idx in self.resp_idx]))
 			self.outfile += "targetHz_ctr:_" + str(ctr)
@@ -1045,7 +1059,7 @@ class EchoStateExperiment:
 		if self.json2be == {}:
 			print("initialiazing json2be")
 			#self.runInterpolation() 
-			ip_pred = {"interpolation" : self.ip_res["prediction"].tolist()}
+			ip_pred = {"interpolation" : self.ip_res["prediction"]}
 			ip_nrmse = {"interpolation" : self.ip_res["nrmse"]}
 			jsonMerge({"prediction" : ip_pred})
 			jsonMerge({"nrmse" : ip_nrmse})
@@ -1053,6 +1067,7 @@ class EchoStateExperiment:
 
 			self.json2be["obs_idx"] = self.obs_idx
 			self.json2be["resp_idx"] = self.resp_idx
+			self.json2be["input_weight_type"] = self.input_weight_type
 
 
 		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
@@ -1087,26 +1102,7 @@ class EchoStateExperiment:
 				"split" : self.split,
 				"aspect" : float(self.aspect)
 			}
-								 #"target_freq_" : target_freq_, 
-								 #"num_observer_timeseries" : len(dat["obs_idx"]),
-								 #"num_target_timeseries" : len(dat["resp_idx"]),
-								 #"split_cutoff" : dat["resp_tr"].shape[0]}
-		
-		# TODO: REWRITE THE BELOW, dat no longer makes sense as a way to save data.
-
-		#1) jsonify dat
-		#new_dat = self.dat.copy().copy()
-		#for key, item in new_dat.items():
-		#	if type(item) != list:
-		#		new_dat[key] = item.tolist()
-		#		if type(new_dat[key]) == int:
-		#			new_dat[key] = [int(item) for item in new_dat[key]]
-		#
-		#		if type(new_dat[key]) == float:
-		#			new_dat[key] = [float(item) for item in new_dat[key]]
-		
-		#json2be["dat"] = new_dat
-		
+								 
 		# 2) saving the optimized hyper-parameters, nrmse
 
 		try:
@@ -1116,26 +1112,22 @@ class EchoStateExperiment:
 
 		args2export = self.best_arguments
 
-		#data assertions, cleanup
-		if self.model == "exponential":
-			assert self.esn_cv.exp_weights
-		elif self.model == "hybrid":
-			assert self.esn_cv.exp_weights
-		elif self.model == "uniform":
-			assert not self.esn_cv.exp_weights# == False
+		if self.input_weight_type == "exponential":
+			assert self.esn_cv.input_weight_type == "exponential"
+		elif self.input_weight_type == "uniform":
 			args2export = ifdel(args2export, "llambda")
 			args2export = ifdel(args2export, "llambda2")
 			args2export = ifdel(args2export, "noise")
 		try:
-			pred = self.prediction.tolist()
-			self.json2be["prediction"]= Merge(self.json2be["prediction"], {self.model: pred}) #Merge(self.json2be["prediction"], )
-			self.json2be["nrmse"][self.model] = nrmse(pred, self.xTe, columnwise = False)
+			model_key = self.model + "_" + self.input_weight_type
+			self.json2be["prediction"]= Merge(self.json2be["prediction"], { model_key : pred}) #Merge(self.json2be["prediction"], )
+			self.json2be["nrmse"][model_key] = nrmse(pred, self.xTe, columnwise = False)
 		except:
 			print("object doesn't have the prediction attribute.")
-		self.json2be["best arguments"] = Merge(self.json2be["best arguments"], {self.model: args2export}) 
+		self.json2be["best arguments"] = Merge(self.json2be["best arguments"], {model_key : args2export}) 
 
 	
-	def RC_CV(self, cv_args, model, hybrid_llambda_bounds = (-5, 1)): #TODO: change exp to 
+	def RC_CV(self, cv_args, model, input_weight_type, hybrid_llambda_bounds = (-5, 1)): #TODO: change exp to 
 		"""
 		example bounds:
 		bounds = {
@@ -1162,18 +1154,16 @@ class EchoStateExperiment:
 		#esn_cv_spec equivalent: EchoStateNetworkCV
 		"""
 		self.model = model
+		self.input_weight_type = input_weight_type
 		print("." + self.model + ".")
-		assert self.model in ["uniform", "exponential", "delay_line", "hybrid", "cyclic"], self.model + " model not yet implimented"
+		assert self.model in ["random", "delay_line", "cyclic"], self.model + " model not yet implimented"
 
-		if self.model in ["exponential"]:
-			self.exp = True
-			exp_w_ = {'exp_weights' : True}
-		else:
-			exp = False
-			exp_w_ = {'exp_weights' : False}
-			
+		input_err_msg = " input weight type not yet implimented"
+		assert self.input_weight_type in ["exponential", "uniform"], self.input_weight_type + input_err_msg
+
 		predetermined_args = {
 				"model_type" : self.model,
+				"input_weight_type" : self.input_weight_type,
 				"esn_feedback" : False
 			}
 
@@ -1191,13 +1181,9 @@ class EchoStateExperiment:
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
 
-		if self.model in ["exponential", "uniform", "delay_line", "cyclic"]:
-				print(self.model + "rc cv set, ready to train ")
-
-		else:
-			print("training hybrid part one: finding unif parameters")
-
-		
+		if self.model in ["random", "delay_line", "cyclic"]:
+			if self.input_weight_type in ["uniform", "exponential"]:
+				print(self.model, "rc cv with ", input_weight_type, " weights set, ready to train ")
 
 		if self.prediction_type == "column":
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
@@ -1212,7 +1198,8 @@ class EchoStateExperiment:
 		self.esn = self.esn_spec(**self.best_arguments,
 								 obs_idx  = self.obs_idx,
 								 resp_idx = self.resp_idx, 
-								 model_type = self.model
+								 model_type = self.model,
+								 input_weight_type = self.input_weight_type
 								 )
 
 		print(self.best_arguments)
@@ -1245,7 +1232,8 @@ class EchoStateExperiment:
 									 **extra_args,
 									 obs_idx  = self.obs_idx,
 									 resp_idx = self.resp_idx,
-									 model_type = model)
+									 model_type = model,
+									 input_weight_type = self.input_weight_type)
 
 			self.esn.train(x = self.Train, y = self.xTr)
 

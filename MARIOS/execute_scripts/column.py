@@ -8,8 +8,10 @@ def get_frequencies(trial = 1):
   """
   get frequency lists
   """
-  if trial == 1:
-      lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)
+  if trial =="run_fast_publish":
+      lb_targ, ub_targ, obs_hz  = 340, 350, 10
+  elif trial == 1:
+      lb_targ, ub_targ, obs_hz  = 210, 560, int(320 / 2)   
   elif trial == 2:
       lb_targ, ub_targ, obs_hz  = 340, 640, 280
   elif trial == 3:
@@ -152,7 +154,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       default_presets['subsequence_length'] = inputs["subseq_len"]
     else:
       default_presets['subsequence_length'] = 75
-
+  print("NCORES", n_cores)
   cv_args = {
       'bounds' : inputs["bounds"],
       'scoring_method' : 'tanh',
@@ -171,9 +173,10 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   if model_type == "uniform" and prediction_type == "column":
     experiment.RC_CV(cv_args = cv_args, model = "uniform")
   elif model_type in ["delay_line", "cyclic"]:
-    experiment.RC_CV(cv_args = cv_args, model = model_type)
+    experiment.RC_CV(cv_args = cv_args, model = model_type, input_weight_type = "uniform")
+    experiment.RC_CV(cv_args = cv_args, model = model_type, input_weight_type = "exponential")
   else:
-    experiment.RC_CV(cv_args = cv_args, model = "uniform")
-    experiment.RC_CV(cv_args = cv_args, model = "exponential")
+    experiment.RC_CV(cv_args = cv_args, model = "random", input_weight_type = "uniform")
+    experiment.RC_CV(cv_args = cv_args, model = "random", input_weight_type = "exponential")
   
 

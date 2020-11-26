@@ -63,9 +63,12 @@ class EchoStateNetwork:
                  cyclic_res_w = None, 
                  cyclic_input_w = None, 
                  cyclic_bias = None,
-                 already_normalized = False
+                 already_normalized = False,
+                 input_weight_type = "uniform"
+
                  ):
         # Parameters
+        self.input_weight_type = input_weight_type
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
         self.feedback_scaling = feedback_scaling
@@ -86,15 +89,18 @@ class EchoStateNetwork:
         assert self.model_type, "you must choose a model"
         
         if llambda2:
-            #print("dual lambda")
             self.llambda = [self.llambda, llambda2]
             self.dual_lambda = True
         else:
             self.dual_lambda = False
 
-        assert self.model_type in ["exponential", "uniform", "delay_line", "cyclic"], self.model_type + str(" not implimented")
+        assert self.model_type in ["random", "delay_line", "cyclic"], self.model_type + str(" not implimented")
+        assert self.input_weight_type in ["exponential", "uniform"], self.input_weight_type + str(" not implimented")
 
-        if self.model_type in ["exponential", "uniform"]:
+
+        #reservoir generation:
+
+        if self.model_type in ["random"]:
             #random RC reservoir
             self.generate_reservoir()
 
@@ -119,7 +125,7 @@ class EchoStateNetwork:
             self.activation_function = sin_sq
     
 
-    def exp_w(self, verbose = False):
+    def exp_w(self,  random_state, verbose = False):
         """
         Args:
             llambda: is llambda in an exponential function.
@@ -129,7 +135,7 @@ class EchoStateNetwork:
         distance matrix which measures the distance from the 
         observer sequences to the target sequences.
         """
-        random_state = np.random.RandomState(self.seed)
+        
         def get_exp_w_set(llambda_, distance_np_):
             exp_np_ = np.exp( - llambda_ * distance_np_) #*llambda
             exp_np_ = exp_np_.sum(axis = 0).reshape( -1 )
@@ -153,7 +159,6 @@ class EchoStateNetwork:
                 exp_np = random_state.uniform(-1, 1, size=(exp_np.shape))
             
         else:
-            #print("llambda:" + str(self.llambda))
             exp_np1 = get_exp_w_set( self.llambda[0], self.distance_np[0])
             exp_np2 = get_exp_w_set( self.llambda[1], self.distance_np[1]) 
             
@@ -181,8 +186,9 @@ class EchoStateNetwork:
         	DistsToTarg stands for distance numpy array
         """
         def calculate_distance_matrix(obs_idx):
+            obs_idxx_arr = np.array(obs_idx)
             for i, resp_seq in enumerate(self.resp_idx):
-                DistsToTarg = abs(resp_seq - np.array(obs_idx)).reshape(1, -1)
+                DistsToTarg = abs(resp_seq - obs_idxx_arr).reshape(1, -1)
                 if i == 0:
                     distance_np_ = DistsToTarg
                 else:
@@ -226,9 +232,10 @@ class EchoStateNetwork:
         change the automatic var assignments
         """
         self.build_distance_matrix()
-        self.exp_w()
+        random_state = np.random.RandomState(self.seed)
+        self.exp_w(random_state)
         n_temp = len(self.exp_weights)
-        sign = np.random.choice([-1, 1], self.exp_weights.shape)
+        sign = random_state.choice([-1, 1], self.exp_weights.shape)
 
         self.exp_weights *= sign
 
@@ -240,8 +247,8 @@ class EchoStateNetwork:
                     exp_w_dict["obs_idx"] = []
                     exp_w_dict["weight"] = []
                 #lst.append({"obs_idx": , "weight": })
-                exp_w_dict["weight"]+= list(self.exp_weights[i, :].reshape(-1,))
-                exp_w_dict["obs_idx"]+= self.obs_idx
+                exp_w_dict["weight"]  += list(self.exp_weights[i, :].reshape(-1,))
+                exp_w_dict["obs_idx"] += self.obs_idx
 
             pd_ = pd.DataFrame(exp_w_dict)
             #print(pd_)
@@ -251,7 +258,7 @@ class EchoStateNetwork:
             plt.show()
 
     
-    def generate_reservoir(self, exp_weights = False, obs_idx = None, targ_idx = None):
+    def generate_reservoir(self, obs_idx = None, targ_idx = None):
         """Generates random reservoir from parameters set at initialization."""
         # Initialize new random state
         random_state = np.random.RandomState(self.seed)
@@ -262,7 +269,6 @@ class EchoStateNetwork:
 
             n = self.n_nodes
             accept = random_state.uniform(size = (n, n)) < self.connectivity
-
 
             self.weights = random_state.uniform( -1., 1., size = (n, n))
             self.weights *= accept
@@ -346,7 +352,7 @@ class EchoStateNetwork:
 
         if not inputs is None:
             if keep:
-                # Store for denormalization
+                # Store for denormalizationf
                 self._input_means = inputs.mean(axis=0)
                 self._input_stds = inputs.std(ddof=1, axis=0)
             
@@ -451,19 +457,21 @@ class EchoStateNetwork:
         if not x is None:
             inputs = np.hstack((inputs, x[start_index:]))  # Add data inputs
                     
-        if self.model_type in ["uniform", "exponential"]:
+        if self.input_weight_type in ["exponential", "uniform"]:
+
             if self.model_type == "exponential":
-                print("EXP")
+                #print("EXP")
                 self.get_exp_weights()
                 self.in_weights = self.input_scaling * self.exp_weights
             else:
-                print("unif")
+                #print("unif")
                 self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
 
             uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
             self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
 
-        elif self.model_type == "cyclic":
+        elif self.input_weight_type == "cyclic":
+
             # Set and scale input weights (for memory length and non-linearity)
             self.in_weights = np.full(shape=(self.n_nodes, inputs.shape[1] - 1), fill_value=self.cyclic_input_w, dtype=np.float32)
             self.in_weights *= np.sign(random_state.uniform(low=-1.0, high=1.0, size=self.in_weights.shape))
@@ -476,7 +484,7 @@ class EchoStateNetwork:
             self.in_weights = np.hstack((cyclic_bias, self.in_weights)) 
 
 
-        elif self.model_type == "delay_line":
+        if self.model_type == "delay_line":
             """
             SANDBOX RESULT:
 

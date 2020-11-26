@@ -24,6 +24,7 @@ sys.path.append(os.getcwd())
 
 PREDICTION_TYPE = "block"
 
+
 # get number of cpus available to job
 try:
     ncpus = os.environ["SLURM_JOB_CPUS_PER_NODE"]
@@ -162,7 +163,7 @@ def test(TEST, multiprocessing = False, gap = False):
                  #llambda -> wider net: (-3.5, 0.5), noise -> larger (more general solution then): (-5, -0.5),
                  # connectivity needs to be wider as well: (-5, 0)
                  #unif adj:
-                 # not going to impliment these, but connectivity clustered around 1, leaking rate around 1, spectral radius around 1
+                 # not going to impliment these, but connectivity clustered around 1, leaking rate RUNaround 1, spectral radius around 1
                 'noise' :          (-5, -0.5),
                 'llambda' :        (-5, 0),
                 'llambda2' :       (-5, 0), 
@@ -189,8 +190,8 @@ def test(TEST, multiprocessing = False, gap = False):
       #librosa_args = {"spectrogram_path" : "19th_century_male_stft",
       #                "spectrogram_type" : "db",#"db", #power
       #                "librosa": True}
-    
-      obs_freqs, resp_freqs   = get_frequencies(1)
+      obs_freqs, resp_freqs   = get_frequencies("run_fast_publish")
+      #obs_freqs, resp_freqs   = get_frequencies(1)
       obs_freqs2, resp_freqs2 = get_frequencies(2)
       obs_freqs3, resp_freqs3 = get_frequencies(3)
       obs_freqs4, resp_freqs4 = get_frequencies(4)
@@ -206,7 +207,7 @@ def test(TEST, multiprocessing = False, gap = False):
              #{ 'split': 0.7, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
              #{ 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              #{ 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
-             
+             { 'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs },
              { 'split': 0.5, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
@@ -220,7 +221,7 @@ def test(TEST, multiprocessing = False, gap = False):
       experiment["bounds"] = bounds
       experiment["prediction_type"] = "block" #"block"#PREDICTION_TYPE
       experiment["size"] = "publish"
-      experiment["model_type"] = "uniform"
+      experiment["model_type"] = "exponential"
 
     try:
       set_start_method('forkserver')
@@ -257,88 +258,4 @@ if __name__ == '__main__':
 
 """ ##################################### VESTIGAL CODE BELOW
   #https://github.com/pytorch/pytorch/issues/3492:
-          set_start_method('spawn')#, force = True), set_start_method('forkserver')
-      if experiment_specification == 1:
-        
-        experiment_set = [  #4k, 0.5 filling in some gaps:
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1000, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1500, 'obs_hz': 1000},
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.9, 'target_hz': 1250, 'obs_hz': 1000},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 500},
-                          {'target_freq': 2000, 'split': 0.5, 'target_hz': 1250, 'obs_hz': 1000},
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 500},
-                          {'target_freq': 4000, 'split': 0.9, 'target_hz': 1500, 'obs_hz': 1000}
-              
-                          ]
-        experiment_set = [
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 500.0,  'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 100.0},
-                {'target_frequency': 1000, "split" : 0.5, 'obs_hz': 100.0,  'target_hz': 100.0},
-
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0, 'target_hz': 1000.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 1000.0, 'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 500.0,  'target_hz': 500.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 250.0,  'target_hz': 100.0},
-                {'target_frequency': 1000, "split" : 0.9, 'obs_hz': 100.0,  'target_hz': 100.0},
-                ]
-      elif experiment_specification == 2: 
-        # for 2k lets add some 750 target hz.
-        experiment_set = [  #4k, 0.5 filling in some more gaps:
-                          ]
-
-        #librosa_args = {"spectrogram_path" : "publish",   #examples: 18th_cqt_low,
-        #                "spectrogram_type"  : "power",    #examples: db, power
-        #                "librosa": True}
-      experiment_set = [
-             { 'split': 0.9, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.9, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-             { 'split': 0.9, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
-             { 'split': 0.9, "obs_freqs": obs_freqs4, "target_freqs": resp_freqs4 },
-             { 'split': 0.9, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
-             { 'split': 0.9, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
-
-             { 'split': 0.7, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.7, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-             { 'split': 0.7, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
-             { 'split': 0.7, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
-             { 'split': 0.7, "obs_freqs": obs_freqs5, "target_freqs": resp_freqs5 },
-             { 'split': 0.7, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
-
-             
-             { 'split': 0.5, "obs_freqs": obs_freqs,  "target_freqs": resp_freqs  },
-             { 'split': 0.5, "obs_freqs": obs_freqs2, "target_freqs": resp_freqs2 },
-             { 'split': 0.5, "obs_freqs": obs_freqs3,  "target_freqs": resp_freqs3  },
-             { 'split': 0.5, "obs_freqs": obs_freqs4,  "target_freqs": resp_freqs4  },
-             { 'split': 0.5, "obs_freqs": obs_freqs5,  "target_freqs": resp_freqs5  },
-             { 'split': 0.5, "obs_freqs": obs_freqs6,  "target_freqs": resp_freqs6  },
-             ]
-             experiment_set = [
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 980.0, 'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 450.0,  'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 250.0,  'target_hz': 80.0},
-                {'target_frequency': 990, "split" : 0.5, 'obs_hz': 80.0,  'target_hz': 80.0},
-
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0, 'target_hz': 980.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 980.0, 'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 450.0,  'target_hz': 450.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 230.0,  'target_hz': 80.0},
-                {'target_frequency': 990, "split" : 0.9, 'obs_hz': 80.0,  'target_hz': 80.0},
-                ]
-      bounds = {
-                #'noise' : (-2, -4),
-                'llambda' : (-3, -1), 
-                'connectivity': (-3, 0), # 0.5888436553555889, 
-                'n_nodes': 1000,#(100, 1500),
-                'spectral_radius': (0.05, 0.99),
-                'regularization': (-10,-2)
-                }
       """

@@ -2,7 +2,7 @@
 
 module load Anaconda3/2019.10; 
 cpus_per_task=10
-for x in {0..3} #..94}
+for x in {0..4} #..94}
 do
 	#echo $x -p shared
 	srun -t 6000 -n 1 -p shared --cpus-per-task=$cpus_per_task --error="new_experiment${x}_error.txt" -o="new_experiment${x}_output.txt" --mem-per-cpu=11gb  bash -c "python /n/home00/hjoy/rc/Reservoir/MARIOS/execute.py '$x' $cpus_per_task" & #-c 30 -N 1 
