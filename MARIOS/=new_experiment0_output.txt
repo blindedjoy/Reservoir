@@ -1,0 +1,8 @@
+Total cpus available: 10
+RUNNING EXPERIMENT 0 YOU ARE NOT RUNNING EXP TESTS RIGHT NOW
+TEST
+N EXPERIMENTS 1
+{'size': 'publish', 'verbose': False, 'target_frequency': 1000, 'obs_hz': 50.0, 'target_hz': 6.0, 'model': 'random'}
+great success
+NCORES 10
+.random.

@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute.py", line 224, in <module>
+    test("block")
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute.py", line 212, in test
+    run_experiment(exper_[0])
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/execute_scripts/column.py", line 181, in run_experiment
+    experiment.RC_CV(cv_args = cv_args, model = "random", input_weight_type = "uniform")
+  File "/n/home00/hjoy/rc/Reservoir/MARIOS/PyFiles/experiment.py", line 1232, in RC_CV
+    self.esn_cv = self.esn_cv_spec(**input_dict)
+TypeError: __init__() got an unexpected keyword argument 'input_weight_type'
