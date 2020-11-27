@@ -806,6 +806,9 @@ class EchoStateNetwork:
 
                 #res = self.in_weights @ inputs[t].T
 
+                print("prediction_input", prediction_row.shape)
+                print("predicted_state", prediction_state)
+
                 # Prediction. Order of concatenation is [1, inputs, y(n-1), state]
                 prediction_row = np.hstack((prediction_input, prediction_state))
                 pred = prediction_row @ self.out_weights
