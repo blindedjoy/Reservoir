@@ -145,9 +145,10 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       "initial_samples" : 100}
   elif size == "publish":
     default_presets = {
-      "cv_samples" : 1,
+      "cv_samples" : 4,
       "max_iterations" : 2000,
       "eps" : 1e-6,
+      "random_seed" : None,
       'subsequence_length' : 700,
       "initial_samples" : 300}
 
