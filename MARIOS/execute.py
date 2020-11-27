@@ -185,7 +185,7 @@ def test(exper_type, multiprocessing = False, gap = False):
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       experiment["prediction_type"] = exper_type
-      experiment["size"] = "small"
+      experiment["size"] = "publish"
       experiment["model_type"] = "random"
       experiment["input_weight_type"] = "exponential"
       
