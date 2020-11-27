@@ -15,7 +15,6 @@ import multiprocessing
 __all__ = ['EchoStateNetworkCV']
 
 
-
 class EchoStateNetworkCV:
     """A cross-validation object that automatically optimizes ESN hyperparameters using Bayesian optimization with
     Gaussian Process priors.
@@ -53,7 +52,7 @@ class EchoStateNetworkCV:
     tanh_alpha : float
         Alpha coefficient used to scale the tanh error function: alpha * tanh{(1 / alpha) * mse}
     esn_burn_in : int
-        Number of time steps to dicard upon training a single Echo State Network
+        Number of time steps to discard upon training a single Echo State Network
     acquisition_type : {'MPI', 'EI', 'LCB'}
         The type of acquisition function to use in Bayesian Optimization
     max_time : float
@@ -78,14 +77,19 @@ class EchoStateNetworkCV:
                  scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
-                 model_type = "random", activation_function = "tanh", input_weight_type = "uniform"): #, pure_prediction = False
+                 model_type = "random", activation_function = "tanh", input_weight_type = "uniform", 
+                 Distance_matrix = None, n_res = 1):
         
         # Bookkeeping
         self.bounds = OrderedDict(bounds)  # Fix order
         self.parameters = list(self.bounds.keys())
         self.free_parameters = []
         self.fixed_parameters = []
+        self.n_res = n_res
         #self.pure_prediction = pure_prediction
+
+        print("FEEDBACK", esn_feedback)
+        print("FEEDBACK", esn_feedback)
 
         # Store settings
         self.model = model
@@ -117,6 +121,8 @@ class EchoStateNetworkCV:
         self.target_index = target_index
         self.noise = noise
         self.model_type = model_type
+
+        self.Distance_matrix = Distance_matrix
 
         # Normalize bounds domains and remember transformation
         self.scaled_bounds, self.bound_scalings, self.bound_intercepts = self.normalize_bounds(self.bounds)
@@ -217,7 +223,7 @@ class EchoStateNetworkCV:
             arguments[name] = value
 
         # Specific additions
-        arguments['random_seed'] = self.seed
+        #arguments['random_seed'] = self.seed
         if 'regularization' in arguments:
             arguments['regularization'] = 10. ** arguments['regularization']  # Log scale correction
 
@@ -309,7 +315,7 @@ class EchoStateNetworkCV:
         self.validate_data(y, x, self.verbose)
 
         # Initialize new random state
-        self.random_state = np.random.RandomState(self.seed + 2)
+        #self.random_state = np.random.RandomState(self.seed + 2)
 
         # Temporarily store the data
         self.x = x.astype(np.float32) if x is not None else None
@@ -403,7 +409,7 @@ class EchoStateNetworkCV:
         # Return best parameters
         return best_arguments
 
-    def objective_function(self, parameters, train_y, validate_y, train_x=None, validate_x=None):
+    def objective_function(self, parameters, train_y, validate_y, train_x=None, validate_x=None, random_seed=None):
         """Returns selected error metric on validation set.
 
         Parameters
@@ -429,24 +435,25 @@ class EchoStateNetworkCV:
         arguments = self.construct_arguments(parameters)
         #print("args" + str(arguments))
         #if pure_prediction = True:
-        
 
         # Build network
         esn = self.model(**arguments, exponential = self.exp_weights, activation_function = self.activation_function,
                 obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type,
-                input_weight_type = self.input_weight_type) 
-                #already_normalized = self.already_normalized
+                input_weight_type = self.input_weight_type, Distance_matrix = self.Distance_matrix,
+                random_seed = random_seed) 
 
         # Train
         esn.train(x=train_x, y=train_y, burn_in=self.esn_burn_in)
 
         # Validation score
+
         score = esn.test(x=validate_x, y=validate_y, scoring_method=self.scoring_method,
-                         steps_ahead=self.steps_ahead, alpha=self.alpha)
+                                         alpha=self.alpha)#, steps_ahead=self.steps_ahead) #validate_y.shape[0]) 
+                         #steps_ahead=self.steps_ahead, alpha=self.alpha)
         return score
 
     ### Hayden Edit
-    def define_tr_val(self, start_index):
+    def define_tr_val(self, inputs):
         """
         Get indices
         start_index = np.random.randint(viable_start, viable_stop)
@@ -469,6 +476,7 @@ class EchoStateNetworkCV:
         #print("Hayden edit: fixed parameters: " + str(self.fixed_parameters))
         #print("Hayden edit: free parameters: " + str(self.free_parameters))
         ####
+        start_index, random_seed = inputs["start_index"], inputs["random_seed"]
 
         # Get indices
         #start_index = np.random.randint(self.viable_start, self.viable_stop)
@@ -487,13 +495,28 @@ class EchoStateNetworkCV:
             validate_x = None
         #return(train_x, train_y, validate_x, validate_y)
         # Loop through series and score result
-        scores_ = []
-        for n in range(self.n_series):
-            score_ = self.objective_function(self.parameters, train_y[:, n].reshape(-1, 1),
-                                                   validate_y[:, n].reshape(-1, 1), train_x, validate_x)
-            scores_.append(score_)
-        return(scores_)
+        #scores_ = []
+        
+        
+        score_ = self.objective_function(self.parameters, train_y, validate_y, train_x, validate_x, random_seed=random_seed)
+        #scores_.append(score_)
+        #for n in range(self.n_series):
+        #    score_ = self.objective_function(self.parameters, train_y[:, n].reshape(-1, 1),
+        #                                           validate_y[:, n].reshape(-1, 1), train_x, validate_x)
+        #    scores_.append(score_)
+        #print(scores_)
+        return([score_])#{random_seed : score_})
     ###
+    def build_unq_dict_lst(self, lst1, lst2, key1 = "start_index", key2 = "random_seed"):
+        dict_lst = []
+        for i in range(len(lst1)):
+            for j in range(len(lst2)):
+                dictt = {}
+                dictt[key1] =  lst1[i]
+                dictt[key2] =  lst2[j]
+                dict_lst.append(dictt)
+
+        return dict_lst
 
     def objective_sampler(self, parameters):
         """Splits training set into train and validate sets, and computes multiple samples of the objective function.
@@ -524,49 +547,48 @@ class EchoStateNetworkCV:
         viable_start = self.esn_burn_in
         viable_stop = training_y.shape[0] - self.subsequence_length
 
-
-        #print("n_series: " + str(self.n_series))
-        #print("burn in: "  + str(self.esn_burn_in))
-        #print("subsequence_length: "  + str(self.subsequence_length))
-        #print("VIABLE START: " + str(viable_start))
-        #print("VIABLE STOP: " + str(viable_stop))
-
         # Get sample lengths
         self.validate_length = np.round(self.subsequence_length * self.validate_fraction).astype(int)
         self.train_length = self.subsequence_length - self.validate_length
 
         # Score storage
-        scores = np.zeros((self.cv_samples, self.n_series), dtype=np.float32)
+        scores = np.zeros((self.cv_samples, self.n_res), dtype=np.float32)
 
         ###
-        # Get samples
-        Pool = multiprocessing.Pool(self.cv_samples)
         start_indices = np.random.randint(viable_start, viable_stop, size = self.cv_samples)
-        #get the asynch object:
-        results = list(zip(*Pool.map(self.define_tr_val, start_indices)))#.get(timeout=5)))
-        results = np.array(results)
+        
+        if self.seed == None:
+            random_seeds  = np.random.randint(0, 100000, size = self.n_res)
+        else:
+            random_seeds = [self.seed]
 
-        #apply_results = [pool.apply_async(mesh_subset, [population]) for i in range(len(population))]
-        # the call to result.get() blocks until its worker process (running
-        # mesh_subset) returns a value
-        #population = [result.get() for result in apply_results]
+        objective_inputs = self.build_unq_dict_lst(start_indices, random_seeds)
+       
+        # Get samples
+        if (self.cv_samples * self.n_res)  > 1:
+            Pool = multiprocessing.Pool(self.cv_samples * self.n_res)
 
-        Pool.close() #close()
-        Pool.join()
-        ###
+            #get the asynch object:
+            results = list(zip(*Pool.map(self.define_tr_val, objective_inputs)))
 
-        self.scores = results.reshape(scores.shape)
-            
+            Pool.close()
+            Pool.join()
+        else:
+            results = self.define_tr_val(objective_inputs[0])
+
+        self.scores = np.array(results).reshape(-1,1)
+
+        #.reshape(scores.shape)
+
+        # He is perhaps overlooking something essential to LCB here, it's hard to tell.
+        # Why do we only pass back a mean?
         # Pass back as a column vector (as required by GPyOpt)
+        #mean_score = self.scores.mean()
         mean_score = self.scores.mean()
-        #mean_score = mean_score/n_series
-
-        #print('Score:', mean_score)
-        # Inform user
-        if self.verbose:
-            #print(parameters)
-            print('Score:' + str(mean_score))
+        
+            
+        print('Score \u03BC:' + str(round(np.log10(mean_score),4)), ", \u03C3: ",  round(np.log10(self.scores.std()),4), "seed", random_seeds, "n", self.scores.shape[0])#, "scores", self.scores)#str(self.scores.std()),)
             # pars = self.construct_arguments(parameters)
 
         # Return scores
-        return mean_score.reshape(-1, 1)
+        return mean_score #self.scores.reshape(-1,1)#mean_score.reshape(-1, 1)

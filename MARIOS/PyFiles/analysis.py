@@ -94,6 +94,7 @@ class EchoStateAnalysis:
                 the spectrograms that were created with the librosa package.
 
         """
+        #https://towardsdatascience.com/design-optimization-with-ax-in-python-957b1fec776f
         pickle_obj = json_obj
         extra_inputs = { "obs_idx" : pickle_obj["obs_idx"],
                          "resp_idx" : pickle_obj["resp_idx"],
@@ -103,7 +104,7 @@ class EchoStateAnalysis:
                     }
 
         obs_inputs = json_obj["get_observer_inputs"]
-        obs_inputs["method"] = "exact" #https://towardsdatascience.com/design-optimization-with-ax-in-python-957b1fec776f
+        obs_inputs["method"] = "exact"
         print("CYCLIC DISABLED")
 
         vals = json_obj["best arguments"][model]
@@ -435,6 +436,7 @@ class EchoStateAnalysis:
         exper_["f"]   = exper_spec.f
         exper_["T"]   = exper_spec.T
         exper_["A"]   = exper_spec.A
+
         exper_dict = exper_
         exper_obj = exper_spec
 

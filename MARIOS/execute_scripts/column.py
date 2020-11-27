@@ -128,28 +128,31 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
 
   if size == "small":
     default_presets = {
-      "cv_samples" : 6,
+      "cv_samples" : 1,
       "max_iterations" : 1000,
       "eps" : 1e-5,
       'subsequence_length' : 180,
-      "initial_samples" : 100}
+      "initial_samples" : 200,
+      "random_seed" : None,
+      "n_res": 1,
+      "batch_size": 1}
   elif size == "medium":
     default_presets = {
-      "cv_samples" : 5,
+      "cv_samples" : 1,
       "max_iterations" : 4000,
       "eps" : 1e-5,
       'subsequence_length' : 250,
       "initial_samples" : 100}
   elif size == "publish":
     default_presets = {
-      "cv_samples" : 8,
+      "cv_samples" : 1,
       "max_iterations" : 2000,
       "eps" : 1e-6,
       'subsequence_length' : 700,
       "initial_samples" : 300}
 
   if inputs["prediction_type"] == "column":
-    #default_presets['esn_feedback'] = True
+    default_presets['esn_feedback'] = True
     if "subseq_len" in inputs:
       default_presets['subsequence_length'] = inputs["subseq_len"]
     else:
@@ -166,8 +169,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   if model_type in ["delay_line", "cyclic"]:
     cv_args = {**cv_args, "activation_function" : "sin_sq"}
 
-  #if TEACHER_FORCING:
-  #  cv_args = Merge(cv_args, {"esn_feedback" : True})
+  
 
   #Consider combining cyclic and delay line
   if model_type == "uniform" and prediction_type == "column":

@@ -199,6 +199,45 @@ class EchoStateExperiment:
 		self.horiz_display()
 		self.k = k
 
+	def build_distance_matrix(self, dual_lambda, verbose = False):
+		"""	
+		args:
+		    resp is the response index (a list of integers associated with the target train/test time series 
+		        (for example individual frequencies)
+		    obs is the same for the observation time-series.
+		Description:
+			DistsToTarg stands for distance numpy array
+		"""
+		def calculate_distance_matrix(obs_idx):
+			obs_idxx_arr = np.array(obs_idx)
+			for i, resp_seq in enumerate(self.resp_idx):
+				DistsToTarg = abs(resp_seq - obs_idxx_arr).reshape(1, -1)
+				if i == 0:
+					distance_np_ = DistsToTarg
+				else:
+					distance_np_ = np.concatenate([distance_np_, DistsToTarg], axis = 0)
+			distance_np_ = distance_np_
+			
+			return(distance_np_)
+
+		if not dual_lambda:
+
+			self.distance_np = calculate_distance_matrix(self.obs_idx) 
+		else:
+
+			def split_lst(lst, scnd_lst):
+			    
+				lst = np.array(lst)
+				breaka = np.mean(scnd_lst)
+				scnd_arr = np.array(scnd_lst)
+				lst1, lst2 = lst[lst < scnd_arr.min()], lst[lst > scnd_arr.max()]
+
+				return list(lst1), list(lst2)
+
+			obs_lsts = split_lst(self.obs_idx, self.resp_idx) #good!
+			self.distance_np = [calculate_distance_matrix(obs_lst) for obs_lst in obs_lsts]
+			
+
 	def save_pickle(self, path, transform):
 		self.getData2Save()
 		save_path = path # + ".pickle"
@@ -1164,8 +1203,13 @@ class EchoStateExperiment:
 		predetermined_args = {
 				"model_type" : self.model,
 				"input_weight_type" : self.input_weight_type,
-				"esn_feedback" : False
+				#"esn_feedback" : False
 			}
+
+		if self.input_weight_type == "uniform":
+			cv_args["bounds"] = ifdel(cv_args["bounds"], "llambda")
+			cv_args["bounds"] = ifdel(cv_args["bounds"], "llambda2")
+			cv_args["bounds"] = ifdel(cv_args["bounds"], "noise")
 
 		### hacky intervention:
 		if self.prediction_type != "column":
@@ -1175,8 +1219,14 @@ class EchoStateExperiment:
 				'target_index' : self.resp_idx
 			}
 
+		dual_lambda = True if "llamda" in cv_args["bounds"] else False
+			
+		self.build_distance_matrix(dual_lambda = dual_lambda)
+		
+
 		input_dict = { **cv_args, 
-					   **predetermined_args}
+					   **predetermined_args,
+					   "Distance_matrix" : self.distance_np}
 
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
@@ -1186,6 +1236,7 @@ class EchoStateExperiment:
 				print(self.model, "rc cv with ", input_weight_type, " weights set, ready to train ")
 
 		if self.prediction_type == "column":
+			print(self.xTr.shape)
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
 		else:
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
@@ -1223,13 +1274,15 @@ class EchoStateExperiment:
 		if best_args:
 			extra_args = {}
 			if self.model in ["delay_line", "cyclic"]:
-				extra_args = {**extra_args,
-							  "activation_function" : "sin_sq"}
-				best_args = {**best_args, **extra_args}
+				extra_args = {**extra_args, "activation_function" : "sin_sq"}
+			
+			best_args = {**best_args, **extra_args}
 
+			if model in ["uniform", "exponential"]:
+				self.input_weight_type = best_args["model"] 
+				self.model_type = "random"
 
-			self.esn = self.esn_spec(**self.best_arguments,
-									 **extra_args,
+			self.esn = self.esn_spec(**best_args,
 									 obs_idx  = self.obs_idx,
 									 resp_idx = self.resp_idx,
 									 model_type = model,

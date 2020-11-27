@@ -64,10 +64,12 @@ class EchoStateNetwork:
                  cyclic_input_w = None, 
                  cyclic_bias = None,
                  already_normalized = False,
-                 input_weight_type = "uniform"
+                 input_weight_type = "uniform",
+                 Distance_matrix = None
 
                  ):
         # Parameters
+        self.Distance_matrix = Distance_matrix
         self.input_weight_type = input_weight_type
         self.n_nodes = int(np.round(n_nodes))
         self.input_scaling = input_scaling
@@ -83,7 +85,7 @@ class EchoStateNetwork:
         self.llambda = llambda
         self.plot = plot
         self.noise = noise
-        self.already_normalized = already_normalized
+        self.already_normalized = already_normalized            
 
         self.model_type = model_type
         assert self.model_type, "you must choose a model"
@@ -138,14 +140,12 @@ class EchoStateNetwork:
         
         def get_exp_w_set(llambda_, distance_np_):
             exp_np_ = np.exp( - llambda_ * distance_np_) #*llambda
-            exp_np_ = exp_np_.sum(axis = 0).reshape( -1 )
+            exp_np_ = exp_np_.sum(axis = 0).reshape(-1, )
             
             #normalize the max weight to 1.
-            exp_np_ = (exp_np_) / np.max(exp_np_)
-            exp_np_ = exp_np_.reshape(-1,)
+            exp_np_ = exp_np_ / np.max(exp_np_)
+            #exp_np_ = exp_np_.reshape(-1,)
 
-            #white_Noise = np.random.normal(size = exp_np_.shape[0]) * self.noise
-            #exp_np_ += white_Noise
             return(exp_np_)
 
 
@@ -193,8 +193,6 @@ class EchoStateNetwork:
                     distance_np_ = DistsToTarg
                 else:
                     distance_np_ = np.concatenate([distance_np_, DistsToTarg], axis = 0)
-            #if verbose == True:
-            #    display(pd.DataFrame(distance_np))
             distance_np_ = distance_np_
             if verbose == True:
                 print("distance_matrix completed " + str(self.distance_np_.shape))
@@ -231,7 +229,11 @@ class EchoStateNetwork:
         #TODO: description
         change the automatic var assignments
         """
-        self.build_distance_matrix()
+        if not self.Distance_matrix:
+            print("building distance matrix, you should externalize this if CV")
+            self.build_distance_matrix()
+        else:
+            self.distance_np = self.Distance_matrix
         random_state = np.random.RandomState(self.seed)
         self.exp_w(random_state)
         n_temp = len(self.exp_weights)
@@ -529,7 +531,7 @@ class EchoStateNetwork:
 
         # Add feedback if requested, optionally with feedback scaling
         if self.feedback:
-            inputs = np.hstack((inputs, y[:-1]))  # Add teacher forced signal (equivalent to y(t-1) as input)
+            inputs = np.hstack((inputs, y[-1,:]))  # Add teacher forced signal (equivalent to y(t-1) as input)
             feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
             #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
             self.in_weights = np.hstack((self.in_weights, feedback_weights))
@@ -567,10 +569,10 @@ class EchoStateNetwork:
         self.out_weights = np.linalg.solve(ridge_x, ridge_y)
 
         # Store last y value as starting value for predictions
-        self.y_last = y[-1]
+        self.y_last = y[-1, :]
 
         # Return all data for computation or visualization purposes (Note: these are normalized)
-        return complete_data, (y[1:] if self.feedback else y), burn_in
+        return complete_data, (y[1:,:] if self.feedback else y), burn_in
 
     def test(self, y, x=None, y_start=None, steps_ahead=None, scoring_method='mse', alpha=1.):
         """Tests and scores against known output.
@@ -602,11 +604,13 @@ class EchoStateNetwork:
             #raise ValueError("Error: provide x or enable feedback")
 
         # Run prediction
+        
         final_t = y.shape[0]
+        
         if steps_ahead is None:
-            y_predicted = self.predict(final_t, x, y_start=y_start)
+            y_predicted = self.predict(n_steps = x.shape[0], x=x, y_start=y_start)
         else:
-            y_predicted = self.predict_stepwise(y, x, steps_ahead=steps_ahead, y_start=y_start)[:final_t]
+            y_predicted = self.predict_stepwise(y, x, steps_ahead=steps_ahead, y_start=y_start)[:final_t,:]
 
         # Return error
         return self.error(y_predicted, y, scoring_method, alpha=alpha)
@@ -708,6 +712,7 @@ class EchoStateNetwork:
             y_predicted = self.denormalize(outputs=y_predicted)
 
         # Return predictions
+        #print(y_predicted[:5,0])
         return y_predicted.reshape(-1, self.out_weights.shape[1])
 
     def predict_stepwise(self, y, x=None, steps_ahead=1, y_start=None):
@@ -720,7 +725,7 @@ class EchoStateNetwork:
         y : numpy array
             Array with y-values. At every time point a prediction is made (excluding the current y)
         x : numpy array or None
-            If prediciton requires inputs, provide them here
+            If prediction requires inputs, provide them here
         steps_ahead : int (default 1)
             The number of steps to predict into the future at every time point
         y_start : float or None
@@ -799,9 +804,15 @@ class EchoStateNetwork:
                 if n == 0:
                     current_state = np.copy(prediction_state)
 
+                #res = self.in_weights @ inputs[t].T
+
                 # Prediction. Order of concatenation is [1, inputs, y(n-1), state]
                 prediction_row = np.hstack((prediction_input, prediction_state))
-                y_predicted[t, n] = prediction_row @ self.out_weights
+                pred = prediction_row @ self.out_weights
+                print("prediction_row", prediction_row.shape)
+                print("y_predicted", y_predicted.shape)
+                print("pred", pred.shape)
+                y_predicted[:, n] = pred.reshape(-1,1)
                 prediction_y = y_predicted[t, n]
 
             # Evolve true state
@@ -848,16 +859,7 @@ class EchoStateNetwork:
             The error as evaluated with the metric chosen above
 
         """
-        # Return error based on choices
-        if predicted.shape[1] == 1:
-            errors = predicted.ravel() - target.ravel()
-        else:
-            # Multiple prediction columns
-            errors = np.zeros(predicted.shape, dtype=np.float32)
-            for i in steps_ahead:
-                predictions = predicted[:, i]
-                errors[:, i] = predictions.ravel()[:-i] - target.ravel()[i:]
-
+        errors = predicted - target
         # Adjust for NaN and np.inf in predictions (unstable solution)
         if not np.all(np.isfinite(predicted)):
             # print("Warning: some predicted values are not finite")
