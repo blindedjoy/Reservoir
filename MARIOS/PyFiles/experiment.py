@@ -1226,7 +1226,8 @@ class EchoStateExperiment:
 
 		input_dict = { **cv_args, 
 					   **predetermined_args,
-					   "Distance_matrix" : self.distance_np}
+					   "Distance_matrix" : self.distance_np,
+					   }
 
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
@@ -1236,9 +1237,11 @@ class EchoStateExperiment:
 				print(self.model, "rc cv with ", input_weight_type, " weights set, ready to train ")
 
 		if self.prediction_type == "column":
-			print(self.xTr.shape)
+			print("Xtr", self.xTr.shape)
+			print("Train", self.Train.shape)
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
 		else:
+			
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		self.best_arguments['feedback'] = False
 

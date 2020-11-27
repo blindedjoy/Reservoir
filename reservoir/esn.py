@@ -447,6 +447,7 @@ class EchoStateNetwork:
 
         # Calculate correct shape based on feedback (feedback means one row less)
         start_index = 1 if self.feedback else 0  # Convenience index
+        #print('y.shape',y.shape)
         rows = y.shape[0] - start_index
 
         # Build state matrix
@@ -467,8 +468,12 @@ class EchoStateNetwork:
                 self.in_weights = self.input_scaling * self.exp_weights
             else:
                 #print("unif")
-                self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
+                if x is None:
+                    self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, y.shape[1] - 1))
+                else:
+                    self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, y.shape[1] - 1))
 
+            
             uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
             self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
 
@@ -531,16 +536,27 @@ class EchoStateNetwork:
 
         # Add feedback if requested, optionally with feedback scaling
         if self.feedback:
-            inputs = np.hstack((inputs, y[-1,:]))  # Add teacher forced signal (equivalent to y(t-1) as input)
+            
+            #1by3153 X 3153 by 1000 --> 1by1000
+            #1by1000 X 1000 by 3153 --> 
+            #2by3153 X (1000by2) --> 2by3153
+
+            last_y = y[:-1,:]#.reshape(-1,rows)
+            
+            #print("last_y", y.shape)
+            #print("y[-1]", y[-1,:].shape)
+
+            inputs = np.hstack((inputs ,last_y )) # Add teacher forced signal (equivalent to y(t-1) as input)
+            #print("inputs", inputs.shape)
             feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
             #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
-            self.in_weights = np.hstack((self.in_weights, feedback_weights))
+            self.in_weights = np.hstack((self.in_weights, feedback_weights)).reshape(self.n_nodes, -1)
 
         # Train iteratively
         for t in range(inputs.shape[0]):
             #print("in_weights: "  + str(self.in_weights.shape))
             #print("inputs[t].T: " + str(inputs[t].T.shape))
-            #res = self.in_weights @ inputs[t].T
+            res = self.in_weights @ inputs[t].T
             #print("res: " + str(res.shape))
             #print("update: " + str(update.shape))
 
@@ -608,7 +624,7 @@ class EchoStateNetwork:
         final_t = y.shape[0]
         
         if steps_ahead is None:
-            y_predicted = self.predict(n_steps = x.shape[0], x=x, y_start=y_start)
+            y_predicted = self.predict(n_steps = y.shape[0], x=x, y_start=y_start)
         else:
             y_predicted = self.predict_stepwise(y, x, steps_ahead=steps_ahead, y_start=y_start)[:final_t,:]
 
@@ -618,7 +634,7 @@ class EchoStateNetwork:
     def print_version(self):
         print("previous y")
 
-    def predict(self, n_steps, x=None, y_start=None):
+    def predict(self, n_steps, pure_prediction = True, x=None, y_start=None):
         """Predicts n values in advance.
 
         Prediction starts from the last state generated in training.
@@ -676,6 +692,8 @@ class EchoStateNetwork:
         # Initialize state from last availble in train
         current_state = self.state[-1]
 
+
+
         # Predict iteratively
         for t in range(n_steps):
             
@@ -685,9 +703,18 @@ class EchoStateNetwork:
             # Update
 
             #print("in_weights: "  + str(self.in_weights.shape))
-            #print("inputs[t].T: " + str(inputs[t].T.shape))
-            res = self.in_weights @ inputs[t].T
+            #print("current_input.T: " + str(inputs[t].T.shape))
+            #print("current_input.T: " + str(current_input.T.shape))
+            
+            res = self.in_weights @ current_input.T
             #print("res: " + str(res.shape))
+            
+            #print("weights "  + str(self.weights.shape))
+            #print("current_state: " + str(current_state.shape))
+            
+            hi =  self.weights @ current_state
+            #print("hi: " + str(hi.shape))
+            
             
 
             f = self.activation_function
@@ -703,16 +730,15 @@ class EchoStateNetwork:
               previous_y = y_predicted[t,:]
             else:
               y_predicted[t] = complete_row @ self.out_weights
+              #print("t: ", t, "y_predicted", y_predicted[t])
               previous_y = y_predicted[t]
+            #print("t: ", t, "y_predicted", y_predicted[t].shape)
 
-            
             
         if not self.already_normalized:
             # Denormalize predictions
             y_predicted = self.denormalize(outputs=y_predicted)
 
-        # Return predictions
-        #print(y_predicted[:5,0])
         return y_predicted.reshape(-1, self.out_weights.shape[1])
 
     def predict_stepwise(self, y, x=None, steps_ahead=1, y_start=None):

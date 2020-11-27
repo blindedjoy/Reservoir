@@ -185,7 +185,7 @@ def test(exper_type, multiprocessing = False, gap = False):
     for experiment in experiment_set:
       experiment["bounds"] = bounds
       experiment["prediction_type"] = exper_type
-      experiment["size"] = "publish"
+      experiment["size"] = "small"
       experiment["model_type"] = "random"
       experiment["input_weight_type"] = "exponential"
       
@@ -221,7 +221,7 @@ if __name__ == '__main__':
   TEST = True #false for low frequencies, true for column.
 
   start = timeit.default_timer()
-  test("block")
+  test("column")
   stop = timeit.default_timer()
   print('Time: ', stop - start) 
 

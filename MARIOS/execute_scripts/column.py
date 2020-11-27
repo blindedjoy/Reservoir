@@ -145,7 +145,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       "initial_samples" : 100}
   elif size == "publish":
     default_presets = {
-      "cv_samples" : 3,
+      "cv_samples" : 1,
       "max_iterations" : 2000,
       "eps" : 1e-6,
       "random_seed" : None,
@@ -170,8 +170,6 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
   }
   if model_type in ["delay_line", "cyclic"]:
     cv_args = {**cv_args, "activation_function" : "sin_sq"}
-
-  
 
   #Consider combining cyclic and delay line
   if model_type == "uniform" and prediction_type == "column":
