@@ -221,7 +221,7 @@ if __name__ == '__main__':
   TEST = True #false for low frequencies, true for column.
 
   start = timeit.default_timer()
-  test("column")
+  test("block")
   stop = timeit.default_timer()
   print('Time: ', stop - start) 
 
