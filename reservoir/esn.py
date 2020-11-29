@@ -6,8 +6,25 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from copy import deepcopy
 
 __all__ = ['EchoStateNetwork']
+
+colorz = {
+  "header" : '\033[95m',
+  "blue" : '\033[94m',
+  'cyan' : '\033[96m',
+  'green' : '\033[92m',
+  'warning' : '\033[93m',
+  'fail' : '\033[91m',
+  'endc' : '\033[0m',
+   'bold' :'\033[1m',
+   "underline" : '\033[4m'
+}
+  
+def printc(string_, color_) :
+  print(colorz[color_] + string_ + colorz["endc"] )
+
 
 
 class EchoStateNetwork:
@@ -65,10 +82,16 @@ class EchoStateNetwork:
                  cyclic_bias = None,
                  already_normalized = False,
                  input_weight_type = "uniform",
-                 Distance_matrix = None
+                 Distance_matrix = None,
+                 reservoir = None,
+                 input_weights_from_cv = None,
+                 reservoir_output = None
 
                  ):
+        
         # Parameters
+        self.input_weights_from_cv = input_weights_from_cv
+        self.reservoir = reservoir
         self.Distance_matrix = Distance_matrix
         self.input_weight_type = input_weight_type
         self.n_nodes = int(np.round(n_nodes))
@@ -79,7 +102,11 @@ class EchoStateNetwork:
         self.leaking_rate = leaking_rate
         self.regularization = regularization
         self.feedback = feedback
-        self.seed = random_seed
+        if not random_seed:
+            self.seed = np.random.randint(100000)
+        else:
+            self.seed = random_seed
+        #print("ESN random_seed", self.seed)
         self.obs_idx = obs_idx
         self.resp_idx = resp_idx
         self.llambda = llambda
@@ -259,34 +286,64 @@ class EchoStateNetwork:
             ax.set_title("Exponential Attention Weights")
             plt.show()
 
+    def return_reservoir(self):
+        res_copy = self.reservoir_output
+        return res_copy
+
     
-    def generate_reservoir(self, obs_idx = None, targ_idx = None):
+    
+    def generate_reservoir(self, obs_idx = None, targ_idx = None, load_failed = None):
         """Generates random reservoir from parameters set at initialization."""
         # Initialize new random state
         random_state = np.random.RandomState(self.seed)
 
+    
+        assert type(load_failed) == type(None)
         # Set weights and sparsity randomly
         max_tries = 1000  # Will usually finish on the first iteration
+        n = self.n_nodes
+
+
+
         for i in range(max_tries):
+            if load_failed == 1 or type(self.reservoir) == type(None):
+                accept = random_state.uniform(size = (n, n)) 
+                self.weights = random_state.uniform( -1., 1., size = (n, n))
+                pre_accept = deepcopy(accept)
+                pre_weights = deepcopy(self.weights)
+                save_res = True
+            else:
+                #print("LOADING MATRIX", load_failed)
+                self.weights = self.reservoir["reservoir"]
+                accept  = self.reservoir["accept"]
+                save_res = False
 
-            n = self.n_nodes
-            accept = random_state.uniform(size = (n, n)) < self.connectivity
+            self.weights *= (accept < self.connectivity)
 
-            self.weights = random_state.uniform( -1., 1., size = (n, n))
-            self.weights *= accept
-            
             max_eigenvalue = np.abs( np.linalg.eigvals( self.weights)).max()
 
             if max_eigenvalue > 0:
+                if save_res:
+                    self.reservoir_output = {"reservoir": pre_weights,
+                                                    "accept" : pre_accept}
                 break
-            elif i == max_tries - 1:
-                raise ValueError('Nilpotent reservoirs are not allowed. Increase connectivity and/or number of nodes.')
+            else:
+                load_failed = 1
+                #print("Load FAILED, now == 1", load_failed == 1, max_eigenvalue)
+                if i == max_tries - 1:
+                
+                    raise ValueError('Nilpotent reservoirs are not allowed. Increase connectivity and/or number of nodes.')
+        
+        
+            # Set spectral radius of weight matrix
+        
+            
 
-        # Set spectral radius of weight matrix
         self.weights *= self.spectral_radius / max_eigenvalue
 
-        # Default state
+        # Default state #CAN BE DEEP-COPIED
         self.state = np.zeros((1, self.n_nodes), dtype=np.float32)
+        #self.init_state = self.state.copy()
 
         # Set out to none to indicate untrained ESN
         self.out_weights = None
@@ -403,8 +460,11 @@ class EchoStateNetwork:
 
         # Syntactic sugar
         return tuple(transformed) if len(transformed) > 1 else transformed[0]
+    def return_in_weights(self):
+        in_weights_copy = self.input_weights_from_cv
+        return in_weights_copy
 
-    def train(self, y, x=None, burn_in=0, input_weight=None):
+    def train(self, y, x=None, burn_in=0, input_weight=None, verbose = False):
         """Trains the Echo State Network.
 
         Trains the out weights on the random network. This is needed before being able to make predictions.
@@ -428,6 +488,7 @@ class EchoStateNetwork:
             for diagnostic purposes  (e.g. vizualization of activations).
 
         """
+        #verbose = True
         if x is None and not self.feedback:
             self.already_normalized = True
             x = np.ones(y.shape)
@@ -459,36 +520,42 @@ class EchoStateNetwork:
         # Add data inputs if present
         if not x is None:
             inputs = np.hstack((inputs, x[start_index:]))  # Add data inputs
-                    
-        if self.input_weight_type in ["exponential", "uniform"]:
 
-            if self.model_type == "exponential":
-                #print("EXP")
-                self.get_exp_weights()
-                self.in_weights = self.input_scaling * self.exp_weights
-            else:
-                #print("unif")
-                if x is None:
-                    self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, y.shape[1] - 1))
+        if type(self.input_weights_from_cv) == type(None):
+                        
+            if self.input_weight_type in ["exponential", "uniform"]:
+
+                if self.model_type == "exponential":
+                    #print("EXP")
+                    self.get_exp_weights()
+                    self.in_weights = self.input_scaling * self.exp_weights
                 else:
-                    self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, y.shape[1] - 1))
+                    #print("unif")
+                    if x is None:
+                        self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, y.shape[1] - 1))
+                    else:
+                        self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, x.shape[1]))
 
-            
-            uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
-            self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
+                
+                uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+                self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
 
-        elif self.input_weight_type == "cyclic":
+            elif self.input_weight_type == "cyclic":
 
-            # Set and scale input weights (for memory length and non-linearity)
-            self.in_weights = np.full(shape=(self.n_nodes, inputs.shape[1] - 1), fill_value=self.cyclic_input_w, dtype=np.float32)
-            self.in_weights *= np.sign(random_state.uniform(low=-1.0, high=1.0, size=self.in_weights.shape))
-            self.in_weights *= self.input_scaling 
-            
-            #add input bias
-            cyclic_bias = np.full(shape=(self.n_nodes, 1), fill_value=self.cyclic_bias, dtype=np.float32)
-            cyclic_bias *= np.sign(random_state.uniform(low=-1.0, high=1.0, size=self.cyclic_bias.shape))
-            
-            self.in_weights = np.hstack((cyclic_bias, self.in_weights)) 
+                # Set and scale input weights (for memory length and non-linearity)
+                self.in_weights = np.full(shape=(self.n_nodes, inputs.shape[1] - 1), fill_value=self.cyclic_input_w, dtype=np.float32)
+                self.in_weights *= np.sign(random_state.uniform(low=-1.0, high=1.0, size=self.in_weights.shape))
+                self.in_weights *= self.input_scaling 
+                
+                #add input bias
+                cyclic_bias = np.full(shape=(self.n_nodes, 1), fill_value=self.cyclic_bias, dtype=np.float32)
+                cyclic_bias *= np.sign(random_state.uniform(low=-1.0, high=1.0, size=self.cyclic_bias.shape))
+                
+                self.in_weights = np.hstack((cyclic_bias, self.in_weights)) 
+                self.input_weights_from_cv = self.in_weights
+            #return_in_weights()
+        else:
+            self.in_weights = self.input_weights_from_cv
 
 
         if self.model_type == "delay_line":
@@ -554,17 +621,18 @@ class EchoStateNetwork:
 
         # Train iteratively
         for t in range(inputs.shape[0]):
-            #print("in_weights: "  + str(self.in_weights.shape))
-            #print("inputs[t].T: " + str(inputs[t].T.shape))
+            if verbose:
+                print("in_weights: "  + str(self.in_weights.shape))
+                print("inputs[t].T: " + str(inputs[t].T.shape))
+            
             res = self.in_weights @ inputs[t].T
-            #print("res: " + str(res.shape))
-            #print("update: " + str(update.shape))
-
-            #CHANGE
-            #f = self.activation_function
+            #
 
             update = self.activation_function(self.in_weights @ inputs[t].T + self.weights @ current_state)
-            
+            if verbose:
+                
+                print("res: " + str(res.shape))
+                print("update: " + str(update.shape))
             #print("update: " + str(update.shape))
             current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state  # Leaking separate
             self.state[t] = current_state
@@ -625,7 +693,9 @@ class EchoStateNetwork:
         
         if steps_ahead is None:
             y_predicted = self.predict(n_steps = y.shape[0], x=x, y_start=y_start)
+            printc("predicting "  + str(y.shape[0]) + "steps", 'blue')
         else:
+            printc("predicting "  + str(y.shape[0]) + "steps", 'blue')
             y_predicted = self.predict_stepwise(y, x, steps_ahead=steps_ahead, y_start=y_start)[:final_t,:]
 
         # Return error
@@ -669,6 +739,7 @@ class EchoStateNetwork:
                 x = self.normalize(inputs=x)
 
         # Initialize input
+        
         inputs = np.ones((n_steps, 1), dtype=np.float32)  # Add bias term
 
         # Choose correct input
@@ -676,6 +747,7 @@ class EchoStateNetwork:
             raise ValueError("Error: cannot run without feedback and without x. Enable feedback or supply x")
         elif not x is None:
             inputs = np.hstack((inputs, x))  # Add data inputs
+        #print("inputs", inputs.shape)
 
         # Set parameters
         if self.out_weights.shape[1] > 1:
@@ -707,8 +779,8 @@ class EchoStateNetwork:
             #print("current_input.T: " + str(current_input.T.shape))
             
             res = self.in_weights @ current_input.T
+
             #print("res: " + str(res.shape))
-            
             #print("weights "  + str(self.weights.shape))
             #print("current_state: " + str(current_state.shape))
             

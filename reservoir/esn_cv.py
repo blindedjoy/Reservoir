@@ -14,6 +14,23 @@ import multiprocessing
 
 __all__ = ['EchoStateNetworkCV']
 
+colorz = {
+  "header" : '\033[95m',
+  "blue" : '\033[94m',
+  'cyan' : '\033[96m',
+  'green' : '\033[92m',
+  'warning' : '\033[93m',
+  'fail' : '\033[91m',
+  'endc' : '\033[0m',
+   'bold' :'\033[1m',
+   "underline" : '\033[4m'
+}
+  
+def printc(string_, color_) :
+  print(colorz[color_] + string_ + colorz["endc"] )
+
+
+
 
 class EchoStateNetworkCV:
     """A cross-validation object that automatically optimizes ESN hyperparameters using Bayesian optimization with
@@ -78,7 +95,7 @@ class EchoStateNetworkCV:
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
                  model_type = "random", activation_function = "tanh", input_weight_type = "uniform", 
-                 Distance_matrix = None, n_res = 1):
+                 Distance_matrix = None, n_res = 1, count = 0, reservoir = None):
         
         # Bookkeeping
         self.bounds = OrderedDict(bounds)  # Fix order
@@ -90,6 +107,7 @@ class EchoStateNetworkCV:
 
         print("FEEDBACK", esn_feedback)
         print("FEEDBACK", esn_feedback)
+        self.count = count
 
         # Store settings
         self.model = model
@@ -355,12 +373,14 @@ class EchoStateNetworkCV:
         if self.batch_size == 1:
             evaluator = GPyOpt.core.evaluators.sequential.Sequential(acquisition=acquisition,
                                                                      batch_size=self.batch_size)
+            #evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition=acquisition,
+            #                                                         batch_size=self.batch_size)
         else:
             evaluator = GPyOpt.core.evaluators.RandomBatch(acquisition=acquisition,
                                                            batch_size=self.batch_size)
         # Show progress bar
         if self.verbose:
-            print("Starting optimization...", '\n')
+            printc("Starting optimization..." + ' \n', 'green')
 
         ###
         print("Hayden edit: space: " + str(space))
@@ -383,7 +403,7 @@ class EchoStateNetworkCV:
 
         # Inform user
         if self.verbose:
-            print('Done after', self.iterations_taken, 'iterations.')
+            printc('Done after ' + str(self.iterations_taken) + ' iterations.', 'green')
 
         # Purge temporary data references
         del self.x
@@ -436,11 +456,24 @@ class EchoStateNetworkCV:
         #print("args" + str(arguments))
         #if pure_prediction = True:
 
+        #if not random_seed:
+        #    random_seed = np.random.randint(0, 100000)
+        if random_seed:
+
+            if self.count <=0:
+                print("initializing reservoir")
+            else:
+                rez = {"reservoir" : self.reservoir, "input_weights_from_cv" : self.in_weights}
+                arguments = {**arguments, **rez}
+
         # Build network
         esn = self.model(**arguments, exponential = self.exp_weights, activation_function = self.activation_function,
                 obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type,
                 input_weight_type = self.input_weight_type, Distance_matrix = self.Distance_matrix,
                 random_seed = random_seed) 
+        if self.count <=0:
+            self.reservoir = esn.return_reservoir()
+            self.in_weights = esn.return_in_weights()
 
         # Train
         esn.train(x=train_x, y=train_y, burn_in=self.esn_burn_in)
@@ -507,18 +540,29 @@ class EchoStateNetworkCV:
         #print(scores_)
         return([score_])#{random_seed : score_})
     ###
-    def build_unq_dict_lst(self, lst1, lst2, key1 = "start_index", key2 = "random_seed"):
-        dict_lst = []
-        for i in range(len(lst1)):
-            for j in range(len(lst2)):
+    def build_unq_dict_lst(self, list1, list2, key1 = "start_index", key2 = "random_seed"):
+        dict_list = []
+        #print("list1:",list1)
+        #print("list2:",list2)
+        for i in range(len(list1)):
+
+            if type(list2) == type(None):
                 dictt = {}
                 dictt[key1] =  lst1[i]
-                dictt[key2] =  lst2[j]
-                dict_lst.append(dictt)
+                dictt[key2] =  None
+                dict_list.append(dictt)
+            else:
+                for j in range(len(list2)):
+                    dictt = {}
+                    dictt[key1] =  list1[i]
+                    dictt[key2] =  list2[j]
+                    dict_list.append(dictt)
+        #print(len(dict_list))
+        #dict_lst = list({v[key1]: v for v in dict_list}.values())
+        #print(dict_lst)
+        return dict_list
 
-        return dict_lst
-
-    def objective_sampler(self, parameters):
+    def objective_sampler(self, parameters, be_crazy = True):
         """Splits training set into train and validate sets, and computes multiple samples of the objective function.
 
         This method also deals with dispatching multiple series to the objective function if there are multiple,
@@ -557,15 +601,16 @@ class EchoStateNetworkCV:
         ###
         start_indices = np.random.randint(viable_start, viable_stop, size = self.cv_samples)
         
-        if self.seed == None:
-            random_seeds  = np.random.randint(0, 100000, size = self.n_res)
-        else:
-            random_seeds = [self.seed]
+       
+        random_seeds  = np.random.randint(0, 100000, size = self.n_res) if self.seed == None else [self.seed]
+        #random_seeds  = None if self.seed == None else [self.seed]
 
         objective_inputs = self.build_unq_dict_lst(start_indices, random_seeds)
        
         # Get samples
-        if (self.cv_samples * self.n_res)  > 1:
+        if self.count < 0:
+            results = self.define_tr_val(objective_inputs[0])
+        elif (self.cv_samples * self.n_res) > 1:
             Pool = multiprocessing.Pool(self.cv_samples * self.n_res)
 
             #get the asynch object:
@@ -585,10 +630,28 @@ class EchoStateNetworkCV:
         # Pass back as a column vector (as required by GPyOpt)
         #mean_score = self.scores.mean()
         mean_score = self.scores.mean()
-        
+        log_mu = round(np.log10(mean_score),4)
+        std_score = np.log10(self.scores.std())
+        score_ = mean_score - 0.1 * std_score
+        log_score =  round(np.log10(score_),4)
+
+        score_str = 'iter ' + str(self.count) + ': Score ' + str(round(score_,4)) +', \u03BC:' + str(log_mu) + ", \u03C3: " + str(round(std_score, 4)) + " seed " + str(random_seeds) + " n " + str(self.scores.shape[0])
+        self.count+=1
+        if log_mu > -0.5:
+            printc(score_str, "fail")
+        elif log_mu  > -0.8:
+            printc(score_str, "warning")
+        elif log_mu > -1:
+            print(score_str)
+        elif log_mu > -1.5:
+            printc(score_str, "blue")
+        elif log_mu > -2 :
+            printc(score_str, "cyan")
+        elif log_mu > -2.5:
+            printc(score_str, "green")
             
-        print('Score \u03BC:' + str(round(np.log10(mean_score),4)), ", \u03C3: ",  round(np.log10(self.scores.std()),4), "seed", random_seeds, "n", self.scores.shape[0])#, "scores", self.scores)#str(self.scores.std()),)
-            # pars = self.construct_arguments(parameters)
+
+
 
         # Return scores
-        return mean_score #self.scores.reshape(-1,1)#mean_score.reshape(-1, 1)
+        return mean_score #- 0.1 * std_score #score_ #self.scores.reshape(-1,1)#mean_score.reshape(-1, 1)
