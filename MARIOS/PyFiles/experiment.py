@@ -1,12 +1,8 @@
 #Herein we shall create a new file, similar to esn.py 
 #where we transform the notebook into an object oriented approach worthy of Reinier's library.
-import pickle
-from scipy.interpolate import Rbf
+
 from reservoir import *
 from PyFiles.imports import *
-
-
-
 
 def Merge(dict1, dict2): 
 	res = {**dict1, **dict2} 
@@ -88,6 +84,22 @@ def is_numeric(x):
 def class_copy(class_spec):
 	CopyOfClass = type('esn_cv_copy', class_spec.__bases__, dict(class_spec.__dict__))
 	return class_spec
+
+colorz = {
+  "header" : '\033[95m',
+  "blue" : '\033[94m',
+  'cyan' : '\033[96m',
+  'green' : '\033[92m',
+  'warning' : '\033[93m',
+  'fail' : '\033[91m',
+  'endc' : '\033[0m',
+   'bold' :'\033[1m',
+   "underline" : '\033[4m'
+}
+  
+def printc(string_, color_) :
+  print(colorz[color_] + string_ + colorz["endc"] )
+
 
 
 class EchoStateExperiment:
@@ -1200,16 +1212,12 @@ class EchoStateExperiment:
 		input_err_msg = " input weight type not yet implimented"
 		assert self.input_weight_type in ["exponential", "uniform"], self.input_weight_type + input_err_msg
 
-		predetermined_args = {
-				"model_type" : self.model,
-				"input_weight_type" : self.input_weight_type,
-				#"esn_feedback" : False
-			}
+		predetermined_args = {"model_type" : self.model, "input_weight_type" : self.input_weight_type}
 
 		if self.input_weight_type == "uniform":
 			cv_args["bounds"] = ifdel(cv_args["bounds"], "llambda")
 			cv_args["bounds"] = ifdel(cv_args["bounds"], "llambda2")
-			cv_args["bounds"] = ifdel(cv_args["bounds"], "noise")
+			#cv_args["bounds"] = ifdel(cv_args["bounds"], "noise")
 
 		### hacky intervention:
 		if self.prediction_type != "column":
@@ -1239,11 +1247,12 @@ class EchoStateExperiment:
 		if self.prediction_type == "column":
 			print("Xtr", self.xTr.shape)
 			print("Train", self.Train.shape)
+			self.feedback = True
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
 		else:
-			
+			self.feedback = False
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
-		self.best_arguments['feedback'] = False
+		self.best_arguments['feedback'] = self.feedback
 
 		print("Bayesian Optimization complete. Now running saving data, getting prediction etc. ")
 		print(input_dict)
@@ -1257,15 +1266,36 @@ class EchoStateExperiment:
 								 )
 
 		print(self.best_arguments)
-		self.esn.train(x = self.Train, y = self.xTr)
-		
 
 		def my_predict(test, n_steps = None):
 			if not n_steps:
 				n_steps = test.shape[0]
 			return self.esn.predict(n_steps, x = test[:n_steps,:])
 
-		#self.prediction = my_predict(self.Test)
+		
+
+		if self.prediction_type == "column":
+			print()
+			self.esn = self.esn_spec(**self.best_arguments,
+								 obs_idx  = self.obs_idx,
+								 resp_idx = self.resp_idx, 
+								 model_type = self.model,
+								 input_weight_type = self.input_weight_type
+								 )
+			nrmses = []
+			for i in range(20):
+				self.esn.train(x = None, y = self.xTr)
+				self.prediction = self.esn.predict(x = None, n_steps = self.xTe.shape[0])
+				nrmse_ = nrmse(self.xTe,self.prediction)
+				nrmses.append(nrmse_)
+			printc("nrmse: " + str( np.mean(nrmses)), 'cyan')
+			
+		else:
+			self.esn.train(x = self.Train, y = self.xTr)
+			self.prediction = my_predict(self.Test)
+		
+
+		
 
 		self.save_json()
 		print("\n \n rc cv data saved @ : " + self.outfile +".pickle")
@@ -1291,14 +1321,17 @@ class EchoStateExperiment:
 									 model_type = model,
 									 input_weight_type = self.input_weight_type)
 
-			self.esn.train(x = self.Train, y = self.xTr)
-
 			def my_predict(test, n_steps = None):
 				if not n_steps:
 					n_steps = test.shape[0]
 				return self.esn.predict(n_steps, x = test[ :n_steps, :])
 
-			self.prediction = my_predict(self.Test)
+			if best_args["feedback"] == True:
+				self.esn.train(x = None, y = self.xTr)
+				self.prediction = self.esn.predict(n_steps = self.Test.shape[0])
+			else:
+				self.esn.train(x = self.Train, y = self.xTr)
+				self.prediction = my_predict(self.Test)
 		else:
 			"at least one network not trained successfully"
 

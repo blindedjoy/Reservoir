@@ -4,6 +4,22 @@ from PyFiles.analysis import *
 
 TEACHER_FORCING = False
 
+colorz = {
+  "header" : '\033[95m',
+  "blue" : '\033[94m',
+  'cyan' : '\033[96m',
+  'green' : '\033[92m',
+  'warning' : '\033[93m',
+  'fail' : '\033[91m',
+  'endc' : '\033[0m',
+   'bold' :'\033[1m',
+   "underline" : '\033[4m'
+}
+  
+def printc(string_, color_) :
+  print(colorz[color_] + string_ + colorz["endc"] )
+
+
 def get_frequencies(trial = 1):
   """
   get frequency lists
@@ -28,8 +44,23 @@ def get_frequencies(trial = 1):
   obs_list += list( range( ub_targ, ub_targ + obs_hz))
   resp_list = list( range( lb_targ, ub_targ))
   return obs_list, resp_list
+  
+def printc(string_, color_) :
+  print(colorz[color_] + string_ + colorz["endc"] )
 
-def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpolation_method = "griddata-linear"):
+
+colorz = {
+  "header" : '\033[95m',
+  "blue" : '\033[94m',
+  'cyan' : '\033[96m',
+  'green' : '\033[92m',
+  'warning' : '\033[93m',
+  'fail' : '\033[91m',
+  'endc' : '\033[0m',
+   'bold' :'\033[1m',
+   "underline" : '\033[4m'
+}
+def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "griddata-linear"):
   """
   4*4 = 16 + 
 
@@ -59,6 +90,36 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
 
 
   prediction_type = inputs["prediction_type"] 
+
+  if size == "small":
+    default_presets = {
+      "random_seed" : 125,
+      "n_res" : 1,#2,
+      "cv_samples" : 1,#2,
+      "batch_size": 1,#4,
+      "eps" : 1e-3,
+      'subsequence_length' : 190,
+      "initial_samples" : 100,
+      }
+  elif size == "medium":
+    default_presets = { #cv_samples * n_res * batch size --> n_cores. what about njobs?
+      "random_seed" : 123,
+      "n_res" : 1,
+      "cv_samples" : 3,
+      "batch_size": 5,
+      "eps" : 1e-4,
+      'subsequence_length' : 250,
+      "initial_samples" : 100,
+      "max_iterations" : 4000}
+  elif size == "publish":
+    default_presets = {
+      "cv_samples" : 1,
+      "max_iterations" : 2000,
+      "eps" : 1e-4,
+      "random_seed" : None,
+      'subsequence_length' : 700,
+      "n_res": 1,
+      "initial_samples" : 300}
   if "k" in inputs:
     k = inputs["k"]
   else:
@@ -126,32 +187,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
     method = "exact" if "obs_freqs" in inputs else "freq"
     experiment.get_observers(method = method, **obs_inputs)
 
-  if size == "small":
-    default_presets = {
-      "cv_samples" : 1,
-      "max_iterations" : 1000,
-      "eps" : 1e-5,
-      'subsequence_length' : 180,
-      "initial_samples" : 200,
-      "random_seed" : None,
-      "n_res": 1,
-      "batch_size": 1}
-  elif size == "medium":
-    default_presets = {
-      "cv_samples" : 1,
-      "max_iterations" : 4000,
-      "eps" : 1e-5,
-      'subsequence_length' : 250,
-      "initial_samples" : 100}
-  elif size == "publish":
-    default_presets = {
-      "cv_samples" : 1,
-      "max_iterations" : 2000,
-      "eps" : 1e-6,
-      "random_seed" : None,
-      'subsequence_length' : 700,
-      "n_res": 1,
-      "initial_samples" : 300}
+  
 
   if inputs["prediction_type"] == "column":
     default_presets['esn_feedback'] = True
@@ -159,26 +195,43 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), cv_samples = 5, interpola
       default_presets['subsequence_length'] = inputs["subseq_len"]
     else:
       default_presets['subsequence_length'] = 75
-  print("NCORES", n_cores)
+
+  print("NCORES " + str(n_cores), 'blue')
+  #
+  njobs = int(np.floor(n_cores/(default_presets["n_res"] * default_presets["batch_size"]*default_presets["cv_samples"])) * 0.9) 
+  njobs = max(njobs, 1)
+  #assert njobs >= 1
+  #njobs = 1
+  printc("njobs" + str(njobs), 'warning')
+  est_cores = default_presets["batch_size"]  * default_presets["n_res"] * default_presets["batch_size"]  * default_presets["cv_samples"]
+  print("estimated core use " + str(est_cores), 'green')
   cv_args = {
       'bounds' : inputs["bounds"],
       'scoring_method' : 'tanh',
-      "n_jobs" : n_cores,
+      "n_jobs" : njobs,
       "verbose" : True,
       "plot" : False, 
       **default_presets
   }
+  #consider making n_jobs be a calculation based on the other shit.
+
+  assert model_type in ["random", "cyclic", "delay_line"]
+
+  def go_(input_weight_type, model_type = model_type, cv_args = cv_args):
+    experiment.RC_CV(cv_args = cv_args, model = model_type, input_weight_type = input_weight_type)
+
+
   if model_type in ["delay_line", "cyclic"]:
     cv_args = {**cv_args, "activation_function" : "sin_sq"}
 
   #Consider combining cyclic and delay line
-  if model_type == "uniform" and prediction_type == "column":
-    experiment.RC_CV(cv_args = cv_args, model = "uniform")
+  if prediction_type == "column":
+    go_("uniform")
   elif model_type in ["delay_line", "cyclic"]:
-    experiment.RC_CV(cv_args = cv_args, model = model_type, input_weight_type = "uniform")
-    experiment.RC_CV(cv_args = cv_args, model = model_type, input_weight_type = "exponential")
+    go_("uniform")
+    go_("exponential")
   else:
-    experiment.RC_CV(cv_args = cv_args, model = "random", input_weight_type = "uniform")
-    experiment.RC_CV(cv_args = cv_args, model = "random", input_weight_type = "exponential")
+    go_("uniform")
+    go_("exponential")
   
 
