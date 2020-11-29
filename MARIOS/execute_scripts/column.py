@@ -105,8 +105,8 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
     default_presets = { #cv_samples * n_res * batch size --> n_cores. what about njobs?
       "random_seed" : 123,
       "n_res" : 1,
-      "cv_samples" : 3,
-      "batch_size": 5,
+      "cv_samples" : 1,
+      "batch_size": 1,
       "eps" : 1e-4,
       'subsequence_length' : 250,
       "initial_samples" : 100,
