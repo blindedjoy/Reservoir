@@ -1070,6 +1070,18 @@ class EchoStateExperiment:
 
 		self.outfile += "/split_" + str(split)  +"/"
 
+		from datetime import datetime
+
+		# datetime object containing current date and time
+		now = datetime.now()
+		 
+		print("now =", now)
+
+		# dd/mm/YY H:M:S
+		dt_string = now.strftime("%d.%m.%Y_%H:%M:%S")
+
+		self.outfile += dt_string + "__"
+
 		if self.prediction_type == "column":
 			self.outfile += "column_"
 		elif self.prediction_type == "block":

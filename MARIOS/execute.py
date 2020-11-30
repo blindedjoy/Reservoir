@@ -118,7 +118,7 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
 
       set_specific_args = {"prediction_type": "column"}
       experiment_set = [
-                        #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 1, "subseq_len" : 3},
+                        {'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 1, "subseq_len" : 3},
                         {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 1, "subseq_len" : subseq_len},
                         {'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 1, "subseq_len" : subseq_len},
                         #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 10, "subseq_len" : 3},
@@ -171,7 +171,7 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
               'noise' :          (-5, -0.5),
               'llambda' :        (-5, 0),
               'llambda2' :       (-5, 0), 
-              'connectivity':    (-5, 0),       # 0.5888436553555889, 
+              'connectivity':    (-4, 0),       # 0.5888436553555889, 
               'n_nodes':         1000,          #(100, 1500),
               'spectral_radius': (0.001, 0.999),
               'regularization':  (-3, 4),#(-12, 1),
@@ -241,10 +241,9 @@ def printc(string_, color_) :
 if __name__ == '__main__':
   start = timeit.default_timer()
   printc("Total cpus available: " + str(ncpus), 'green')
-  #print("bcolors.WARNING Total cpus available: " + str(ncpus))
   printc("RUNNING EXPERIMENT " + str(experiment_specification), 'warning')
   
-  test(exper_type = "column", size = "medium", reservoir_type = "random", input_weight_type = "uniform", run_lite = False)
+  test(exper_type = "column", size = "small", reservoir_type = "random", input_weight_type = "uniform", run_lite = True)
 
   stop = timeit.default_timer()
   print('Time: ', stop - start) 

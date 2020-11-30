@@ -25,6 +25,10 @@ colorz = {
 def printc(string_, color_) :
   print(colorz[color_] + string_ + colorz["endc"] )
 
+from scipy.sparse import csc_matrix
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import eigs
+import time
 
 
 class EchoStateNetwork:
@@ -179,8 +183,8 @@ class EchoStateNetwork:
         if not self.dual_lambda:
             
             exp_np = get_exp_w_set( self.llambda, self.distance_np)
-            white_Noise = random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, exp_np.shape[0]))
-            exp_np = exp_np + white_Noise
+            #white_Noise = random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, exp_np.shape[0]))
+            #exp_np = exp_np + white_Noise
 
             if self.llambda < 10 ** (-4):
                 exp_np = random_state.uniform(-1, 1, size=(exp_np.shape))
@@ -191,8 +195,8 @@ class EchoStateNetwork:
             
             exp_np  = list(exp_np2) + list(exp_np1)
             exp_np = np.array(exp_np)
-            white_Noise = random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, exp_np.shape[0]))
-            exp_np = exp_np + white_Noise
+            #white_Noise = random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, exp_np.shape[0]))
+            #exp_np = exp_np + white_Noise
 
             nn = exp_np1.shape[0]
 
@@ -295,58 +299,75 @@ class EchoStateNetwork:
     def generate_reservoir(self, obs_idx = None, targ_idx = None, load_failed = None):
         """Generates random reservoir from parameters set at initialization."""
         # Initialize new random state
+        start = time.time()
         random_state = np.random.RandomState(self.seed)
-
-    
-        assert type(load_failed) == type(None)
+        #assert type(load_failed) == type(None)
         # Set weights and sparsity randomly
         max_tries = 1000  # Will usually finish on the first iteration
         n = self.n_nodes
 
-
+        #if the size of the reservoir has changed, reload it. RENAME THE VARIABLE
+        if self.reservoir:
+            if self.reservoir.n_nodes != self.n_nodes:
+                load_failed = 1
+        
 
         for i in range(max_tries):
-            if load_failed == 1 or type(self.reservoir) == type(None):
-                accept = random_state.uniform(size = (n, n)) 
+
+            #only initialize the reservoir and connectivity matrix if we have to for speed in esn_cv.
+            if not self.reservoir:
+
                 self.weights = random_state.uniform( -1., 1., size = (n, n))
-                pre_accept = deepcopy(accept)
-                pre_weights = deepcopy(self.weights)
-                save_res = True
+                accept = csc_matrix(np.random.uniform(size = (n, n))  < self.connectivity)
+
+            elif load_failed == 1:
+                if i > 20:
+                    print("CONNECTIONS FAILED")
+                    accept = csc_matrix(np.random.uniform(size = (n, n))  < self.connectivity)
+
+                self.weights = random_state.uniform( -1., 1., size = (n, n))
+                
             else:
                 #print("LOADING MATRIX", load_failed)
-                self.weights = self.reservoir["reservoir"]
-                accept  = self.reservoir["accept"]
-                save_res = False
+                self.weights = self.reservoir.reservoir_pre_weights.copy()
+                accept = csr_matrix(self.reservoir.accept < self.connectivity)
 
-            self.weights *= (accept < self.connectivity)
 
-            max_eigenvalue = np.abs( np.linalg.eigvals( self.weights)).max()
+            self.weights *= accept
+ 
+            try:
+                #sparse = csr_matrix()
+                eigs_list = eigs(self.weights, k = 1, which  = 'LM', return_eigenvectors = False)
+
+                max_eigenvalue = np.abs(eigs_list)[0]
+            except:
+                max_eigenvalue = np.abs(np.linalg.eigvals(self.weights)).max()
 
             if max_eigenvalue > 0:
-                if save_res:
-                    self.reservoir_output = {"reservoir": pre_weights,
-                                                    "accept" : pre_accept}
+                
                 break
             else:
-                load_failed = 1
-                #print("Load FAILED, now == 1", load_failed == 1, max_eigenvalue)
+                #print("MAX FAIL")
+                if i == 0:
+                    load_failed = 1
+                    printc("Loaded Reservoir is Nilpotent (max_eigenvalue =" + str(max_eigenvalue) + "), connectivity =" + str(round(self.connectivity,8))  + '...regenerating', 'fail')
                 if i == max_tries - 1:
                 
                     raise ValueError('Nilpotent reservoirs are not allowed. Increase connectivity and/or number of nodes.')
-        
-        
-            # Set spectral radius of weight matrix
-        
-            
 
-        self.weights *= self.spectral_radius / max_eigenvalue
+        # Set spectral radius of weight matrix
+        self.weights = csc_matrix(self.weights*  (self.spectral_radius / max_eigenvalue ))#csc_matrix(self.weights)
 
-        # Default state #CAN BE DEEP-COPIED
-        self.state = np.zeros((1, self.n_nodes), dtype=np.float32)
-        #self.init_state = self.state.copy()
+        if load_failed == 1 or not self.reservoir:
+            # Default state #CAN BE DEEP-COPIED
+            self.state = np.zeros((1, self.n_nodes), dtype=np.float32)
+        else:
+            #print("loading state", self.reservoir.state[0:5])
+            self.state = self.reservoir.state
 
         # Set out to none to indicate untrained ESN
         self.out_weights = None
+        #printc('TIME TO gen_res: ' + str(time.time() - start), 'green')
 
     def generate_delay_line(self):
         """Generates the simple delay line reservoir from ?parameters? set at initialization."""
@@ -460,6 +481,7 @@ class EchoStateNetwork:
 
         # Syntactic sugar
         return tuple(transformed) if len(transformed) > 1 else transformed[0]
+
     def return_in_weights(self):
         in_weights_copy = self.input_weights_from_cv
         return in_weights_copy
@@ -488,6 +510,7 @@ class EchoStateNetwork:
             for diagnostic purposes  (e.g. vizualization of activations).
 
         """
+        start = time.time()
         #verbose = True
         if x is None and not self.feedback:
             self.already_normalized = True
@@ -521,7 +544,8 @@ class EchoStateNetwork:
         if not x is None:
             inputs = np.hstack((inputs, x[start_index:]))  # Add data inputs
 
-        if type(self.input_weights_from_cv) == type(None):
+        if not self.reservoir:
+            print("BUILDING IN WEIGHTS")
                         
             if self.input_weight_type in ["exponential", "uniform"]:
 
@@ -530,14 +554,13 @@ class EchoStateNetwork:
                     self.get_exp_weights()
                     self.in_weights = self.input_scaling * self.exp_weights
                 else:
-                    #print("unif")
-                    if x is None:
-                        self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, y.shape[1] - 1))
-                    else:
-                        self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, x.shape[1]))
+                    n_inputs = (y.shape[1] - 1) if x is None else x.shape[1]
+                    self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, n_inputs))
 
                 
                 uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+                if self.noise:
+                    self.in_weights += random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, y.shape[1] - 1))
                 self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
 
             elif self.input_weight_type == "cyclic":
@@ -555,7 +578,8 @@ class EchoStateNetwork:
                 self.input_weights_from_cv = self.in_weights
             #return_in_weights()
         else:
-            self.in_weights = self.input_weights_from_cv
+            #print("loading in_weights from cv.")
+            self.in_weights = self.reservoir.in_weights + self.noise * self.reservoir.noise_z
 
 
         if self.model_type == "delay_line":
@@ -613,29 +637,34 @@ class EchoStateNetwork:
             #print("last_y", y.shape)
             #print("y[-1]", y[-1,:].shape)
 
-            inputs = np.hstack((inputs ,last_y )) # Add teacher forced signal (equivalent to y(t-1) as input)
+            inputs = np.hstack((inputs, last_y )) # Add teacher forced signal (equivalent to y(t-1) as input)
             #print("inputs", inputs.shape)
             feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, 1))
             #feedback_weights = self.feedback_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, inputs.shape[1] - 1))
             self.in_weights = np.hstack((self.in_weights, feedback_weights)).reshape(self.n_nodes, -1)
+            #print("in_weights", self.in_weights.shape)
 
         # Train iteratively
         for t in range(inputs.shape[0]):
-            if verbose:
-                print("in_weights: "  + str(self.in_weights.shape))
-                print("inputs[t].T: " + str(inputs[t].T.shape))
-            
-            res = self.in_weights @ inputs[t].T
-            #
 
-            update = self.activation_function(self.in_weights @ inputs[t].T + self.weights @ current_state)
-            if verbose:
-                
+            #for debugging:
+            #if verbose:
+            #    print("in_weights: "  + str(self.in_weights.shape))
+            #    print("inputs[t].T: " + str(inputs[t].T.shape))
+            
+            #res = self.in_weights @ inputs[t].T
+            
+            #for debugging
+            update = self.activation_function(self.in_weights @ inputs[t].T + self.weights.dot(current_state))
+            
+            if verbose:    
                 print("res: " + str(res.shape))
                 print("update: " + str(update.shape))
-            #print("update: " + str(update.shape))
+            
             current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state  # Leaking separate
             self.state[t] = current_state
+
+        #printc('TIME TO TRAIN: ' + str(time.time() - start), 'green')
 
         # Concatenate inputs with node states
         complete_data = np.hstack((inputs, self.state))
@@ -693,9 +722,9 @@ class EchoStateNetwork:
         
         if steps_ahead is None:
             y_predicted = self.predict(n_steps = y.shape[0], x=x, y_start=y_start)
-            printc("predicting "  + str(y.shape[0]) + "steps", 'blue')
+            #printc("predicting "  + str(y.shape[0]) + "steps", 'blue')
         else:
-            printc("predicting "  + str(y.shape[0]) + "steps", 'blue')
+            #printc("predicting "  + str(y.shape[0]) + "steps", 'blue')
             y_predicted = self.predict_stepwise(y, x, steps_ahead=steps_ahead, y_start=y_start)[:final_t,:]
 
         # Return error

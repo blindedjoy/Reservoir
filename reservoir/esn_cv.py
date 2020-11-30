@@ -29,6 +29,68 @@ colorz = {
 def printc(string_, color_) :
   print(colorz[color_] + string_ + colorz["endc"] )
 
+#from scipy.sparse import csr_matrix
+#>>> A = csr_matrix([[1, 2, 0], [0, 0, 3], [4, 0, 5]])
+
+class ReservoirBuildingBlocks:
+    """ An object that allows us to save reservoir components (independent of hyper-parameters) for faster optimization.
+    Parameters:
+
+    """
+    def __init__(self, model_type, input_weight_type, random_seed, n_nodes, n_inputs = None, Distance_matrix = None):
+        print("INITIALING RESERVOIR")
+        self.input_weight_type = input_weight_type
+        self.model_type = model_type
+        self.n_inputs = n_inputs
+        self.n_nodes = n_nodes
+        self.seed = random_seed
+        self.state = np.zeros((1, self.n_nodes), dtype=np.float32)
+        
+        if model_type == "random":
+            self.gen_ran_res_params()
+
+    def gen_ran_res_params(self):
+        random_state = np.random.RandomState(self.seed)
+        n = self.n_nodes
+        self.accept = random_state.uniform(size = (n, n)) 
+        self.reservoir_pre_weights = random_state.uniform( -1., 1., size = (n, n))
+
+    def gen_in_weights(self):
+
+        random_state = np.random.RandomState(self.seed)
+        in_w_shape = (self.n_nodes, self.n_inputs)
+
+        #at the moment all input weight matrices use uniform bias.
+        uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+
+        #weights
+        if self.input_weight_type == "uniform":
+            
+            self.in_weights = random_state.uniform(-1, 1, size= in_w_shape)
+            
+        #add bias
+        self.in_weights = np.hstack((uniform_bias, self.in_weights))
+
+        #regularization
+        self.noise_z = random_state.normal(loc = 0, scale = 1, size = (self.n_nodes, self.n_inputs + 1))
+
+        #elif self.input_weight_type == "exponential":
+    """   #self.reservoir = {"reservoir" : weights, "accept" : accept}
+    if self.input_weight_type in ["exponential", "uniform"]:
+
+                if self.model_type == "exponential":
+                    #print("EXP")
+                    self.get_exp_weights()
+                    self.in_weights = self.input_scaling * self.exp_weights
+                else:
+                    n_inputs = (y.shape[1] - 1) if x is None else x.shape[1]
+                    self.in_weights = self.input_scaling * random_state.uniform(-1, 1, size=(self.n_nodes, n_inputs))
+
+                
+                uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+                self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
+    """
+
 
 
 
@@ -95,7 +157,7 @@ class EchoStateNetworkCV:
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
                  model_type = "random", activation_function = "tanh", input_weight_type = "uniform", 
-                 Distance_matrix = None, n_res = 1, count = 0, reservoir = None):
+                 Distance_matrix = None, n_res = 1, count = None, reservoir = None):
         
         # Bookkeeping
         self.bounds = OrderedDict(bounds)  # Fix order
@@ -104,10 +166,10 @@ class EchoStateNetworkCV:
         self.fixed_parameters = []
         self.n_res = n_res
         #self.pure_prediction = pure_prediction
+        if esn_feedback:
+            print("FEEDBACK", esn_feedback, 'warning')
 
-        print("FEEDBACK", esn_feedback)
-        print("FEEDBACK", esn_feedback)
-        self.count = count
+        self.count_ = count
 
         # Store settings
         self.model = model
@@ -147,6 +209,12 @@ class EchoStateNetworkCV:
 
         self.activation_function = activation_function
         self.input_weight_type = input_weight_type
+
+        if self.seed != None and type(self.bounds["n_nodes"]) == int:
+            self.reservoir_matrices = ReservoirBuildingBlocks(model_type = self.model_type, 
+                                                              random_seed = self.seed,
+                                                              n_nodes = self.bounds["n_nodes"],
+                                                              input_weight_type = self.input_weight_type)
 
     def normalize_bounds(self, bounds):
         """Makes sure all bounds feeded into GPyOpt are scaled to the domain [0, 1],
@@ -332,6 +400,11 @@ class EchoStateNetworkCV:
         # Checks
         self.validate_data(y, x, self.verbose)
 
+        #generate the input weights for reuse. This will later to upgraded so that we can test cominations of reservoirs and input weights for robustness.
+        #however, with the random state the same network and input weight matrices were being constantly recreated, leading to computational redundancy.
+        self.reservoir_matrices.n_inputs = (y.shape[1] - 1) if not x else x.shape[1]
+        self.reservoir_matrices.gen_in_weights()
+
         # Initialize new random state
         #self.random_state = np.random.RandomState(self.seed + 2)
 
@@ -371,10 +444,11 @@ class EchoStateNetworkCV:
 
         # Pick evaluator
         if self.batch_size == 1:
-            evaluator = GPyOpt.core.evaluators.sequential.Sequential(acquisition=acquisition,
-                                                                     batch_size=self.batch_size)
-            #evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition=acquisition,
+            
+            #evaluator = GPyOpt.core.evaluators.sequential.Sequential(acquisition=acquisition,
             #                                                         batch_size=self.batch_size)
+            evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition=acquisition,
+                                                                     batch_size=self.batch_size)
         else:
             evaluator = GPyOpt.core.evaluators.RandomBatch(acquisition=acquisition,
                                                            batch_size=self.batch_size)
@@ -429,6 +503,7 @@ class EchoStateNetworkCV:
         # Return best parameters
         return best_arguments
 
+
     def objective_function(self, parameters, train_y, validate_y, train_x=None, validate_x=None, random_seed=None):
         """Returns selected error metric on validation set.
 
@@ -453,28 +528,27 @@ class EchoStateNetworkCV:
         """
         # Get arguments
         arguments = self.construct_arguments(parameters)
-        #print("args" + str(arguments))
-        #if pure_prediction = True:
 
-        #if not random_seed:
-        #    random_seed = np.random.randint(0, 100000)
-        if random_seed:
 
-            if self.count <=0:
-                print("initializing reservoir")
-            else:
-                rez = {"reservoir" : self.reservoir, "input_weights_from_cv" : self.in_weights}
-                arguments = {**arguments, **rez}
+        try:
+            res_args  = {"reservoir" : self.reservoir_matrices}
+            arguments = {**arguments, **res_args}
+        except:
+            print("failed to load")
+
 
         # Build network
         esn = self.model(**arguments, exponential = self.exp_weights, activation_function = self.activation_function,
                 obs_idx = self.obs_index, resp_idx = self.target_index, plot = False, model_type = self.model_type,
                 input_weight_type = self.input_weight_type, Distance_matrix = self.Distance_matrix,
                 random_seed = random_seed) 
-        if self.count <=0:
-            self.reservoir = esn.return_reservoir()
-            self.in_weights = esn.return_in_weights()
 
+        #if random_seed:
+        #    print("initializing reservoir")
+        #    print(self.count_)
+        #    self.reservoir = esn.return_reservoir()
+        #    self.in_weights = esn.return_in_weights()
+        
         # Train
         esn.train(x=train_x, y=train_y, burn_in=self.esn_burn_in)
 
@@ -608,9 +682,9 @@ class EchoStateNetworkCV:
         objective_inputs = self.build_unq_dict_lst(start_indices, random_seeds)
        
         # Get samples
-        if self.count < 0:
-            results = self.define_tr_val(objective_inputs[0])
-        elif (self.cv_samples * self.n_res) > 1:
+        #if not self.count_:
+        #    results = self.define_tr_val(objective_inputs[0])
+        if (self.cv_samples * self.n_res) > 1:
             Pool = multiprocessing.Pool(self.cv_samples * self.n_res)
 
             #get the asynch object:
@@ -631,12 +705,22 @@ class EchoStateNetworkCV:
         #mean_score = self.scores.mean()
         mean_score = self.scores.mean()
         log_mu = round(np.log10(mean_score),4)
-        std_score = np.log10(self.scores.std())
-        score_ = mean_score - 0.1 * std_score
-        log_score =  round(np.log10(score_),4)
+        
+        #score_ = mean_score #- 0.1 * std_score
+        
+        score_str = 'iter ' + str(self.count_) +': Score ' + str(round(mean_score, 4)) +', log(\u03BC):' + str(log_mu) 
+        
+        if scores.shape[0] > 1:
+            
+            std_score = np.log10(self.scores.std())
 
-        score_str = 'iter ' + str(self.count) + ': Score ' + str(round(score_,4)) +', \u03BC:' + str(log_mu) + ", \u03C3: " + str(round(std_score, 4)) + " seed " + str(random_seeds) + " n " + str(self.scores.shape[0])
-        self.count+=1
+            score_str += ", \u03C3: " + str(round(std_score, 4))
+        score_str += " seed " + str(random_seeds) + " n " + str(self.scores.shape[0])
+
+        if not self.count_:
+            self.count_ = 1
+        else:
+            self.count_ +=1
         if log_mu > -0.5:
             printc(score_str, "fail")
         elif log_mu  > -0.8:
