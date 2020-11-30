@@ -34,6 +34,74 @@ def build_string(message, *values, sep = ""):
     else:
         return message.join(str(x) + sep for x in values)
 
+
+
+
+
+class ExperData:
+    """
+    Consider making this do the splitting automatically for based on the indices.
+    """
+    def __init__(self, dataset):
+        # Observers_Train, Observers_Test, Target_Train, Target_Test,
+        self.A_ = A
+        self.datasets = {}
+
+    def add_data(self, **kwargs):
+        assert name in ["Target_Tr", "Target_Te", "Obs_Tr", "Obs_Te"]
+        self.datasets["name"] = ExperimentDataSet(**kwargs)
+
+class ExperDataSet(ExperData):
+
+    """
+    Consider renaming this.
+    Parameters:
+        time_indices are the vertical indices that correspond to the time steps of the data.
+        y_indices correspond to the variable perpendicular to time. For example, the frequencies
+    """
+    def __init__(self, time_indices, y_indices, name):
+        self.time_indices_ = time_indices
+        self.y_indices_ = y_indices
+        #
+        #self.name_ = name
+        self.data = self.A_[self.time_indices_, self.y_indices_]
+
+class Exper_Result:
+    """
+    The base class for an experiment result. This will be more general than RC_Result, containing things like the data.
+    Parameters:
+        reservoir: a sparse matrix representation of the reservoir.
+        data: a numpy array (A) containing the entirity of the dataset.
+        
+    """
+    def __init__(self, data, ,  reservoir):
+        self.data = data
+        self.reservoir = reservoir
+
+    def display_experiment(self, log = True):
+        pass
+
+class RC_Result(Exper_Result):
+    """
+    This class is the result of a specific RC model.
+    """
+
+    def __init__(self, prediction, model_type, in_weight_type, experiment_type):
+        self.prediction_ = prediction
+        self.model_type_ = model_type
+        self.in_weight_type_ = in_weight_type
+        assert experiment_type in ["column", "block"]
+        self.experiment_type_ = experiment_type
+
+    def plot_input_weights(self):
+
+        pass
+
+    
+
+
+
+
 class EchoStateAnalysis:
     """ #Spectrogram analysis class for analyzing the output of neural networks.
     

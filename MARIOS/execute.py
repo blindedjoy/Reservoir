@@ -243,7 +243,7 @@ if __name__ == '__main__':
   printc("Total cpus available: " + str(ncpus), 'green')
   printc("RUNNING EXPERIMENT " + str(experiment_specification), 'warning')
   
-  test(exper_type = "column", size = "small", reservoir_type = "random", input_weight_type = "uniform", run_lite = True)
+  test(exper_type = "column", size = "small", reservoir_type = "random", input_weight_type = "uniform", run_lite = False)
 
   stop = timeit.default_timer()
   print('Time: ', stop - start) 

@@ -35,15 +35,23 @@ def printc(string_, color_) :
 class ReservoirBuildingBlocks:
     """ An object that allows us to save reservoir components (independent of hyper-parameters) for faster optimization.
     Parameters:
+        model_type: either random, cyclic or delay line
+        input_weight_type: exponential or uniform
+        random_seed: the random seed to set the reservoir
+        n_nodes: the nodes of the network
+        n_inputs: the number of observers in the case of a block experiment, the size of the output in the case of a pure prediction where teacher forcing is used.
 
     """
     def __init__(self, model_type, input_weight_type, random_seed, n_nodes, n_inputs = None, Distance_matrix = None):
         print("INITIALING RESERVOIR")
-        self.input_weight_type = input_weight_type
-        self.model_type = model_type
-        self.n_inputs = n_inputs
-        self.n_nodes = n_nodes
-        self.seed = random_seed
+
+        #initialize attributes
+        self.input_weight_type_ = input_weight_type
+        self.model_type_ = model_type
+        self.n_inputs_ = n_inputs
+        self.n_nodes_ = n_nodes
+        self.seed_ = random_seed
+
         self.state = np.zeros((1, self.n_nodes), dtype=np.float32)
         
         if model_type == "random":
@@ -51,17 +59,19 @@ class ReservoirBuildingBlocks:
 
     def gen_ran_res_params(self):
         random_state = np.random.RandomState(self.seed)
-        n = self.n_nodes
+        n = self.n_nodes_
         self.accept = random_state.uniform(size = (n, n)) 
         self.reservoir_pre_weights = random_state.uniform( -1., 1., size = (n, n))
 
     def gen_in_weights(self):
 
         random_state = np.random.RandomState(self.seed)
-        in_w_shape = (self.n_nodes, self.n_inputs)
+        
+        n, m = self.n_nodes_, self.n_inputs_
+        in_w_shape = (n, m)
 
         #at the moment all input weight matrices use uniform bias.
-        uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
+        uniform_bias = random_state.uniform(-1, 1, size = (n, 1))
 
         #weights
         if self.input_weight_type == "uniform":
@@ -72,7 +82,7 @@ class ReservoirBuildingBlocks:
         self.in_weights = np.hstack((uniform_bias, self.in_weights))
 
         #regularization
-        self.noise_z = random_state.normal(loc = 0, scale = 1, size = (self.n_nodes, self.n_inputs + 1))
+        self.noise_z = random_state.normal(loc = 0, scale = 1, size = (n, m + 1))
 
         #elif self.input_weight_type == "exponential":
     """   #self.reservoir = {"reservoir" : weights, "accept" : accept}
@@ -90,6 +100,7 @@ class ReservoirBuildingBlocks:
                 uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
                 self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
     """
+    
 
 
 
@@ -153,7 +164,7 @@ class EchoStateNetworkCV:
 
     def __init__(self, bounds, subsequence_length, model=EchoStateNetwork, eps=1e-8, initial_samples=50,
                  validate_fraction=0.2, steps_ahead=1, max_iterations=1000, batch_size=1, cv_samples=1,
-                 scoring_method='nmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
+                 scoring_method='nrmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
                  max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
                  model_type = "random", activation_function = "tanh", input_weight_type = "uniform", 

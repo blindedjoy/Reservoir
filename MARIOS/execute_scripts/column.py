@@ -93,7 +93,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
 
   if size == "small":
     default_presets = {
-      "random_seed" : 125,
+      "random_seed" : 126,
       "n_res" : 1,#2,
       "cv_samples" : 1,#2,
       "batch_size": 1,#4,

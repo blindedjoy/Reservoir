@@ -687,7 +687,7 @@ class EchoStateNetwork:
         # Return all data for computation or visualization purposes (Note: these are normalized)
         return complete_data, (y[1:,:] if self.feedback else y), burn_in
 
-    def test(self, y, x=None, y_start=None, steps_ahead=None, scoring_method='mse', alpha=1.):
+    def test(self, y, x=None, y_start=None, steps_ahead=None, scoring_method='nmse', alpha=1.):
         """Tests and scores against known output.
 
         Parameters
@@ -955,7 +955,7 @@ class EchoStateNetwork:
         # Return predictions
         return y_predicted
 
-    def error(self, predicted, target, method='mse', alpha=1.):
+    def error(self, predicted, target, method='nmse', alpha=1.):
         """Evaluates the error between predictions and target values.
 
         Parameters
