@@ -48,8 +48,8 @@ class ExperData:
         self.datasets = {}
 
     def add_data(self, **kwargs):
-        assert name in ["Target_Tr", "Target_Te", "Obs_Tr", "Obs_Te"]
-        self.datasets["name"] = ExperimentDataSet(**kwargs)
+        
+        self.set["name"] = ExperimentDataSet(**kwargs)
 
 class ExperDataSet(ExperData):
 
@@ -60,6 +60,7 @@ class ExperDataSet(ExperData):
         y_indices correspond to the variable perpendicular to time. For example, the frequencies
     """
     def __init__(self, time_indices, y_indices, name):
+        assert name in ["Target_Tr", "Target_Te", "Obs_Tr", "Obs_Te"]
         self.time_indices_ = time_indices
         self.y_indices_ = y_indices
         #
@@ -74,7 +75,7 @@ class Exper_Result:
         data: a numpy array (A) containing the entirity of the dataset.
         
     """
-    def __init__(self, data, ,  reservoir):
+    def __init__(self, data, reservoir):
         self.data = data
         self.reservoir = reservoir
 

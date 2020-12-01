@@ -25,7 +25,10 @@ colorz = {
    'bold' :'\033[1m',
    "underline" : '\033[4m'
 }
-  
+
+from scipy.sparse import csc_matrix
+from scipy.sparse import csr_matrix
+
 def printc(string_, color_) :
   print(colorz[color_] + string_ + colorz["endc"] )
 
@@ -43,7 +46,7 @@ class ReservoirBuildingBlocks:
 
     """
     def __init__(self, model_type, input_weight_type, random_seed, n_nodes, n_inputs = None, Distance_matrix = None):
-        print("INITIALING RESERVOIR")
+        #print("INITIALING RESERVOIR")
 
         #initialize attributes
         self.input_weight_type_ = input_weight_type
@@ -52,31 +55,53 @@ class ReservoirBuildingBlocks:
         self.n_nodes_ = n_nodes
         self.seed_ = random_seed
 
-        self.state = np.zeros((1, self.n_nodes), dtype=np.float32)
+        self.state = np.zeros((1, self.n_nodes_), dtype=np.float32)
         
         if model_type == "random":
             self.gen_ran_res_params()
+            self.gen_sparse_accept_dict()
 
     def gen_ran_res_params(self):
-        random_state = np.random.RandomState(self.seed)
+        random_state = np.random.RandomState(self.seed_)
         n = self.n_nodes_
         self.accept = random_state.uniform(size = (n, n)) 
         self.reservoir_pre_weights = random_state.uniform( -1., 1., size = (n, n))
 
+    def gen_sparse_accept_dict(self, precision = 2000):
+        """
+        Later change this so that you put in the real search bounds.
+        This will approximate the search for the sparcity hyper-parameter, which will dramatically speed up training of the network.
+        Later we can add in a final stage where the network does approximate sparcity to a point, then changes to computer precision search.
+        """
+        self.sparse_dict = {}
+        printc()
+        for connectivity in np.logspace(0, -5, precision):
+            self.sparse_dict[connectivity] = csc_matrix((self.accept < connectivity ) * self.reservoir_pre_weights)
+        self.sparse_keys_ = np.array(sorted(self.sparse_dict))
+
+    def get_approx_preRes(self, connectivity_threshold):
+        """
+        You can use the matrix returned instead of...
+        """
+        key_ =  self.sparse_keys_[self.sparse_keys_ > connectivity_threshold][0]
+        val =  self.sparse_dict[key_].copy()
+        return val
+
     def gen_in_weights(self):
 
-        random_state = np.random.RandomState(self.seed)
+        random_state = np.random.RandomState(self.seed_)
         
         n, m = self.n_nodes_, self.n_inputs_
-        in_w_shape = (n, m)
+        in_w_shape_ = (n, m)
+        print("n_inputs", m)
 
         #at the moment all input weight matrices use uniform bias.
         uniform_bias = random_state.uniform(-1, 1, size = (n, 1))
 
         #weights
-        if self.input_weight_type == "uniform":
+        if self.input_weight_type_ == "uniform":
             
-            self.in_weights = random_state.uniform(-1, 1, size= in_w_shape)
+            self.in_weights = random_state.uniform(-1, 1, size= in_w_shape_)
             
         #add bias
         self.in_weights = np.hstack((uniform_bias, self.in_weights))
@@ -99,8 +124,64 @@ class ReservoirBuildingBlocks:
                 
                 uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
                 self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
-    """
+
+
+    sample_space = np.random.choice(np.logspace(-5, -3, 1000), size = 1000)
+def test_res_spec(connectivity): #res_pre_weights, accept, 
+    #connectivity = sample_space[np.random.choice(len(sample_space))]
     
+    reservoir_pre_weights = np.random.uniform(-1,1, size = (1000,1000))
+    accept = np.random.uniform(size = (1000,1000))
+    weights = csc_matrix((accept < connectivity) * reservoir_pre_weights)
+    try:
+        #sparse = csr_matrix()
+        eigs_list = eigs(weights, k = 1, which  = 'LM', return_eigenvectors = False,max_iter = 5000 )
+
+        max_eigenvalue = np.abs(eigs_list)[0]
+        print(max_eigenvalue)
+    except:
+        #print("Fail")
+        max_eigenvalue = np.abs(np.linalg.eigvals(weights.toarray())).max()
+
+    if max_eigenvalue == 0:
+        return [1]
+    else:
+        return [0]
+
+def test_reservoir(precision = 1000, failure_tolerance = 0.05, get_ground_rate = False):
+    
+    fails = 0
+    sparse_dict = {}
+    size = 1000 if get_ground_rate else 200
+    
+    results = []
+    sample_space = np.logspace(-5, 0, 1000)
+    for i in range(100):
+        print("round", i)
+        sample_space = np.random.choice(sample_space, size = 20)
+        Pool = multiprocessing.Pool(20)
+
+        #get the asynch object:
+        result = list(zip(*Pool.map(test_res_spec, sample_space )))
+        results += result
+
+        Pool.close()
+        Pool.join()
+    print(results)
+    print("Fail rate", np.mean(results))
+    if get_ground_rate:
+        print("predicted_failure_rate:", np.mean(results))
+    elif np.mean(results) >= failure_tolerance:
+        print("Reservoir rejected")
+    else:
+        print("Reservoir accepted")
+    
+    #sparse_keys_ = np.array(sorted(self.sparse_dict))
+
+
+
+    """
+
 
 
 
@@ -178,7 +259,7 @@ class EchoStateNetworkCV:
         self.n_res = n_res
         #self.pure_prediction = pure_prediction
         if esn_feedback:
-            print("FEEDBACK", esn_feedback, 'warning')
+            printc("FEEDBACK " + str(esn_feedback), 'warning')
 
         self.count_ = count
 
@@ -413,7 +494,7 @@ class EchoStateNetworkCV:
 
         #generate the input weights for reuse. This will later to upgraded so that we can test cominations of reservoirs and input weights for robustness.
         #however, with the random state the same network and input weight matrices were being constantly recreated, leading to computational redundancy.
-        self.reservoir_matrices.n_inputs = (y.shape[1] - 1) if not x else x.shape[1]
+        self.reservoir_matrices.n_inputs_ = (y.shape[1] - 1) if type(x) == type(None) else x.shape[1]
         self.reservoir_matrices.gen_in_weights()
 
         # Initialize new random state

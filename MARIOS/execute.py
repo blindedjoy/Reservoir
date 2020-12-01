@@ -118,7 +118,7 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
 
       set_specific_args = {"prediction_type": "column"}
       experiment_set = [
-                        {'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 1, "subseq_len" : 3},
+                        #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 1, "subseq_len" : 3},
                         {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 1, "subseq_len" : subseq_len},
                         {'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 1, "subseq_len" : subseq_len},
                         #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 10, "subseq_len" : 3},
@@ -243,7 +243,7 @@ if __name__ == '__main__':
   printc("Total cpus available: " + str(ncpus), 'green')
   printc("RUNNING EXPERIMENT " + str(experiment_specification), 'warning')
   
-  test(exper_type = "column", size = "small", reservoir_type = "random", input_weight_type = "uniform", run_lite = False)
+  test(exper_type = "column", size = "medium", reservoir_type = "random", input_weight_type = "uniform", run_lite = False)
 
   stop = timeit.default_timer()
   print('Time: ', stop - start) 

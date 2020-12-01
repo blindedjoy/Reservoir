@@ -96,20 +96,20 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
       "random_seed" : 126,
       "n_res" : 1,#2,
       "cv_samples" : 1,#2,
-      "batch_size": 1,#4,
-      "eps" : 1,
+      "batch_size": 3,#4,
+      "eps" : 1e-2,
       'subsequence_length' : 190,
-      "initial_samples" : 20,
+      "initial_samples" : 150,
       }
   elif size == "medium":
     default_presets = { #cv_samples * n_res * batch size --> n_cores. what about njobs?
       "random_seed" : 125,
       "n_res" : 1,
-      "cv_samples" : 4,
-      "batch_size": 2,
+      "cv_samples" : 1,
+      "batch_size": 3,
       "eps" : 1e-4,
       'subsequence_length' : 300,
-      "initial_samples" : 500,
+      "initial_samples" : 1000,
       "max_iterations" : 4000}
   elif size == "publish":
     default_presets = {

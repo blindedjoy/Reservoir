@@ -101,6 +101,118 @@ def printc(string_, color_) :
   print(colorz[color_] + string_ + colorz["endc"] )
 
 
+        
+class ExperData:
+    """
+    Consider making this do the splitting automatically for based on the indices.
+    """
+    def __init__(self, dataset):
+        # Observers_Train, Observers_Test, Target_Train, Target_Test,
+        self.A_ = dataset
+        self.set_shapes = {}
+        self.sets = {}
+        self.n_rows, self.n_cols = self.A_.shape 
+
+    def add_data(self, time_indices, y_indices, name):
+        
+        ds = ExperDataSet(time_indices = time_indices, 
+                                       y_indices = y_indices, 
+                                       name = name,
+                                       dataset = self.A_.copy())
+        #option2:
+        #if name == "train"
+        #    self.train = ExperDataSet(...)
+        return ds
+        
+    def print_sets(self):
+        printc("dataset: shape, " + str(self.set_shapes), 'blue')
+    
+    def create_datasets(self, resp_idx, obs_idx = None, split = None, train_time_idx = None, test_time_idx = None):
+        
+        if split:
+	        train_len = int(self.n_rows * split)
+	        test_len  = self.A_.shape[0] - train_len
+
+	        #time indices
+	        if not train_time_idx:
+	            train_time_idx = list(range(train_len))
+	            
+	        if not test_time_idx:
+	            test_time_idx  = list(range(train_len, self.n_rows))
+	        assert len(train_time_idx) + len(test_time_idx) == self.A_.shape[0]
+    
+        #Target_Train
+        self.sets["Target_Tr"] = self.add_data(time_indices = train_time_idx, y_indices = resp_idx, name = "Target_Tr")
+        
+        #Target_test
+        self.sets["Target_Te"] = self.add_data(time_indices = test_time_idx, y_indices = resp_idx, name = "Target_Te")
+        
+        self.Target_Tr_, self.Target_Te_ = self.sets["Target_Tr"].data, self.sets["Target_Te"].data
+        
+        self.set_shapes = {"Target_Tr" : self.Target_Tr_.data.shape, 
+                           "Target_Te": self.Target_Te_.data.shape}
+        if obs_idx:
+            #Obs_Train
+            self.sets["Obs_Tr"] = self.add_data(time_indices = train_time_idx, y_indices = obs_idx, name = "Obs_Tr")
+
+            #Obs_test
+            self.sets["Obs_Te"] = self.add_data(time_indices = test_time_idx, y_indices = obs_idx, name = "Obs_Te")
+
+            self.Obs_Tr_, self.Obs_Te_ = self.sets["Obs_Tr"] .data, self.sets["Obs_Te"].data
+
+            self.set_shapes = {"Obs_Tr" : self.Obs_Tr_.data.shape, "Obs_Te": self.Obs_Te_.data.shape}
+
+        else:
+            self.Obs_Tr_, self.Obs_Te_ = None, None
+
+class ExperDataSet(ExperData):
+
+    """
+    Consider renaming this.
+    Parameters:
+        time_indices are the vertical indices that correspond to the time steps of the data.
+        y_indices correspond to the variable perpendicular to time. For example, the frequencies
+    """
+    def __init__(self, time_indices, y_indices, name, dataset):
+        self.time_indices_ = time_indices
+        
+        assert name in ["Target_Tr", "Target_Te", "Obs_Tr", "Obs_Te"]
+
+        self.data = dataset.copy()
+
+        #print(dataset.shape, "dataset shape")
+        #print(self.time_indices_, "time_indices")
+
+        self.data = dataset[np.array(self.time_indices_), :] 
+        
+        if y_indices:
+        	
+	        self.y_indices_ = y_indices
+	        #print(self.y_indices_, "y_indices")
+	        y_idx =  np.array(self.y_indices_)
+	        if type(y_indices) == int:
+	            self.data = self.data[:, y_idx].reshape(-1,1)
+	        else:
+	            self.data = self.data[:, y_idx]
+
+        
+        self.__shape = self.data.shape
+        
+    def print_indices(self):
+        print("time_indices:", self.time_indices_)
+        print("y_indices:", self.y_indices_)
+        
+    def print_matlab_indices(self):
+        
+        print("time_indices:", list(np.array(self.time_indices_ ) - 1))
+        print("y_indices:", list(np.array(self.y_indices_ ) - 1))
+    
+    def print_shape(self):
+        print("time_indices:", )
+        
+        
+        
+
 
 class EchoStateExperiment:
 	""" #Spectrogram class for training, testing, and splitting data for submission to reservoir nueral network code.
@@ -188,14 +300,13 @@ class EchoStateExperiment:
 						if i in self.obs_idx:
 							self.obs_idx.remove(i)
 
-					print("RESP_IDX", self.resp_idx)
-					print("OBS_IDX", self.obs_idx)
+					
 
 				if obs_hz and target_hz:
 					assert is_numeric(obs_hz), "you must enter a numeric observer frequency range"
 					assert is_numeric(target_hz), "you must enter a numeric target frequency range"
 				if not target_freqs:
-					print("great success")
+					#print("great success")
 					self.hz2idx(obs_hz = obs_hz, target_hz = target_hz)
 
 		## exact assumes you already have the obss_idx
@@ -205,8 +316,7 @@ class EchoStateExperiment:
 			for i in self.resp_idx:
 				if i in self.obs_idx:
 					self.obs_idx.remove(i)
-			#print("OBS IDX: " + str(self.obs_idx))
-			#print("RESP IDX: " + str(self.resp_idx))
+
 		
 		self.horiz_display()
 		self.k = k
@@ -518,46 +628,6 @@ class EchoStateExperiment:
 			return(freq_spec)
 		else:
 			self.targetIdx = freq_spec
-
-
-	def simple_block(self, 
-					 target_freq = 2000, 
-					 split = 0.5, 
-					 target_timeseries = None, 
-					 n_obs = None, 
-					 silent = False, 
-					 aspect = 1):
-		"""
-		This is a helper function for get_observers which is a way to simplify the block method
-		for the purposes of our research. It only accepts 3 parameters and doesn't allow for multiple blocks.
-
-		Args: 
-			#TODO
-		"""
-
-		ctr = self.key_freq_idxs[target_freq]
-		if target_timeseries:  
-			#TODO EVEN AND ODD TIMESERIES
-			target_spread = target_timeseries // 2
-			#resp_bounds is the response bounds ie the target area bounds.
-			resp_bounds = [ctr - target_spread, ctr + target_spread] 
-		else: #TODO does this part of the if-else statement actually do anything?
-			response_bounds = None
-			resp_bounds = [ctr, ctr]
-		assert n_obs, "if you want to have no observers then #TODO"
-		
-		obs_bounds  = [[resp_bounds[0] - n_obs, resp_bounds[0]],
-					   [resp_bounds[1], resp_bounds[1] + n_obs ]]
-
-		if not silent:
-			print("response bounds: " + str(resp_bounds))
-			print("observers bounds: " + str(obs_bounds))
-
-		self.bounds = {"response_bounds" : resp_bounds, "observer_bounds" : obs_bounds}
-
-		self.get_observers(method = "block", missing = ctr, split = split, aspect = aspect,
-			observer_range = self.bounds["observer_bounds"], 
-			response_range = self.bounds["response_bounds"])
 	
 	#TODO: horizontal display
 	def horiz_display(self, plot = False):
@@ -744,26 +814,6 @@ class EchoStateExperiment:
 		second = set(second)
 		return [item for item in first if item not in second]
 
-	def my_range2lst(self, response_range):
-		"""
-		This function takes on two forms: lst and lst_of_lsts
-		in the lst form, it simply takes a list [a,b] where a<b ie a numerical range, and converts that into a list
-		of all of the values contained by the range.
-		The reason we have a function at all is because of the lst_of_lsts option, where it returns multiple ranges.
-		"""
-		if type(response_range[0]) != list:
-			response_range_lst = [response_range]
-		else: 
-			response_range_lst = response_range
-		
-		lst_idx = []
-		for i, range_ in enumerate(response_range_lst):
-			range_start = range_[0]
-			range_stop  = range_[1]
-			lst_idx += np.sort( np.array( list( range( range_start, range_stop)))).tolist()
-		lst_idx = np.sort(np.array(lst_idx)).tolist()
-		return(lst_idx)
-
 	def myMSE(prediction,target):
 		return np.sqrt(np.mean((prediction.flatten() - target.flatten() )**2))
 
@@ -775,9 +825,7 @@ class EchoStateExperiment:
 					  aspect = 6,
 					  method  = "random", 
 					  num_observers = 20,
-					  observer_range = None,
 					  plot_split = False,
-					  response_range = None,
 					  split = 0.2
 					  ): 
 		"""
@@ -809,22 +857,23 @@ class EchoStateExperiment:
 		self.split  = split
 		self.method = method
 		self.aspect = aspect
+
+		experData = ExperData(self.A)
+		
 		
 		#remove the response column which we are trying to use for inpainting
 		if method == "random":
 			col_idx.remove(missing)
-			obs_idx = np.random.choice(col_idx, num_observers, replace = False)
-			response  = dataset[ : , missing].reshape(-1,1)
-			response_idx = [missing]
+			self.obs_idx = np.random.choice(col_idx, num_observers, replace = False)
+			self.resp_idx = [missing]
 			
 		elif method == "eq":
 			print("equal spacing")
 			print("NOT YET IMPLIMENTED")
 			
 		elif method == "all":
-			obs_idx = np.random.choice( col_idx, num_observers, replace = False)
-			response_idx  = diff( col_idx, obs_idx.tolist())
-			response  = dataset[ : , self.target_idx]
+			self.obs_idx = np.random.choice( col_idx, num_observers, replace = False)
+			self.resp_idx  = diff( col_idx, self.obs_idx.tolist())
 		
 		### BLOCK: this is oldschool and super-annoying: you have to specify indices.
 		elif method == "block":
@@ -832,36 +881,15 @@ class EchoStateExperiment:
 			This method either blocks observers and/or the response area.
 			"""
 			print("you selected the block method")
-			print(self.resp_idx)
-			if self.resp_idx:
-				print("assigning resp_idx")
-				response_idx = self.resp_idx
-			elif response_range == None:
-				response_idx  = [missing]
-				response	  = dataset[ : , missing].reshape( -1, 1)
-			else:
-				response_idx =  self.my_range2lst(response_range)
-				response = dataset[ : , self.target_idx].reshape( -1, len( self.target_idx))
-				
-			for resp_idx_spec in response_idx:
-				col_idx.remove( resp_idx_spec)
+
+			if not self.resp_idx:
+				self.resp_idx  = [missing]
+
+			###Cool vestigal randomization.
+			#if observer_range == None:
+			#	col_idx.remove( missing)
+			#	obs_idx = np.sort( np.random.choice( col_idx, num_observers, replace = False))
 			
-			if observer_range == None:
-				col_idx.remove( missing)
-				obs_idx = np.sort( np.random.choice( col_idx, 
-													num_observers, 
-													replace = False))
-			elif self.obs_idx:
-				obs_idx = self.obs_idx
-			else:
-				obs_idx = self.my_range2lst(observer_range)
-				
-			# check for problems with the block method:
-			union_obs_resp_set = set(obs_idx) & set(response_idx)
-			err_msg = "Error: overlap in obs_idx and response_idx \n"
-			err_msg += "overlap: " + str(list(union_obs_resp_set))
-			
-			assert union_obs_resp_set, err_msg # check if the list is empty
 
 		elif method == "freq":
 			"""
@@ -869,69 +897,54 @@ class EchoStateExperiment:
 			This method is just like simple_block but upgraded to take in only frequencies by using the helper function hz2freq which must
 			be called first.
 			"""
-			#obs_idx  = self.resp_obs_idx_dict["obs_idx"]
-			#response_idx = self.resp_obs_idx_dict["resp_idx"]
-			#assert type(obs_idx) != type(None), "oops, your observer index cannot be None, first run hz2idx helper function"
-			#assert type(response_idx) != type(None), "oops, your response index cannot be None"
+			
 			assert self.obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
 			assert self.resp_idx, "oops, your response index cannot be None"
 
-			response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
 			#response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
 
 		elif method == "exact":
 			"""
-			The newest method, the only one we care to have survive because it is not based on indices but rather desired Hz.
-			This method is just like simple_block but upgraded to take in only frequencies by using the helper function hz2freq which must
-			be called first.
+			Exact indices.
 			"""
 			
 			self.exact = True
-			if self.resp_idx:
-				#print("dataset shape" + str(dataset.shape))
-				#print("resp_idx.shape " + str(np.array(self.resp_idx).shape))
-				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
-			else:
-				response = dataset.copy()
 
-			response_idx = self.resp_idx
-			
-			if self.prediction_type == "block":
-				assert self.obs_idx, "oops, your observer index cannot be None, first run hz2idx helper function"
-				assert self.resp_idx, "oops, your response index cannot be None"
-				response = dataset[ : , self.resp_idx].reshape( -1, len( self.resp_idx))
-				response_idx = self.resp_idx
+		if self.prediction_type == "column":
+			if not k or k == 1:
+				self.obs_idx, self.resp_idx  = [], range(self.A.shape[1])
+			elif k != 1:
+				assert 1 == 0, "k is currently deactivated in the get_observers function."
+			#else:
+			#	self.obs_idx, self.resp_idx  = [], range(0, self.A.shape[1], k)
 
-			elif self.prediction_type == "column":
-				if not k:
-					self.obs_idx, self.resp_idx  = [], range(self.A.shape[1])
-				else:
-					self.obs_idx, self.resp_idx  = [], range(self.A.shape[1])
-				self.target_kHz = "all"
-				self.obs_kHz	= 0.0
+			self.target_kHz = "all"
+			self.obs_kHz	= 0.0	
 
 
-		assert method in  ["freq", "exact"], "at this time only use the 'freq' method for cluster, \
-												  'exact' for analysis"
+		assert method in ["freq", "exact"], "at this time only use the 'freq' method for cluster, 'exact' for analysis"
 
 		if self.prediction_type != "column":
+
 			# PARTITION THE DATA
-			observers = dataset[ : , self.obs_idx]
-			self.Train, self.Test = observers[ :train_len, : ], observers[ train_len:, : ]
-			self.xTr, self.xTe = response[ :train_len, : ], response[ train_len:, : ]
-
-
+			print("split", split)
+			experData.create_datasets(resp_idx = self.resp_idx, obs_idx = self.obs_idx, split = split)
+			#self.Train, self.Test = experData.Obs_Tr, experData.Obs_Te #observers[ :train_len, : ], observers[ train_len:, : ]
+			#self.xTr, self.xTe    = experData.Target_Tr, experData.Target_Te #response[ :train_len, : ], response[ train_len:, : ]
+		else:
+			experData.create_datasets(resp_idx = self.resp_idx,
+									  train_time_idx = self.train_time_idx, 
+									  test_time_idx = self.test_time_idx)
+			
+		cool_k = """
 		elif self.prediction_type == "column":
 			#no observers so assign empty arrays
-			obs_arrs = [np.array([[]]) for i in [1, 2, 3]]
-			observers, observers_tr, observers_te = obs_arrs
-			A_shape_0 = self.A.shape[0]
+			
 
-			self.obs_idx = []
-			self.xTr = dataset[ self.train_time_idx, : ]
-			self.xTe = dataset[ self.test_time_idx , : ]
-			self.Train, self.Test = np.ones(self.xTr.shape), np.ones(self.xTe.shape)
+			#self.xTr = dataset[ self.train_time_idx, : ]
+			#self.xTe = dataset[ self.test_time_idx , : ]
 
+			
 			if k: # calculating 1 in k observers:
 				n_obs = A_shape_0 // k
 
@@ -941,16 +954,16 @@ class EchoStateExperiment:
 
 				#we are slimming down the inputs to reduce computational complexity.
 				self.Train = self.Train[:, keep_index]
-				self.Test  = self.Test[:, keep_index]
+				self.Test  = self.Test[:, keep_index]"""
 				
+		self.Train, self.Test = experData.Obs_Tr_, experData.Obs_Te_ 
+		self.xTr, self.xTe    = experData.Target_Tr_, experData.Target_Te_
 
-			#print("response_te shape: " + str(response_te.shape))
-			train_len = len(self.train_time_idx)
-			test_len = len(self.test_time_idx)
-		#Shape([self.Train, "Train Region Train/Observers"])
-		#Shape([self.Test, "Test Region Train/Observers"])
-		#Shape([self.xTr, "Train Region Target"])
-		#Shape([self.xTe, "Test Region Target"])
+		experData.print_sets()
+		
+		#print("RESP IDX", self.resp_idx)
+		#print("OBS IDX", self.obs_idx)
+
 		### Visualize the train test split and the observers
 		if plot_split:
 			red, yellow, blue, black = [255, 0, 0], [255, 255, 0], [0, 255, 255], [0, 0, 0]
@@ -1027,38 +1040,8 @@ class EchoStateExperiment:
 			
 			##################################### END plots
 			
-		#self.dat = {"obs_tr"  : self.Train, 
-		#			"obs_te"  : self.Test,
-		#			"resp_tr" : response_tr,
-		#			"resp_te" : response_te,
-		#			"obs_idx" : self.obs_idx,
-		#			"resp_idx" : self.resp_idx}
-
-		#self.Train, self.Test = observers_tr, observers_te
-		#self.xTr, self.xTe = response_tr, response_te
-		
-		
-
 
 		self.runInterpolation(k = k)
-
-		# print statements:
-		if self.verbose:
-			print_lst =  [(observers_tr, "X target"), (observers_te, "X test")]
-			print_lst += [(response_tr, "response train"), (response_te, "response test")]
-				
-			for i in print_lst:
-				Shape(i)
-			#print("total observers: " + str(len(self.dat["obs_idx"])))
-			#print("total targets: " + str(len(self.dat["resp_idx"])))
-		
-			if method != "freq":
-				print("observer_range: " + str(observer_range))
-				if not response_idx:
-					print("target index: " + str(missing))
-				else:
-					print("response range: " + str(response_range))
-		
 
 		#assert self.xTr.shape[1] == self.xTe.shape[1], "something is broken, xTr and xTe should have the same column dimension"
 		
@@ -1075,7 +1058,7 @@ class EchoStateExperiment:
 		# datetime object containing current date and time
 		now = datetime.now()
 		 
-		print("now =", now)
+		#print("now =", now)
 
 		# dd/mm/YY H:M:S
 		dt_string = now.strftime("%d.%m.%Y_%H:%M:%S")
@@ -1218,7 +1201,7 @@ class EchoStateExperiment:
 		"""
 		self.model = model
 		self.input_weight_type = input_weight_type
-		print("." + self.model + ".")
+
 		assert self.model in ["random", "delay_line", "cyclic"], self.model + " model not yet implimented"
 
 		input_err_msg = " input weight type not yet implimented"
@@ -1257,8 +1240,6 @@ class EchoStateExperiment:
 				print(self.model, "rc cv with ", input_weight_type, " weights set, ready to train ")
 
 		if self.prediction_type == "column":
-			print("Xtr", self.xTr.shape)
-			print("Train", self.Train.shape)
 			self.feedback = True
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
 		else:

@@ -89,7 +89,8 @@ class EchoStateNetwork:
                  Distance_matrix = None,
                  reservoir = None,
                  input_weights_from_cv = None,
-                 reservoir_output = None
+                 reservoir_output = None,
+                 approximate_reservoir = True
 
                  ):
         
@@ -110,6 +111,7 @@ class EchoStateNetwork:
             self.seed = np.random.randint(100000)
         else:
             self.seed = random_seed
+        self.approximate_reservoir = approximate_reservoir
         #print("ESN random_seed", self.seed)
         self.obs_idx = obs_idx
         self.resp_idx = resp_idx
@@ -308,7 +310,7 @@ class EchoStateNetwork:
 
         #if the size of the reservoir has changed, reload it. RENAME THE VARIABLE
         if self.reservoir:
-            if self.reservoir.n_nodes != self.n_nodes:
+            if self.reservoir.n_nodes_ != self.n_nodes:
                 load_failed = 1
         
 
@@ -318,22 +320,42 @@ class EchoStateNetwork:
             if not self.reservoir:
 
                 self.weights = random_state.uniform( -1., 1., size = (n, n))
-                accept = csc_matrix(np.random.uniform(size = (n, n))  < self.connectivity)
+                self.accept = np.random.uniform(size = (n, n))  < self.connectivity
+                self.weights *= self.accept
+                self.weights = csc_matrix(self.weights)
 
             elif load_failed == 1:
+                if i ==1 and self.approximate_reservoir:
+                    self.accept = (self.reservoir.accept < self.connectivity)
                 if i > 20:
                     print("CONNECTIONS FAILED")
-                    accept = csc_matrix(np.random.uniform(size = (n, n))  < self.connectivity)
+                    self.accept = np.random.uniform(size = (n, n))  < self.connectivity
 
                 self.weights = random_state.uniform( -1., 1., size = (n, n))
+                self.weights *= self.accept
+                self.weights = csc_matrix(self.weights)
                 
             else:
                 #print("LOADING MATRIX", load_failed)
-                self.weights = self.reservoir.reservoir_pre_weights.copy()
-                accept = csr_matrix(self.reservoir.accept < self.connectivity)
+                if self.approximate_reservoir:
+                    #print("loading_approx_res")
+                    try:
+                        self.weights = self.reservoir.get_approx_preRes(self.connectivity)
+                    except:
+                        printc("approx reservoir failed to load... regenerating", 'fail')
+                        self.weights = self.reservoir.reservoir_pre_weights.copy()
+                        self.accept = (self.reservoir.accept < self.connectivity)
+                        self.weights *= self.accept
+                        self.weights = csc_matrix(self.weights)
+                else:
+                    self.weights = self.reservoir.reservoir_pre_weights.copy()
+                    self.accept = (self.reservoir.accept < self.connectivity)
+                    self.weights *= self.accept
+                    self.weights = csc_matrix(self.weights)
 
+            #if not self.approximate_reservoir and self.reservoir:
 
-            self.weights *= accept
+             #   self.weights *= accept
  
             try:
                 #sparse = csr_matrix()
@@ -341,7 +363,7 @@ class EchoStateNetwork:
 
                 max_eigenvalue = np.abs(eigs_list)[0]
             except:
-                max_eigenvalue = np.abs(np.linalg.eigvals(self.weights)).max()
+                max_eigenvalue = np.abs(np.linalg.eigvals(self.weights.toarray())).max()
 
             if max_eigenvalue > 0:
                 
@@ -560,7 +582,10 @@ class EchoStateNetwork:
                 
                 uniform_bias = random_state.uniform(-1, 1, size = (self.n_nodes, 1))
                 if self.noise:
-                    self.in_weights += random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, y.shape[1] - 1))
+                    white_noise = random_state.normal(loc = 0, scale = self.noise, size = (self.n_nodes, n_inputs)) #self.in_weights.shape[1] - 1
+                    #print(self.in_weights.shape, "in_weights")
+                    #print(white_noise.shape, "white noise")
+                    self.in_weights += white_noise
                 self.in_weights = np.hstack((uniform_bias, self.in_weights)) 
 
             elif self.input_weight_type == "cyclic":
