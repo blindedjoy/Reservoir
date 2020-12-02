@@ -3,6 +3,7 @@
 
 from reservoir import *
 from PyFiles.imports import *
+from collections import defaultdict
 
 def Merge(dict1, dict2): 
 	res = {**dict1, **dict2} 
@@ -100,25 +101,48 @@ colorz = {
 def printc(string_, color_) :
   print(colorz[color_] + string_ + colorz["endc"] )
 
+class Reservoir:
+    """
+    a reservoir class that stores hyper-parameters specific to the reservoir, 
+    as well as a csc matrix and the reservoir type.
+    """
+    def __init__(self, res_type, sparse_reserveroir_representation = None):
+        self.res_type_ = res_type
+        self.sparse_reserveroir_representation = sparse_reserveroir_representation
 
+    def plot(self):
+        print("Not implimented")
+
+class InWeights:
+    def __init__(self, in_weight_type, in_weights = None):
+        self.in_weight_type = in_weight_type
+        self.in_weights = in_weights
+
+    def plot(self):
+        print("Not implimented")
         
 class ExperData:
     """
     Consider making this do the splitting automatically for based on the indices.
+
+    f: frequency indices
+    T: time indices
     """
-    def __init__(self, dataset):
+    def __init__(self, dataset, f, T):
         # Observers_Train, Observers_Test, Target_Train, Target_Test,
         self.A_ = dataset
         self.set_shapes = {}
         self.sets = {}
+        self.f_ = f
+        self.T_  = T
         self.n_rows, self.n_cols = self.A_.shape 
 
     def add_data(self, time_indices, y_indices, name):
         
         ds = ExperDataSet(time_indices = time_indices, 
-                                       y_indices = y_indices, 
-                                       name = name,
-                                       dataset = self.A_.copy())
+                          y_indices = y_indices, 
+                          name = name,
+                          dataset = self.A_.copy())
         #option2:
         #if name == "train"
         #    self.train = ExperDataSet(...)
@@ -128,7 +152,8 @@ class ExperData:
         printc("dataset: shape, " + str(self.set_shapes), 'blue')
     
     def create_datasets(self, resp_idx, obs_idx = None, split = None, train_time_idx = None, test_time_idx = None):
-        
+        self.obs_idx = obs_idx
+        self.resp_idx = resp_idx
         if split:
 	        train_len = int(self.n_rows * split)
 	        test_len  = self.A_.shape[0] - train_len
@@ -143,7 +168,7 @@ class ExperData:
     
         #Target_Train
         self.sets["Target_Tr"] = self.add_data(time_indices = train_time_idx, y_indices = resp_idx, name = "Target_Tr")
-        
+
         #Target_test
         self.sets["Target_Te"] = self.add_data(time_indices = test_time_idx, y_indices = resp_idx, name = "Target_Te")
         
@@ -158,12 +183,14 @@ class ExperData:
             #Obs_test
             self.sets["Obs_Te"] = self.add_data(time_indices = test_time_idx, y_indices = obs_idx, name = "Obs_Te")
 
-            self.Obs_Tr_, self.Obs_Te_ = self.sets["Obs_Tr"] .data, self.sets["Obs_Te"].data
+            self.Obs_Tr_, self.Obs_Te_ = self.sets["Obs_Tr"].data, self.sets["Obs_Te"].data
 
             self.set_shapes = {"Obs_Tr" : self.Obs_Tr_.data.shape, "Obs_Te": self.Obs_Te_.data.shape}
 
         else:
             self.Obs_Tr_, self.Obs_Te_ = None, None
+
+
 
 class ExperDataSet(ExperData):
 
@@ -209,8 +236,95 @@ class ExperDataSet(ExperData):
     
     def print_shape(self):
         print("time_indices:", )
+
+class Reservoir:
+    """
+    a reservoir class that stores hyper-parameters specific to the reservoir, 
+    as well as a csc matrix and the reservoir type.
+    """
+    def __init__(self, res_type, sparse_reserveroir_representation = None):
+        self.res_type_ = res_type
+        self.sparse_reserveroir_representation = sparse_reserveroir_representation
+
+    def plot(self):
+        print("Not implimented")
+
+class InWeights:
+    def __init__(self, in_weight_type, in_weights = None):
+        self.in_weight_type_ = in_weight_type
+        self.in_weights = in_weights
+
+    def plot(self):
+        print("Not implimented")
+
+class modelResult:
+    def __init__(self, reservoir, input_weights, hyper_params, prediction, EchoStateExperiment_inputs, ip = False):
         
+        if not ip:
+            self.reservoir = reservoir
+            self.input_weights = input_weights
+            self.hyper_params = defaultdict(**hyper_params)
+            self.name_ = self.reservoir.res_type_ + "_" + self.input_weights.in_weight_type_
+        else:
+            self.name_ = "interpolation"
+        self.EchoStateExperiment_inputs = EchoStateExperiment_inputs 
+        self.prediction = prediction
         
+    def display_params(self):
+        hyper_params = sorted(self.hyper_params.items())
+        print(self.name_, "hyper parameters", hyper_params)
+    
+    def get_params(self):
+        return dict(self.hyper_params)
+
+    def get_residuals(self, ground_truth):
+        return ground_truth - self.prediction
+
+
+
+class ExperResult:
+	"""
+	The base class for an experiment result. This will be more general than RC_Result, containing things like the data.
+	Parameters:
+	    reservoir: a sparse matrix representation of the reservoir.
+	    data: a numpy array (A) containing the entirity of the dataset.
+	    
+	"""
+	def __init__(self, data, cv_inputs, get_observers_input):
+		self.data = data
+		self.cv_inputs = cv_inputs
+		self.get_observers_input = get_observers_input
+		self.model_results = {}
+
+	def add_model_result(self, prediction, ground_truth, 
+							reservoir = None, 
+							input_weights = None, 
+							hyper_params = None, 
+							EchoStateExperiment_inputs = None,
+						    ip = None):
+
+		model_result = modelResult(reservoir = reservoir, 
+						     input_weights = input_weights, 
+						     hyper_params = hyper_params, 
+						     prediction = prediction,
+						     EchoStateExperiment_inputs = EchoStateExperiment_inputs,
+						     ip = ip)
+		if not ip:
+			#ground_truth = self.data.Target_Te_)
+			res_type = model_result.reservoir.res_type_
+			input_weight_type = input_weights.in_weight_type_
+			self.model_results[res_type +"_"+ input_weight_type] = model_result
+		else:
+			self.model_results["interpolation"] = model_result
+
+	def get_models(self):
+		return list(self.model_results.keys())
+        
+	def display_experiment(self, log = True):
+		pass 
+
+	def get_model_result(self, model):
+		return self.model_results[model]
         
 
 
@@ -231,9 +345,14 @@ class EchoStateExperiment:
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
 				 target_freqs = None, spectrogram_type = None, k = None, obs_idx = None, resp_idx = None,
-				 model = None, chop = None, input_weight_type = "uniform"
+				 model = None, chop = None, input_weight_type = "uniform", EchoStateExperiment_inputs = None
 				 ):
+		self.EchoStateExperiment_inputs =  EchoStateExperiment_inputs
+
 		# Parameters
+
+
+
 		self.size = size
 		self.flat = flat
 		self.spectrogram_type = spectrogram_type
@@ -826,7 +945,8 @@ class EchoStateExperiment:
 					  method  = "random", 
 					  num_observers = 20,
 					  plot_split = False,
-					  split = 0.2
+					  split = 0.2,
+					  get_observers_input = None
 					  ): 
 		"""
 		arguments:
@@ -846,7 +966,7 @@ class EchoStateExperiment:
 			observer_range: if you select the "block" opion
 		"""
 		#preprocessing:
-		
+		self.get_observers_input = get_observers_input
 		k = self.k
 		dataset, freq_idx  = self.A,  self.f
 		n_rows, n_cols = dataset.shape[0], dataset.shape[1]
@@ -858,7 +978,7 @@ class EchoStateExperiment:
 		self.method = method
 		self.aspect = aspect
 
-		experData = ExperData(self.A)
+		experData = ExperData(self.A, f = self.f, T = self.T)
 		
 		
 		#remove the response column which we are trying to use for inpainting
@@ -955,7 +1075,7 @@ class EchoStateExperiment:
 				#we are slimming down the inputs to reduce computational complexity.
 				self.Train = self.Train[:, keep_index]
 				self.Test  = self.Test[:, keep_index]"""
-				
+		self.Data = experData
 		self.Train, self.Test = experData.Obs_Tr_, experData.Obs_Te_ 
 		self.xTr, self.xTe    = experData.Target_Tr_, experData.Target_Te_
 
@@ -1102,22 +1222,42 @@ class EchoStateExperiment:
 		def jsonMerge(new_dict):
 			self.json2be = Merge(self.json2be, new_dict)
 
+
+		reservoir_  = Reservoir(res_type = self.model, sparse_reserveroir_representation = self.weights)
+		in_weights_ = InWeights(in_weight_type = self.input_weight_type, in_weights = self.in_weights)
+
 		if self.json2be == {}:
 			print("initialiazing json2be")
+
+			self.exper_result = ExperResult(data = self.Data, 
+									   		cv_inputs = self.cv_args, 
+									   		get_observers_input = self.get_observers_input)
+
+			#add interpolation result.
+			self.exper_result.add_model_result(prediction = self.ip_res["prediction"],  #fix later
+											   ground_truth = self.xTe,
+											   ip = self.ip_res["method"],
+											   EchoStateExperiment_inputs = self.EchoStateExperiment_inputs)
+
+			### save the result of 
 			#self.runInterpolation() 
-			ip_pred = {"interpolation" : self.ip_res["prediction"]}
-			ip_nrmse = {"interpolation" : self.ip_res["nrmse"]}
-			jsonMerge({"prediction" : ip_pred})
-			jsonMerge({"nrmse" : ip_nrmse})
-			jsonMerge({"best arguments" : {}})
+			#ip_pred = {"interpolation" : self.ip_res["prediction"]}
+			#ip_nrmse = {"interpolation" : self.ip_res["nrmse"]}
+			#jsonMerge({"prediction" : ip_pred})
+			#jsonMerge({"nrmse" : ip_nrmse})
+			#jsonMerge({"best arguments" : {}})
 
-			self.json2be["obs_idx"] = self.obs_idx
-			self.json2be["resp_idx"] = self.resp_idx
-			self.json2be["input_weight_type"] = self.input_weight_type
+		self.exper_result.add_model_result(reservoir = reservoir_, 
+										   input_weights = in_weights_, 
+										   hyper_params = self.best_arguments, 
+										   prediction = self.prediction,  #fix later
+										   ground_truth = self.xTe,
+										   EchoStateExperiment_inputs = self.EchoStateExperiment_inputs)
 
+		self.json2be = {"exper_result" : self.exper_result}
 
 		err_msg = "YOU NEED TO CALL THIS FUNCTION LATER "
-
+		"""
 		if not self.librosa: 
 			# 1) Here stored are the inputs to 
 			self.json2be["experiment_inputs"] = { #this should be built into the initialization to avoid errors.
@@ -1135,26 +1275,30 @@ class EchoStateExperiment:
 			   json2be["experiment_inputs"]["obs_freqs"] = self.obs_freqs
 			except:
 				print("")
-		else:
+		"""
+
+		"""
 			self.json2be["experiment_inputs"] = {
 				 "size" : self.size, 
 				 "target_frequency" : int(self.target_frequency),
 				 "obs_idx" : self.obs_idx,
 				 "target_idx" : self.resp_idx,
 				 "verbose" : self.verbose,
+				 "prediction_type" : self.prediction_type
 				 }
 		self.json2be["get_observer_inputs"] = {
 				"method" : self.method,
 				"split" : self.split,
 				"aspect" : float(self.aspect)
 			}
-								 
+		"""
+		"""						 
 		# 2) saving the optimized hyper-parameters, nrmse
 
 		try:
 			self.best_arguments
 		except NameError:
-			err_msg + "#TODO Err message"
+			err_msg + "MISSING BEST ARGUMENTS< SERIOUS ERROR"
 
 		args2export = self.best_arguments
 
@@ -1163,7 +1307,6 @@ class EchoStateExperiment:
 		elif self.input_weight_type == "uniform":
 			args2export = ifdel(args2export, "llambda")
 			args2export = ifdel(args2export, "llambda2")
-			args2export = ifdel(args2export, "noise")
 		try:
 			model_key = self.model + "_" + self.input_weight_type
 			self.json2be["prediction"]= Merge(self.json2be["prediction"], { model_key : pred}) #Merge(self.json2be["prediction"], )
@@ -1171,6 +1314,7 @@ class EchoStateExperiment:
 		except:
 			print("object doesn't have the prediction attribute.")
 		self.json2be["best arguments"] = Merge(self.json2be["best arguments"], {model_key : args2export}) 
+		"""
 
 	
 	def RC_CV(self, cv_args, model, input_weight_type, hybrid_llambda_bounds = (-5, 1)): #TODO: change exp to 
@@ -1231,6 +1375,7 @@ class EchoStateExperiment:
 					   **predetermined_args,
 					   "Distance_matrix" : self.distance_np,
 					   }
+		self.cv_args = cv_args
 
 		# subclass assignment: EchoStateNetworkCV
 		self.esn_cv = self.esn_cv_spec(**input_dict)
@@ -1278,6 +1423,8 @@ class EchoStateExperiment:
 			nrmses = []
 			for i in range(20):
 				self.esn.train(x = None, y = self.xTr)
+				self.weights = self.esn.weights
+				self.in_weights = self.esn.in_weights
 				self.prediction = self.esn.predict(x = None, n_steps = self.xTe.shape[0])
 				nrmse_ = nrmse(self.xTe,self.prediction)
 				nrmses.append(nrmse_)
@@ -1321,7 +1468,7 @@ class EchoStateExperiment:
 
 			if best_args["feedback"] == True:
 				self.esn.train(x = None, y = self.xTr)
-				self.prediction = self.esn.predict(n_steps = self.Test.shape[0])
+				self.prediction = self.esn.predict(n_steps = self.xTe.shape[0])
 			else:
 				self.esn.train(x = self.Train, y = self.xTr)
 				self.prediction = my_predict(self.Test)
@@ -1476,6 +1623,7 @@ class EchoStateExperiment:
 					plt.scatter(xx_train, yy_train, color = "blue")
 					plt.scatter(xx_test, yy_test, color = "red")
 					plt.show()	
+				self.interpolation_method = "griddata-nearest"
 
 			#extract the right method calls
 			translation_dict = { "griddata-linear" : "linear", "griddata-cubic"  : "cubic", "griddata-nearest": "nearest"}	
@@ -1500,7 +1648,9 @@ class EchoStateExperiment:
 
 			###plots:
 			self.ip_res = {"prediction": ip2_pred, 
-						   "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe, columnwise = columnwise)} 
+						   "nrmse" : nrmse(pred_ = ip2_pred, truth = self.xTe),
+						   "method": translation_dict[self.interpolation_method],
+						   "columnwise" : columnwise} 
 
 		elif self.interpolation_method == "rbf":
 			print("STARTING INTERPOLATION")

@@ -2,6 +2,9 @@ from tqdm.notebook import trange, tqdm
 import pickle
 import pandas as pd
 from PyFiles.experiment import *
+from collections import defaultdict
+
+
 def check_for_duplicates(lst, UnqLst = True, verbose = True):
     """ return the duplicate items in a list
     Args:
@@ -33,75 +36,6 @@ def build_string(message, *values, sep = ""):
         return message
     else:
         return message.join(str(x) + sep for x in values)
-
-
-
-
-
-class ExperData:
-    """
-    Consider making this do the splitting automatically for based on the indices.
-    """
-    def __init__(self, dataset):
-        # Observers_Train, Observers_Test, Target_Train, Target_Test,
-        self.A_ = A
-        self.datasets = {}
-
-    def add_data(self, **kwargs):
-        
-        self.set["name"] = ExperimentDataSet(**kwargs)
-
-class ExperDataSet(ExperData):
-
-    """
-    Consider renaming this.
-    Parameters:
-        time_indices are the vertical indices that correspond to the time steps of the data.
-        y_indices correspond to the variable perpendicular to time. For example, the frequencies
-    """
-    def __init__(self, time_indices, y_indices, name):
-        assert name in ["Target_Tr", "Target_Te", "Obs_Tr", "Obs_Te"]
-        self.time_indices_ = time_indices
-        self.y_indices_ = y_indices
-        #
-        #self.name_ = name
-        self.data = self.A_[self.time_indices_, self.y_indices_]
-
-class Exper_Result:
-    """
-    The base class for an experiment result. This will be more general than RC_Result, containing things like the data.
-    Parameters:
-        reservoir: a sparse matrix representation of the reservoir.
-        data: a numpy array (A) containing the entirity of the dataset.
-        
-    """
-    def __init__(self, data, reservoir):
-        self.data = data
-        self.reservoir = reservoir
-
-    def display_experiment(self, log = True):
-        pass
-
-class RC_Result(Exper_Result):
-    """
-    This class is the result of a specific RC model.
-    """
-
-    def __init__(self, prediction, model_type, in_weight_type, experiment_type):
-        self.prediction_ = prediction
-        self.model_type_ = model_type
-        self.in_weight_type_ = in_weight_type
-        assert experiment_type in ["column", "block"]
-        self.experiment_type_ = experiment_type
-
-    def plot_input_weights(self):
-
-        pass
-
-    
-
-
-
 
 class EchoStateAnalysis:
     """ #Spectrogram analysis class for analyzing the output of neural networks.
@@ -144,9 +78,115 @@ class EchoStateAnalysis:
 
         #self.build_loss_df(models = models, group_by = "freq", columnwise = False)
         #self.build_loss_df(models = models, group_by = "time", columnwise = False)
+    def get_experiment(self, experiment_object, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
+        """Robust to change in data structure:
+        try:
+            self.get_experiment_new( exper_result = experiment_object, 
+                                     model = model, 
+                                     compare_ = compare_, 
+                                     plot_split = plot_split, 
+                                     verbose = verbose)
+        except:
+            self.get_experiment_old(json_obj=experiment_object,
+                                    model=model, 
+                                    compare_ = compare_, 
+                                    plot_split = plot_split, 
+                                    librosa = librosa, 
+                                    verbose = verbose)
+
+        return(experiment_)
+        """
+        self.get_experiment_new( exper_result = experiment_object, 
+                                     model = model, 
+                                     compare_ = compare_, 
+                                     plot_split = plot_split, 
+                                     verbose = verbose)
+
+    def get_experiment_new(self, exper_result, model, compare_ = False, plot_split = False, verbose = False, interpolation = False):
+        """ 
+
+        This function retrieves, from a json dictionary file, an EchoStateExperiment object.
+
+        Args:
+            json_obj: This variable name doesn't make sense. Change it.
+            model: The model type. This needs to be adjusted.
+            librosa:
+            compare_: if True run the compare function above (plot the NRMSE comparison)
+
+            plot_split: if True plot the 2D train-test split
+
+            librosa: If True, load a pickle file (instead of json), perhaps other things specific to 
+                the spectrograms that were created with the librosa package.
+
+        """
+        #https://towardsdatascience.com/design-optimization-with-ax-in-python-957b1fec776f
+
+        model_result = exper_result.get_model_result(model)
+
+        exper_inputs = model_result.EchoStateExperiment_inputs
+        obs_inputs = exper_result.get_observers_input
+
+        #if not interpolation:
+        best_hyper_parameters = model_result.get_params()
+
+        experiment_ = EchoStateExperiment( **exper_inputs )
+
+        print('prediction_type', exper_inputs.prediction_type)
+
+        obs_inputs['plot_split'] = plot_split
+
+        printc("Reaching stage 2", 'fail')
         
-        
-    def get_experiment(self, json_obj, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
+        experiment_.get_observers(**obs_inputs)
+        experiment_.already_trained( best_args = best_hyper_parameters, model = model_result)#self.model)
+
+
+        Data = model_result.Data
+
+        xx = range(Data.xTe.shape[0])
+
+        if compare_:
+            compare_inputs = {}
+
+            #this is a hacky solution.
+            changing_terminology = {"uniform" : "unif_w_pred", "exponential" : "exp_w_pred"}
+
+            for model in list(json_obj["prediction"].keys()):
+                specific_prediction = json_obj[model]
+                specific_key = changing_terminology[model]
+                add_modelcompare_inputs[specific_key] = json_obj["prediction"][model]
+
+
+            unif_w_pred, exp_w_pred = json_obj["prediction"]["uniform"], json_obj["prediction"]["exponential"]
+            ip_pred = json_obj["prediction"]["interpolation"]
+            unif_w_pred, exp_w_pred, ip_pred = [np.array(i) for i in [unif_w_pred, exp_w_pred, ip_pred]]
+
+            compare( truth = np.array(experiment_.Test), unif_w_pred = unif_w_pred, ip_pred = ip_pred,
+                exp_w_pred  = exp_w_pred, columnwise  = False, verbose = False)
+            if n_keys == 2:
+                compare(
+                    truth       = np.array(experiment_.Test), 
+                    unif_w_pred = np.array(json_obj["prediction"]["uniform"]),
+                    ip_pred = np.array(json_obj["prediction"]["interpolation"]),
+                    exp_w_pred  = None,#np.array(json_obj["prediction"]["exponential"]), 
+                    columnwise  = False,
+                    verbose = False)
+        if verbose == True:
+            """
+            for i in [[unif_w_pred, "unif pred"],
+                      [exp_w_pred, "exp pred"],
+                      [ip_pred, "ip pred"],
+                      [np.array(experiment_.Test), "Test" ]]:
+                Shape(i)
+            """
+            print("experiment inputs: " + str(json_obj["experiment_inputs"]))
+            print("get_obs_inputs: " + str(obs_inputs))
+            print("Train.shape: " + str(experiment_.Train.shape))
+            print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
+        return(experiment_)
+
+
+    def get_experiment_old(self, json_obj, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
         """ 
 
         This function retrieves, from a json dictionary file, an EchoStateExperiment object.
@@ -165,6 +205,15 @@ class EchoStateAnalysis:
         """
         #https://towardsdatascience.com/design-optimization-with-ax-in-python-957b1fec776f
         pickle_obj = json_obj
+
+        #printc("Data" + str(json_obj["Data"]), 'fail')
+
+        try:
+            obs_idx, resp_idx = json_obj["obs_idx"], json_obj["resp_idx"]
+        except:
+            obs_idx, resp_idx = Data.obs_idx, Data.resp_idx
+
+
         extra_inputs = { "obs_idx" : pickle_obj["obs_idx"],
                          "resp_idx" : pickle_obj["resp_idx"],
                          "prediction_type" : "exact",
@@ -173,13 +222,22 @@ class EchoStateAnalysis:
                     }
 
         obs_inputs = json_obj["get_observer_inputs"]
-        obs_inputs["method"] = "exact"
+
+        if obs_inputs["method"] != "column":
+            obs_inputs["method"] = "exact"
         print("CYCLIC DISABLED")
 
         vals = json_obj["best arguments"][model]
 
+        #printc("experiment inputs" +str(json_obj["experiment_inputs"]), 'fail')
+
+        printc("experiment inputs" +str(json_obj["get_observer_inputs"]), 'fail')
+
         experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
-        experiment_.obs_idx, experiment_.resp_idx  = json_obj["obs_idx"], json_obj["resp_idx"]
+        
+
+        experiment_.obs_idx, experiment_.resp_idx = obs_idx, resp_idx
+        
         experiment_.get_observers(**obs_inputs, plot_split = plot_split)
         experiment_.already_trained(vals, model = "random")#self.model)
 
@@ -225,8 +283,14 @@ class EchoStateAnalysis:
             print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
         return(experiment_)
     
-   
-    def change_interpolation_pickle(self, verbose = False):
+
+    def change_interpolation_pickle(self):
+        """
+        #TODO impliment robust version. or impliment a function that can recover the old data.
+        """
+        self.change_interpolation_pickle_new()
+
+    def change_interpolation_pickle_new(self, verbose = False):
         """
         Force_random__expers: added 11/21, this will not allow the model to build random experiments if they don't include exponential weights.
 
@@ -240,6 +304,106 @@ class EchoStateAnalysis:
         #What is the point of this loop? If model is random -->  make sure uniform and exponential are successfully run.
         #also a vestigal part of this loop is to check if it is even possible to load this.
         
+        #print()
+
+        self.experiment_results = []
+
+        for i, _ in enumerate(trange(len(path_lst), desc='experiment list, loading data...')): 
+            
+            experiment_result = self.load_data(path_lst[i], bp = self.bp, verbose = False)
+
+            self.experiment_results.append(experiment_result["exper_result"])
+            
+        for i, _ in enumerate(trange( len(self.experiment_results), desc='experiment list, fixing interpolation...')): 
+
+            try:
+                #live_nns = self.fix_Rcs(experiment_results[i])
+                printc("Let's not fix something that ain't broken.", 'green')
+                break
+            except:
+
+                #This code, aside from the barplots, is essentially trying to solve a problem via repair rather than 
+                #fixing the problem at the source. Let's instead fix the problem at the source.
+
+                experiment_dict, experiment_obj = self.fix_Rcs(experiment_results[i])
+                printc("failing to retrieve live nns, ... recalibrating to old data structure", 'red')
+
+                if self.ip_method == "all":
+                    ip_methods_ = ["linear", "cubic", "nearest"]
+                else:
+                    ip_methods_ = [self.ip_method]
+
+                for ip_method_ in ip_methods_:
+                    tmp_dict = self.fix_interpolation(experiment_dict, experiment_obj, method = ip_method_)
+                    experiment_dict["nrmse"]["ip: " + ip_method_] = tmp_dict["nrmse"]["interpolation"]
+                    experiment_dict["prediction"]["ip: " + ip_method_] = tmp_dict["prediction"]["interpolation"]
+                try:
+                    rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["ip: linear"] 
+                                for key in experiment_dict["nrmse"].keys()}
+                except:
+                    rel_spec = { key: experiment_dict["nrmse"][key] / experiment_dict["nrmse"]["interpolation"] 
+                                for key in experiment_dict["nrmse"].keys()}
+                
+                results_rel.append(rel_spec)
+                
+                #removing interpolation
+                for key in ["prediction", "nrmse"]:
+                    dict_tmp = experiment_dict[key]
+                    dict_tmp = ifdel(dict_tmp, "interpolation")
+                    experiment_dict[key] = dict_tmp
+
+
+                results_tmp.append(experiment_dict["nrmse"])
+                experiment_list.append(experiment_dict)
+
+                results_df = pd.DataFrame(results_tmp)
+                results_df = results_df.melt()
+                results_df.columns = ["model", "R"]
+
+                results_df_rel = pd.DataFrame(results_rel)
+                results_df_rel = results_df_rel.melt()
+                results_df_rel.columns = ["model", "R"]
+                
+                self.experiment_lst = experiment_list
+                self.R_results_df = results_df
+                self.R_results_df_rel = results_df_rel
+
+                if NOT_YET_RUN:
+                    print("the following paths have not yet been run: ")
+                    print(np.array(path_lst)[NOT_YET_RUN])
+                   
+                        
+                if NOT_INCLUDED:
+                    print("the following paths contain incomplete experiments: (only unif finished)")
+                    #print(np.array(path_lst_unq)[NOT_INCLUDED])
+                    print(np.array(path_lst)[NOT_INCLUDED])
+                    
+
+                NOT_INCLUDED = check_for_duplicates(NOT_INCLUDED)
+                NOT_YET_RUN = check_for_duplicates(NOT_YET_RUN)
+                print("total experiments completed: " + str(len(self.experiment_lst)))
+                print("total experiments half complete: " + str(len(NOT_INCLUDED)))
+                print("total experiments not yet run: " + str(len(NOT_YET_RUN)))
+                pct_complete = (len(self.experiment_lst))/(len(self.experiment_lst)+len(NOT_INCLUDED)*0.5 + len(NOT_YET_RUN)) * 100
+                pct_complete  = str(round(pct_complete, 1))
+                print("Percentage of tests completed: " + str(pct_complete) + "%")  
+
+    def change_interpolation_pickle_old(self, verbose = False):
+        """
+        Force_random__expers: added 11/21, this will not allow the model to build random experiments if they don't include exponential weights.
+
+        """
+        path_lst = self.path_list
+
+        #strange, this seems hacky.
+        if self.ip_use_observers == False:
+            self.ip_method = "nearest"
+
+        #What is the point of this loop? If model is random -->  make sure uniform and exponential are successfully run.
+        #also a vestigal part of this loop is to check if it is even possible to load this.
+        
+        #print()
+
         for i, _ in enumerate(trange(len(path_lst), desc='experiment list, loading data...')): 
             
 
@@ -248,6 +412,7 @@ class EchoStateAnalysis:
                 experiment_list_temp, NOT_INCLUDED, NOT_YET_RUN  = [], [], []
 
             experiment_dict = self.load_data(path_lst[i], bp = self.bp, verbose = False)
+            print('experiment_dict:', experiment_dict)
             if verbose:
                 print(list(experiment_dict["prediction"].keys()))
             if self.model in ["delay_line", "cyclic"] or self.force_random_expers:
@@ -493,23 +658,34 @@ class EchoStateAnalysis:
         Args:
             exper_: the experiment dict being fed in.
         """
-        for model in list(exper_['best arguments'].keys()):
-            exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
-            
-            exper_["prediction"][model] = exper_spec.prediction
-            exper_["nrmse"][model] = nrmse(exper_spec.prediction, exper_spec.xTe)
+        try:
+            exper_ = exper_["exper_result"]
+            live_nns = []
+            for model, _ in exper_.model_results.items():
+                exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
+                live_nns.append(live_nns)
+            return(live_nns)
 
-        #get important pieces of information for later, to avoid running get_experiment over and over and over.
-        exper_["xTe"] = exper_spec.xTe
-        exper_["xTr"] = exper_spec.xTr
-        exper_["f"]   = exper_spec.f
-        exper_["T"]   = exper_spec.T
-        exper_["A"]   = exper_spec.A
+        #old way: 12/2/2020
+        except:
+            for model in list(exper_['best arguments'].keys()):
+                exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
+                
+                exper_["prediction"][model] = exper_spec.prediction
+                exper_["nrmse"][model] = nrmse(exper_spec.prediction, exper_spec.xTe)
 
-        exper_dict = exper_
-        exper_obj = exper_spec
+            #get important pieces of information for later, to avoid running get_experiment over and over and over.
+            exper_["xTe"] = exper_spec.xTe
+            exper_["xTr"] = exper_spec.xTr
+            exper_["f"]   = exper_spec.f
+            exper_["T"]   = exper_spec.T
+            exper_["A"]   = exper_spec.A
 
-        return(exper_dict, exper_spec)
+            exper_dict = exper_
+            exper_obj = exper_spec
+
+            return(exper_dict, exper_spec)
+
 
     def fix_interpolation(self, exper_, exper_spec, method):
         """ Change the interpolation method of the inputed experiment.
@@ -592,8 +768,124 @@ class EchoStateAnalysis:
 
         return(loss_arr)
 
-
     def build_loss_df(self, group_by = "time", columnwise = True, relative = True,
+                  rolling = None, models = ["uniform", "exponential", "interpolation"],
+                  silent = True, hybrid = False):
+        """try:
+            build_loss_df_new(group_by = group_by, columnwise = columnwise , relative = relative,
+                  rolling = rolling ,
+                  silent = silent, hybrid = hybrid)
+        except:
+            build_loss_df_old(group_by = group_by, columnwise = columnwise , relative = relative,
+                  rolling = rolling , models = ["uniform", "exponential", "interpolation"],
+                  silent = silent, hybrid = hybrid)"""
+        build_loss_df_new(group_by = group_by, columnwise = columnwise , relative = relative,
+                  rolling = rolling ,
+                  silent = silent, hybrid = hybrid)
+
+    def build_loss_df_new(self, group_by = "time", columnwise = True, relative = True,
+                  rolling = None, models = ["uniform", "exponential", "interpolation"],
+                  silent = True, hybrid = False):
+        #exp stands for experiment here, not exponential
+        """ Builds a loss dataframe
+        
+        Args:
+            #TODO
+        columnwise == False means don't take the mean.
+        """
+
+        def flatten_loss_dict(loss_dict, model, time_lst, freq_lst, experiment_num = 0):
+            """
+
+            """
+            new_dict = {"freq" : [],
+                        "time" : [],
+                        "experiment #" : experiment_num,
+                        "model" : model}
+            
+            for key in loss_dict.keys():
+                new_dict[key] = []
+
+            for j, (loss_key, loss_Arr) in enumerate(loss_dict.items()):
+                for i in range(loss_Arr.shape[1]):
+                    spec_ = loss_Arr[:,i].reshape(-1,)
+                    if not j:
+                        new_dict["freq"] += list(np.full(spec_.shape, fill_value = freq_lst[i]))
+                        new_dict["time"] += list(time_lst)
+                    new_dict[loss_key] += list(spec_)
+            pd_ = pd.DataFrame(new_dict)
+            return(pd_)
+
+        experiment_list = self.experiment_results
+        count = 0
+        for i in trange(len(experiment_list), desc='processing path list...'):
+
+            experiment_ = experiment_list[i]
+
+            get_observers_input = experiment_.get_observers_input
+
+            if "split" in get_observers_input:
+                split_ = get_observers_input["split"]
+            
+            #construct the required data frame and caculate the nrmse from the predictions:
+            train_, test_ = experiment_.data.Target_Tr_, experiment_.data.Target_Te_
+
+            if i == 0:
+                A = experiment_.data.A_
+                
+            test_len = test_.shape[0]
+            train_len = A.shape[0] - test_len
+            
+            ###################################################
+            time_lst, freq_lst = [], []
+            resp_idx = experiment_.data.sets["Target_Tr"].y_indices_
+
+            T, f = experiment_.data.T_, np.array(experiment_.data.f_)
+
+            time_lst_one_run = list(T[train_len:].reshape(-1,))
+            freq_lst_one_run = list(f[resp_idx].reshape(-1,))
+            ###################################################
+
+            existing_models = experiment_.get_models()
+            
+
+            for j, model in enumerate(models):
+                printc(model, 'green')
+                model_result_ = experiment_.get_model_result(model)
+                
+                shared_args = {
+                    "pred_" : model_result_.prediction,
+                    "truth": test_}
+
+                self.L1_entire_df = self.loss(**shared_args, typee = "L1")
+                self.L2_entire_df = self.loss(**shared_args, typee = "L2")
+                self.R_entire_df  = self.loss(**shared_args, typee = "R")
+
+                loss_arr_dict = {}
+
+                for loss_metric in ["L1", "L2", "R"]:
+                    loss_arr_dict[loss_metric] = self.loss(**shared_args, 
+                                                           typee = loss_metric)
+                
+                rDF_spec = flatten_loss_dict(loss_arr_dict, 
+                                              model = model,
+                                              time_lst = list(np.linspace(time_lst_one_run[0],
+                                                                          time_lst_one_run[-1],
+                                                                          test_len)),
+                                              freq_lst = freq_lst_one_run,  
+                                              experiment_num = i)
+                if count == 0:
+                    self.rDF = rDF_spec
+                else:
+                    self.rDF = pd.concat([self.rDF, rDF_spec], axis = 0)
+                count += 1 
+        if silent != True:
+            display(rDF)
+
+
+
+
+    def build_loss_df_old(self, group_by = "time", columnwise = True, relative = True,
                   rolling = None, models = ["uniform", "exponential", "interpolation"],
                   silent = True, hybrid = False):
         #exp stands for experiment here, not exponential

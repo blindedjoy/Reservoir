@@ -96,10 +96,10 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
       "random_seed" : 126,
       "n_res" : 1,#2,
       "cv_samples" : 1,#2,
-      "batch_size": 3,#4,
-      "eps" : 1e-2,
+      "batch_size": 1,#4,
+      "eps" : 1,
       'subsequence_length' : 190,
-      "initial_samples" : 150,
+      "initial_samples" : 20,
       }
   elif size == "medium":
     default_presets = { #cv_samples * n_res * batch size --> n_cores. what about njobs?
@@ -165,7 +165,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
     obs_inputs = Merge(obs_inputs, {"method" : "exact"})
 
     print("obs_inputs: " + str(obs_inputs))
-    experiment.get_observers(**obs_inputs)
+    experiment.get_observers(**obs_inputs, get_observers_input = obs_inputs)
 
   elif inputs["prediction_type"] == "block":
     if "obs_freqs" in inputs:
@@ -183,10 +183,11 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
                     }
       EchoArgs = Merge( Merge(EchoArgs, AddEchoArgs), librosa_args)
     print(EchoArgs)
-    experiment = EchoStateExperiment( **EchoArgs)
+    experiment = EchoStateExperiment( **EchoArgs, EchoStateExperiment_inputs = EchoArgs)
     ### NOW GET OBSERVERS
     method = "exact" if "obs_freqs" in inputs else "freq"
-    experiment.get_observers(method = method, **obs_inputs)
+    obs_inputs = {**obs_inputs, "method": method}
+    experiment.get_observers(**obs_inputs, get_observers_input = obs_inputs)
 
   
 
@@ -198,7 +199,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
       default_presets['subsequence_length'] = 75
 
   print("NCORES " + str(n_cores), 'blue')
-  #
+
   njobs = int(np.floor(n_cores/(default_presets["n_res"] * default_presets["batch_size"]*default_presets["cv_samples"])) * 0.9) 
   njobs = max(njobs, 1)
   #assert njobs >= 1
