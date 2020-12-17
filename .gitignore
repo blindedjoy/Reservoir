@@ -47,3 +47,5 @@ MANIFEST
 
 # combined_analysis
 MARIOS/final_results/combined_analysis.pickle
+MARIOS/experiment_results_local/*
+

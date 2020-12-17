@@ -48,7 +48,6 @@ def get_frequencies(trial = 1):
 def printc(string_, color_) :
   print(colorz[color_] + string_ + colorz["endc"] )
 
-
 colorz = {
   "header" : '\033[95m',
   "blue" : '\033[94m',
@@ -90,37 +89,39 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
 
 
   prediction_type = inputs["prediction_type"] 
+  cv_samples = 1
+  batch_size = max(n_cores // cv_samples , 1) #
+  random_seed = 126
+
+  default_presets = {
+     "cv_samples" : cv_samples,
+     "batch_size" : batch_size,
+     "random_seed" : random_seed}
 
   if size == "small":
     default_presets = {
-      "random_seed" : 126,
+      **default_presets,
       "n_res" : 1,#2,
-      "cv_samples" : 1,#2,
-      "batch_size": 1,#4,
-      "eps" : 1,
-      'subsequence_length' : 190,
-      "initial_samples" : 20,
+      "eps" : 1e-8,
+      'subsequence_length' : 10,
+      "initial_samples" : 1000,
       }
   elif size == "medium":
     default_presets = { #cv_samples * n_res * batch size --> n_cores. what about njobs?
-      "random_seed" : 125,
+      **default_presets,
       "n_res" : 1,
-      "cv_samples" : 1,
-      "batch_size": 3,
       "eps" : 1e-4,
-      'subsequence_length' : 300,
-      "initial_samples" : 1000,
-      "max_iterations" : 4000}
+      'subsequence_length' : 100,
+      "initial_samples" : 100,
+      "max_iterations" : 5000}
   elif size == "publish":
     default_presets = {
-      "cv_samples" : 2,
-      "max_iterations" : 2000,
+      **default_presets,
+      "max_iterations" : 3000,
       "eps" : 1e-4,
-      "random_seed" : 125,
       'subsequence_length' : 700,
       "n_res": 1,
-      "initial_samples" : 300,
-      "batch_size" : 2}
+      "initial_samples" : 300}
   if "k" in inputs:
     k = inputs["k"]
   else:
@@ -167,7 +168,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
     print("obs_inputs: " + str(obs_inputs))
     experiment.get_observers(**obs_inputs, get_observers_input = obs_inputs)
 
-  elif inputs["prediction_type"] == "block":
+  elif inputs["prediction_type"] == "block" or inputs["prediction_type"] == "freqs":
     if "obs_freqs" in inputs:
       AddEchoArgs = { "obs_freqs" : inputs["obs_freqs"],
                       "target_freqs" : inputs["target_freqs"],
@@ -176,6 +177,7 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
                     }
       EchoArgs = Merge(EchoArgs, AddEchoArgs)
     else:
+
       AddEchoArgs = { "target_frequency" : inputs["target_frequency"],
                       "obs_hz" : inputs["obs_hz"],
                       "target_hz" : inputs["target_hz"],
@@ -186,27 +188,34 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
     experiment = EchoStateExperiment( **EchoArgs, EchoStateExperiment_inputs = EchoArgs)
     ### NOW GET OBSERVERS
     method = "exact" if "obs_freqs" in inputs else "freq"
+    
     obs_inputs = {**obs_inputs, "method": method}
     experiment.get_observers(**obs_inputs, get_observers_input = obs_inputs)
 
   
 
   if inputs["prediction_type"] == "column":
+
     default_presets['esn_feedback'] = True
     if "subseq_len" in inputs:
       default_presets['subsequence_length'] = inputs["subseq_len"]
     else:
       default_presets['subsequence_length'] = 75
 
-  print("NCORES " + str(n_cores), 'blue')
+  if inputs["feedback"] == False:
+    default_presets['esn_feedback'] = False
 
-  njobs = int(np.floor(n_cores/(default_presets["n_res"] * default_presets["batch_size"]*default_presets["cv_samples"])) * 0.9) 
-  njobs = max(njobs, 1)
+  printc("NCORES " + str(n_cores), 'blue')
+
+  njobs = default_presets["batch_size"] #default_presets["batch_size"] #int(np.floor(n_cores/(default_presets["n_res"] * default_presets["batch_size"]*default_presets["cv_samples"])) * 0.9) 
+  
+
+  #njobs = max(njobs, 1)
   #assert njobs >= 1
   #njobs = 1
-  printc("njobs" + str(njobs), 'warning')
+  #printc("njobs" + str(njobs), 'warning')
   est_cores = default_presets["batch_size"]  * default_presets["n_res"] * default_presets["batch_size"]  * default_presets["cv_samples"]
-  print("estimated core use " + str(est_cores), 'green')
+  #print("estimated core use " + str(est_cores), 'green')
   cv_args = {
       'bounds' : inputs["bounds"],
       'scoring_method' : 'tanh',
@@ -228,12 +237,20 @@ def run_experiment(inputs, n_cores = int(sys.argv[2]), interpolation_method = "g
 
   #Consider combining cyclic and delay line
   if prediction_type == "column":
+    printc("running column experiment", 'green')
     go_("uniform")
   elif model_type in ["delay_line", "cyclic"]:
-    go_("uniform")
+    printc("running cyclic experiments", 'fail')
     go_("exponential")
+    go_("uniform")
+    
   else:
-    go_("uniform")
+    printc("running random experiments", 'fail')
+
     go_("exponential")
+    go_("uniform")
+    
+
+#https://stackoverflow.com/questions/47776486/python-struct-error-i-format-requires-2147483648-number-2147483647
   
 

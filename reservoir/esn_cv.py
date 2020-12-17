@@ -33,7 +33,62 @@ def printc(string_, color_) :
   print(colorz[color_] + string_ + colorz["endc"] )
 
 #from scipy.sparse import csr_matrix
-#>>> A = csr_matrix([[1, 2, 0], [0, 0, 3], [4, 0, 5]])
+#>>> A = csr_matrix([[1, 2, 0], [0, 0, 3], [4, 0, 5
+
+class SparseBooklet:
+    def __init__(self, book, keys):
+        self.sparse_book = book
+        self.sparse_keys_ = keys
+
+    def get_approx_preRes(self, connectivity_threshold):
+        """
+        You can use the matrix returned instead of...
+        """
+        key_ =  self.sparse_keys_[self.sparse_keys_ > connectivity_threshold][0]
+        val =  self.sparse_book[key_].copy()
+        return val
+
+class GlobalSparseLibrary:
+
+    def __init__(self, lb = -5, ub = 0, n_nodes = 1000, precision = None, flip_the_script = False):
+        self.lb = lb
+        self.ub = ub
+        self.n_nodes_ = n_nodes
+        self.library = {}
+        self.book_indices = []
+        self.precision = precision
+        self.flip_the_script = flip_the_script
+
+    def addBook(self, random_seed):
+        """
+        Add a sparse reservoir set.
+        """
+        book = {}
+        random_state = np.random.RandomState(random_seed)
+        n = self.n_nodes_
+        accept = random_state.uniform(size = (n, n)) 
+        reservoir_pre_weights = random_state.uniform( -1., 1., size = (n, n))
+        for connectivity in np.logspace(self.ub, self.lb, self.precision):
+            book[connectivity] = csc_matrix((accept < connectivity ) * reservoir_pre_weights)
+        sparse_keys_ = np.array(sorted(book))
+
+        self.library[random_seed] = SparseBooklet(book = book, keys = sparse_keys_)
+        self.book_indices.append(random_seed)
+
+    def getIndices(self):
+        return self.book_indices
+
+    def get_approx_preRes(self, connectivity_threshold, index = 0):
+        """
+        You can use the matrix returned instead of...
+        """
+        if self.flip_the_script:
+            index = np.random.randint(len(self.book_indices))
+        book = self.library[self.book_indices[index]]
+        if index != 0:
+            printc("retrieving book from library" + str(self.book_indices[index]), 'green')
+        return book.get_approx_preRes(connectivity_threshold)
+
 
 class ReservoirBuildingBlocks:
     """ An object that allows us to save reservoir components (independent of hyper-parameters) for faster optimization.
@@ -54,7 +109,6 @@ class ReservoirBuildingBlocks:
         self.n_inputs_ = n_inputs
         self.n_nodes_ = n_nodes
         self.seed_ = random_seed
-
         self.state = np.zeros((1, self.n_nodes_), dtype=np.float32)
         
         if model_type == "random":
@@ -67,44 +121,68 @@ class ReservoirBuildingBlocks:
         self.accept = random_state.uniform(size = (n, n)) 
         self.reservoir_pre_weights = random_state.uniform( -1., 1., size = (n, n))
 
-    def gen_sparse_accept_dict(self, precision = 2000):
+    def gen_sparse_accept_dict(self, reservoir_seeds = [123, 999], precision = 1000):
         """
         Later change this so that you put in the real search bounds.
         This will approximate the search for the sparcity hyper-parameter, which will dramatically speed up training of the network.
         Later we can add in a final stage where the network does approximate sparcity to a point, then changes to computer precision search.
         """
-        self.sparse_dict = {}
-        printc()
-        for connectivity in np.logspace(0, -5, precision):
-            self.sparse_dict[connectivity] = csc_matrix((self.accept < connectivity ) * self.reservoir_pre_weights)
-        self.sparse_keys_ = np.array(sorted(self.sparse_dict))
+        printc("GENERATING SPARSE DICT", 'cyan')
+        global sparse_dict
+        
+        #printc("Building approximate sparse reservoirs for faster optimization ...",'fail')
+        #for connectivity in np.logspace(0, -5, precision):
+        #    sparse_dict[connectivity] = csc_matrix((self.accept < connectivity ) * self.reservoir_pre_weights)
+        #self.sparse_keys_ = np.array(sorted(sparse_dict))
+        self.number_of_preloaded_sparse_sets = len(reservoir_seeds)
+        sparse_dict = GlobalSparseLibrary(precision = precision)
+        for random_seed in reservoir_seeds:
+            printc("generated sparse reservoir library for random seed " + str(random_seed), 'cyan')
+            sparse_dict.addBook(random_seed)
 
-    def get_approx_preRes(self, connectivity_threshold):
+    def get_approx_preRes(self, connectivity_threshold, i):
+        """
+        You can use the matrix returned instead of...
+        """
+        val = sparse_dict.get_approx_preRes(connectivity_threshold, index = i)
+        return val
+
+    def get_approx_preRes_old(self, connectivity_threshold, i):
         """
         You can use the matrix returned instead of...
         """
         key_ =  self.sparse_keys_[self.sparse_keys_ > connectivity_threshold][0]
-        val =  self.sparse_dict[key_].copy()
+        val =  sparse_dict[key_].copy()
         return val
 
     def gen_in_weights(self):
 
         random_state = np.random.RandomState(self.seed_)
+        random_state2 = np.random.RandomState(self.seed_ +1)
+
         
         n, m = self.n_nodes_, self.n_inputs_
         in_w_shape_ = (n, m)
-        print("n_inputs", m)
+        #print("n_inputs", m)
 
         #at the moment all input weight matrices use uniform bias.
-        uniform_bias = random_state.uniform(-1, 1, size = (n, 1))
+        self.uniform_bias = random_state.uniform(-1, 1, size = (n, 1))
 
         #weights
         if self.input_weight_type_ == "uniform":
             
-            self.in_weights = random_state.uniform(-1, 1, size= in_w_shape_)
+            self.in_weights_uniform = random_state.uniform(-1, 1, size= in_w_shape_)
             
-        #add bias
-        self.in_weights = np.hstack((uniform_bias, self.in_weights))
+            #add bias
+            self.in_weights = np.hstack((self.uniform_bias, self.in_weights_uniform))
+        elif self.input_weight_type_ == "exponential":
+            printc("BUILDING SIGN_", 'fail')
+            sign1 = random_state.choice([-1, 1], size= (in_w_shape_[0], in_w_shape_[1]//2))
+            sign2 = random_state.choice([-1, 1], size= (in_w_shape_[0], in_w_shape_[1]//2))
+
+            self.sign_dual = (sign1, sign2)
+            self.sign = np.concatenate((sign1, sign2), axis = 1)
+            
 
         #regularization
         self.noise_z = random_state.normal(loc = 0, scale = 1, size = (n, m + 1))
@@ -246,7 +324,7 @@ class EchoStateNetworkCV:
     def __init__(self, bounds, subsequence_length, model=EchoStateNetwork, eps=1e-8, initial_samples=50,
                  validate_fraction=0.2, steps_ahead=1, max_iterations=1000, batch_size=1, cv_samples=1,
                  scoring_method='nrmse', log_space=True, tanh_alpha=1., esn_burn_in=0, acquisition_type='LCB',
-                 max_time=np.inf, n_jobs=1, random_seed=123, esn_feedback=None, update_interval=1, verbose=True,
+                 max_time=np.inf, n_jobs=1, random_seed=None, esn_feedback=None, update_interval=1, verbose=True,
                  plot=True, target_score=0., exp_weights = False, obs_index = None, target_index = None, noise = 0,
                  model_type = "random", activation_function = "tanh", input_weight_type = "uniform", 
                  Distance_matrix = None, n_res = 1, count = None, reservoir = None):
@@ -295,6 +373,7 @@ class EchoStateNetworkCV:
         self.model_type = model_type
 
         self.Distance_matrix = Distance_matrix
+        assert self.n_jobs > 0, "njobs must be greater than 0"
 
         # Normalize bounds domains and remember transformation
         self.scaled_bounds, self.bound_scalings, self.bound_intercepts = self.normalize_bounds(self.bounds)
@@ -498,7 +577,7 @@ class EchoStateNetworkCV:
         self.reservoir_matrices.gen_in_weights()
 
         # Initialize new random state
-        #self.random_state = np.random.RandomState(self.seed + 2)
+        self.random_state = np.random.RandomState(self.seed + 2)
 
         # Temporarily store the data
         self.x = x.astype(np.float32) if x is not None else None
@@ -507,6 +586,8 @@ class EchoStateNetworkCV:
         # Inform user
         if self.verbose:
             print("Model initialization and exploration run...")
+
+        printc("njobs" + str(self.n_jobs), 'fail')
 
         # Define objective
         objective = GPyOpt.core.task.SingleObjective(self.objective_sampler,
@@ -529,6 +610,7 @@ class EchoStateNetworkCV:
         # Add Local Penalization
         # lp_acquisition = GPyOpt.acquisitions.LP.AcquisitionLP(model, space, acquisition_optimizer, acquisition,
         # transform='none')
+        printc("initial samples" + str(self.initial_samples), 'fail')
 
         # Set initial design
         n = len(self.free_parameters)
@@ -537,13 +619,15 @@ class EchoStateNetworkCV:
         # Pick evaluator
         if self.batch_size == 1:
             
-            #evaluator = GPyOpt.core.evaluators.sequential.Sequential(acquisition=acquisition,
-            #                                                         batch_size=self.batch_size)
-            evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition=acquisition,
+            evaluator = GPyOpt.core.evaluators.sequential.Sequential(acquisition=acquisition,
                                                                      batch_size=self.batch_size)
+            #evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition=acquisition,
+            #                                                         batch_size=self.batch_size)
         else:
             evaluator = GPyOpt.core.evaluators.RandomBatch(acquisition=acquisition,
                                                            batch_size=self.batch_size)
+            #evaluator = GPyOpt.core.evaluators.ThompsonBatch(acquisition=acquisition,
+            #                                                         batch_size=self.batch_size)
         # Show progress bar
         if self.verbose:
             printc("Starting optimization..." + ' \n', 'green')
@@ -553,7 +637,6 @@ class EchoStateNetworkCV:
         print("Hayden edit: fixed_parameters: " + str(self.fixed_parameters))
         print("Hayden edit: free_parameters: "  + str(self.free_parameters))
         ###
-
         # Build optimizer
         self.optimizer = EchoStateBO(model=model, space=space, objective=objective,
                                      acquisition=acquisition, evaluator=evaluator,
@@ -621,7 +704,7 @@ class EchoStateNetworkCV:
         # Get arguments
         arguments = self.construct_arguments(parameters)
 
-
+        #print("running objective function")
         try:
             res_args  = {"reservoir" : self.reservoir_matrices}
             arguments = {**arguments, **res_args}
@@ -645,7 +728,7 @@ class EchoStateNetworkCV:
         esn.train(x=train_x, y=train_y, burn_in=self.esn_burn_in)
 
         # Validation score
-
+        #print("validate y", validate_y.shape)
         score = esn.test(x=validate_x, y=validate_y, scoring_method=self.scoring_method,
                                          alpha=self.alpha)#, steps_ahead=self.steps_ahead) #validate_y.shape[0]) 
                          #steps_ahead=self.steps_ahead, alpha=self.alpha)
@@ -676,7 +759,6 @@ class EchoStateNetworkCV:
         #print("Hayden edit: free parameters: " + str(self.free_parameters))
         ####
         start_index, random_seed = inputs["start_index"], inputs["random_seed"]
-
         # Get indices
         #start_index = np.random.randint(self.viable_start, self.viable_stop)
         train_stop_index = start_index + self.train_length
@@ -728,7 +810,7 @@ class EchoStateNetworkCV:
         #print(dict_lst)
         return dict_list
 
-    def objective_sampler(self, parameters, be_crazy = True):
+    def objective_sampler(self, parameters):
         """Splits training set into train and validate sets, and computes multiple samples of the objective function.
 
         This method also deals with dispatching multiple series to the objective function if there are multiple,
@@ -745,6 +827,7 @@ class EchoStateNetworkCV:
             Column vector with mean score(s), as required by GPyOpt
 
         """
+
         # Get data
         self.parameters = parameters
         training_y = self.y
@@ -776,6 +859,7 @@ class EchoStateNetworkCV:
         # Get samples
         #if not self.count_:
         #    results = self.define_tr_val(objective_inputs[0])
+
         if (self.cv_samples * self.n_res) > 1:
             Pool = multiprocessing.Pool(self.cv_samples * self.n_res)
 

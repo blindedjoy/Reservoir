@@ -263,8 +263,10 @@ class modelResult:
         if not ip:
             self.reservoir = reservoir
             self.input_weights = input_weights
-            self.hyper_params = defaultdict(**hyper_params)
-            self.name_ = self.reservoir.res_type_ + "_" + self.input_weights.in_weight_type_
+            if hyper_params:
+            	self.hyper_params = defaultdict(**hyper_params)
+            if self.reservoir and self.input_weights:
+            	self.name_ = self.reservoir.res_type_ + "_" + self.input_weights.in_weight_type_
         else:
             self.name_ = "interpolation"
         self.EchoStateExperiment_inputs = EchoStateExperiment_inputs 
@@ -301,6 +303,7 @@ class ExperResult:
 							input_weights = None, 
 							hyper_params = None, 
 							EchoStateExperiment_inputs = None,
+							name = None,
 						    ip = None):
 
 		model_result = modelResult(reservoir = reservoir, 
@@ -311,12 +314,19 @@ class ExperResult:
 						     ip = ip)
 		if not ip:
 			#ground_truth = self.data.Target_Te_)
-			res_type = model_result.reservoir.res_type_
-			input_weight_type = input_weights.in_weight_type_
-			self.model_results[res_type +"_"+ input_weight_type] = model_result
+			if reservoir:
+				res_type = model_result.reservoir.res_type_
+			if input_weights:
+				input_weight_type = input_weights.in_weight_type_
+				self.model_results[res_type +"_"+ input_weight_type] = model_result
+			elif name:
+				self.model_results[name] = model_result
 		else:
 			self.model_results["interpolation"] = model_result
-
+	def rename_model(self, old_name, new_name):
+		self.model_results[old_name].name_ = new_name
+		self.model_results[new_name] = self.model_results[old_name]
+		self.model_results = ifdel(self.model_results, old_name)
 	def get_models(self):
 		return list(self.model_results.keys())
         
@@ -345,7 +355,7 @@ class EchoStateExperiment:
 				 smooth_bool = False, interpolation_method = "griddata-linear", prediction_type = "block",
 				 librosa = False, spectrogram_path = None, flat = False, obs_freqs  = None,
 				 target_freqs = None, spectrogram_type = None, k = None, obs_idx = None, resp_idx = None,
-				 model = None, chop = None, input_weight_type = "uniform", EchoStateExperiment_inputs = None
+				 model = None, chop = None, input_weight_type = None, EchoStateExperiment_inputs = None
 				 ):
 		self.EchoStateExperiment_inputs =  EchoStateExperiment_inputs
 
@@ -405,7 +415,7 @@ class EchoStateExperiment:
 		self.load_data()
 
 		#This deals with obs_freqs or obs_hz. We need a different method if we already have the exact index.
-		if self.prediction_type == "block":
+		if self.prediction_type == "block" or self.prediction_type == "freqs":
 			#if the observer index hasn't been initialized or if it equal to None do this:
 			if not self.obs_idx:
 				if obs_freqs:
@@ -1195,7 +1205,7 @@ class EchoStateExperiment:
 		elif self.model == "cyclic":
 			self.outfile += "cyclic"
 		elif self.model == "random":
-			self.outfile += "cyclic"
+			self.outfile += "random"
 
 		if self.input_weight_type == "uniform":
 			self.outfile += "_unif_W_"
@@ -1343,6 +1353,8 @@ class EchoStateExperiment:
 		}
 		#esn_cv_spec equivalent: EchoStateNetworkCV
 		"""
+		if "esn_feedback" in cv_args.keys():
+			self.feedback = cv_args["esn_feedback"]
 		self.model = model
 		self.input_weight_type = input_weight_type
 
@@ -1356,7 +1368,7 @@ class EchoStateExperiment:
 		if self.input_weight_type == "uniform":
 			cv_args["bounds"] = ifdel(cv_args["bounds"], "llambda")
 			cv_args["bounds"] = ifdel(cv_args["bounds"], "llambda2")
-			#cv_args["bounds"] = ifdel(cv_args["bounds"], "noise")
+			cv_args["bounds"] = ifdel(cv_args["bounds"], "noise")
 
 		### hacky intervention:
 		if self.prediction_type != "column":
@@ -1366,7 +1378,7 @@ class EchoStateExperiment:
 				'target_index' : self.resp_idx
 			}
 
-		dual_lambda = True if "llamda" in cv_args["bounds"] else False
+		dual_lambda = True if "llambda2" in cv_args["bounds"] else False
 			
 		self.build_distance_matrix(dual_lambda = dual_lambda)
 		
@@ -1385,16 +1397,26 @@ class EchoStateExperiment:
 				print(self.model, "rc cv with ", input_weight_type, " weights set, ready to train ")
 
 		if self.prediction_type == "column":
-			self.feedback = True
+			if self.feedback == True:
+				self.esn_cv.feedback = True
+				printc("training with feedback", "fail")
+			else:
+				self.esn_cv.feedback = False
+				printc("training without feedback", "green")
+			#printc("ATTEMPTING TO OPTIMIZE", "fail")
+			#print(self.esn_cv)
 			self.best_arguments =  self.esn_cv.optimize(x = None, y = self.xTr)
+			
 		else:
 			self.feedback = False
+			printc("ATTEMPTING TO OPTIMIZE", "fail")
 			self.best_arguments =  self.esn_cv.optimize(x = self.Train, y = self.xTr) 
 		self.best_arguments['feedback'] = self.feedback
 
 		print("Bayesian Optimization complete. Now running saving data, getting prediction etc. ")
 		print(input_dict)
 		print(cv_args)
+		printc("Training " + self.model + "_" + self.input_weight_type + " Reservoir", 'fail')
 		
 		self.esn = self.esn_spec(**self.best_arguments,
 								 obs_idx  = self.obs_idx,
@@ -1404,7 +1426,6 @@ class EchoStateExperiment:
 								 )
 
 		print(self.best_arguments)
-
 		def my_predict(test, n_steps = None):
 			if not n_steps:
 				n_steps = test.shape[0]
@@ -1432,7 +1453,12 @@ class EchoStateExperiment:
 			
 		else:
 			self.esn.train(x = self.Train, y = self.xTr)
+			self.weights = self.esn.weights
+			self.in_weights = self.esn.in_weights
 			self.prediction = my_predict(self.Test)
+			rmse_ = nrmse(self.xTe,self.prediction)
+			#	nrmses.append(nrmse_)
+			printc("nrmse: " + str(rmse_), 'cyan')
 		
 
 		
@@ -1452,13 +1478,13 @@ class EchoStateExperiment:
 			best_args = {**best_args, **extra_args}
 
 			if model in ["uniform", "exponential"]:
-				self.input_weight_type = best_args["model"] 
+				self.input_weight_type = model
 				self.model_type = "random"
 
 			self.esn = self.esn_spec(**best_args,
 									 obs_idx  = self.obs_idx,
 									 resp_idx = self.resp_idx,
-									 model_type = model,
+									 model_type = self.model_type,
 									 input_weight_type = self.input_weight_type)
 
 			def my_predict(test, n_steps = None):
@@ -1466,9 +1492,15 @@ class EchoStateExperiment:
 					n_steps = test.shape[0]
 				return self.esn.predict(n_steps, x = test[ :n_steps, :])
 
-			if best_args["feedback"] == True:
-				self.esn.train(x = None, y = self.xTr)
-				self.prediction = self.esn.predict(n_steps = self.xTe.shape[0])
+			printc("best_args " + str(best_args), 'fail')
+			if "feedback" in best_args:
+				if best_args["feedback"] == True:
+					self.esn.train(x = None, y = self.xTr)
+					self.prediction = self.esn.predict(n_steps = self.xTe.shape[0])
+				else:
+					print("pure prediction with old data, no feedback not handled yet")
+					self.esn.train(x = self.Train, y = self.xTr)
+					self.prediction = my_predict(self.Test)
 			else:
 				self.esn.train(x = self.Train, y = self.xTr)
 				self.prediction = my_predict(self.Test)
@@ -1564,8 +1596,8 @@ class EchoStateExperiment:
 		if self.interpolation_method	 in ["griddata-linear", "griddata-cubic", "griddata-nearest"]:
 			#print(self.interpolation_method)
 			points_to_predict, values, point_lst = [], [], []
-
-			if self.prediction_type == "block" or self.prediction_type == "exact":
+			printc("self.prediction_type" + self.prediction_type, 'fail')
+			if self.prediction_type == "block" or self.prediction_type == "exact" or self.prediction_type == "freqs":
 
 				#Training points
 				resp_idx = self.resp_idx
@@ -1630,7 +1662,7 @@ class EchoStateExperiment:
 			griddata_type = translation_dict[self.interpolation_method]
 			if self.verbose:
 				print("griddata " + griddata_type + " interpolation")
-
+			
 			ip2_pred = griddata(point_lst, values, points_to_predict, method = griddata_type)#"nearest")#griddata_type)#, rescale = True)#, method="linear")#"nearest")#"linear")#'cubic')
 			
 			#Shape(ip2_pred, "ip2_pred")

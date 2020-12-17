@@ -24,7 +24,14 @@ sys.path.append(os.getcwd())
 
 PREDICTION_TYPE = "block"
 
-
+def ifdel(dictt, key):
+    """ If a key is in a dictionary delete it. Return [modified] dictionary.
+    """
+    try:
+        del dictt[key]
+        return(dictt)
+    except:
+        return(dictt)
 # get number of cpus available to job
 try:
     ncpus = os.environ["SLURM_JOB_CPUS_PER_NODE"]
@@ -95,12 +102,11 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
     elif exper_type == "column":
       librosa_args = {}
       
-      gap_start = 250
-      train_width = 50
-      train_width = gap_start
+      gap_start = 903
+      train_width = 200
 
       #not actually a test, we need this asap.
-      zhizhuo_target1    = liang_idx_convert(gap_start, 289)  #249 -> 288 inclusive
+      zhizhuo_target1    = liang_idx_convert(gap_start, 1002)  #249 -> 288 inclusive
       zhizhuo_train1   = liang_idx_convert(gap_start - train_width, gap_start - 1 ) #199 -> 248 inclusive
 
       subseq_len = int(np.array(zhizhuo_train1).shape[0] * 0.5)
@@ -109,19 +115,28 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
       zhizhuo_target2 = liang_idx_convert(gap_start2, 613) #514 -> 613 in matlab, 513 -> 612 in python
       zhizhuo_train2  = liang_idx_convert(gap_start2 - train_width, gap_start2 - 1 )
 
+      train_width = 500
+      gap_start3 = 514
+      zhizhuo_target3 = liang_idx_convert(gap_start3, 1000) #514 -> 613 in matlab, 513 -> 612 in python
+      zhizhuo_train3  = liang_idx_convert(gap_start3 - train_width, gap_start3 - 1 )
 
-      single_column_target = liang_idx_convert(100, 101)
-      single_column_train = liang_idx_convert(100 - 5, 100-1)
+
+      single_column_target = liang_idx_convert(100, 105)
+      single_column_train = liang_idx_convert(100 - 10, 100 -1)
 
       #print("single column target" + str(single_column_target))
-      printc(str(len(zhizhuo_target1)), 'blue')
+      printc(str(len(zhizhuo_train1)) + str(len(zhizhuo_target1)), 'blue')
 
       set_specific_args = {"prediction_type": "column"}
       experiment_set = [
-                        #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 1, "subseq_len" : 3},
-                        {'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 1, "subseq_len" : subseq_len},
-                        {'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 1, "subseq_len" : subseq_len},
-                        #{'split': 0.5, 'train_time_idx': single_column_train, 'test_time_idx': single_column_target, 'k' : 10, "subseq_len" : 3},
+                        {'split': 0.5, 'train_time_idx': single_column_train, 
+                          'test_time_idx': single_column_target, 'k' : 1, "subseq_len" : 3,
+                          'feedback' : True},
+                        #{'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 
+                        #  'k' : 1, "subseq_len" : subseq_len, 'feedback' : True},
+                        #{'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 1, "subseq_len" : subseq_len , "feedback" : True},
+                        #{'split': 0.5, 'train_time_idx': zhizhuo_train3, 
+                        #  'test_time_idx':  zhizhuo_target3, 'k' : 1, 'feedback' : False},
                         #{'split': 0.5, 'train_time_idx': zhizhuo_train1 , 'test_time_idx': zhizhuo_target1, 'k' : 10, "subseq_len" : subseq_len},#, "k" : 100},
                         #{'split': 0.5, 'train_time_idx': zhizhuo_train2, 'test_time_idx':  zhizhuo_target2, 'k' : 10, "subseq_len" : subseq_len},#, "k" : 30},
                         ]
@@ -130,7 +145,6 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
       experiment_set = [ Merge(experiment, set_specific_args) for experiment in experiment_set]
   
     elif exper_type == "freqs":
-      print("This is not a test")
       #librosa_args = {"spectrogram_path" : "19th_century_male_stft",
       #                "spectrogram_type" : "db",#"db", #power
       #                "librosa": True}
@@ -151,8 +165,8 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
              #{ 'split': 0.7, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
              #{ 'split': 0.7, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              #{ 'split': 0.7, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
-             { 'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs },
-             { 'split': 0.5, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6 },
+             #{ 'split': 0.5, "obs_freqs": obs_freqs, "target_freqs": resp_freqs, "feedback": False },
+             { 'split': 0.5, "obs_freqs": obs_freqs6, "target_freqs": resp_freqs6, "feedback" : False },
              { 'split': 0.5, "obs_freqs": obs_freqs3, "target_freqs": resp_freqs3 },
              { 'split': 0.5, "obs_freqs": obs_freqs7, "target_freqs": resp_freqs7 },
              ]
@@ -168,16 +182,20 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
                # connectivity needs to be wider as well: (-5, 0)
                #unif adj:
                # not going to impliment these, but connectivity clustered around 1, leaking rate RUNaround 1, spectral radius around 1
+              #'bias_scaling'    : (0, 1),
+              'input_scaling'   : (0, 1),
+              #'feedback_scaling': (0, 1),
               'noise' :          (-5, -0.5),
               'llambda' :        (-5, 0),
               'llambda2' :       (-5, 0), 
-              'connectivity':    (-4, 0),       # 0.5888436553555889, 
+              'connectivity':    (-5, -0.5),#(-4, 0),       # 0.5888436553555889, 
               'n_nodes':         1000,          #(100, 1500),
               'spectral_radius': (0.001, 0.999),
-              'regularization':  (-3, 4),#(-12, 1),
+              'regularization':  (-4, 5),#(-12, 1),
               "leaking_rate" :   (0.001, 1) # we want some memory. 0 would mean no memory.
               # current_state = self.leaking_rate * update + (1 - self.leaking_rate) * current_state
               }
+
 
     if run_lite == True:
       printc("RUNNING LITE ", 'fail')
@@ -194,21 +212,30 @@ def test(exper_type, size, reservoir_type, input_weight_type, run_lite = False):
               }
 
     for experiment in experiment_set:
+      try:
+        if not experiment["feedback"]:
+          bounds = ifdel(bounds, "feedback_scaling")
+      except:
+        print("")
       experiment["bounds"] = bounds
       experiment["prediction_type"] = exper_type
       experiment["size"] = size
       experiment["model_type"] = reservoir_type
       experiment["input_weight_type"] = input_weight_type
+      
 
 
   #if TEACHER_FORCING:
       
     
+    #try:
+    #  set_start_method('forkserver')
+    #except RuntimeError:
+    #  pass
     
     exper_ = [experiment_set[experiment_specification]]
     n_experiments = len(exper_)
     #print("Creating " + str(n_experiments) + " (non-daemon) workers and jobs in main process.")
-    print("N EXPERIMENTS", n_experiments)
 
     if n_experiments > 1:
       try:
@@ -241,7 +268,7 @@ def printc(string_, color_) :
 if __name__ == '__main__':
   start = timeit.default_timer()
   printc("Total cpus available: " + str(ncpus), 'green')
-  printc("RUNNING EXPERIMENT " + str(experiment_specification), 'warning')
+  #printc("RUNNING EXPERIMENT " + str(experiment_specification), 'warning')
   
   test(exper_type = "column", size = "small", reservoir_type = "random", input_weight_type = "uniform", run_lite = False)
 

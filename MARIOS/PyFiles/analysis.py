@@ -56,7 +56,8 @@ class EchoStateAnalysis:
 
     """
     def __init__(self, path_list, ip_method = "linear", bp = None, 
-                 force = False, ip_use_observers = True, data_type = "pickle", model = None, force_random_expers = False):
+                 force = False, ip_use_observers = True, data_type = "pickle", model = None, force_random_expers = False, over_ride_idx = None,
+                 over_ride_best_args = None):
         self.path_list = path_list
         self.bp = bp
         self.force = force
@@ -64,10 +65,15 @@ class EchoStateAnalysis:
         self.ip_method = ip_method
         self.model = model
         self.data_type = data_type
+        self.over_ride_idx = over_ride_idx
+        self.over_ride_best_args = over_ride_best_args
 
         self.force_random_expers = force_random_expers
 
         assert model in ["uniform", "exponential","random", "delay_line", "cyclic"]
+
+        print('path_list ', path_list)
+        self.recover_old_data = False if 'exper_result' in self.load_data(path_list[0], bp = self.bp, verbose = False) else True
 
         self.change_interpolation_pickle()
 
@@ -80,27 +86,30 @@ class EchoStateAnalysis:
         #self.build_loss_df(models = models, group_by = "time", columnwise = False)
     def get_experiment(self, experiment_object, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
         """Robust to change in data structure:
-        try:
+        
+        self.get_experiment_new( exper_result = experiment_object, 
+                                     model = model, 
+                                     compare_ = compare_, 
+                                     plot_split = plot_split, 
+                                     verbose = verbose)
+        """
+        if not self.recover_old_data:
+            print("GETTING NEW EXPERIMENT")
             self.get_experiment_new( exper_result = experiment_object, 
                                      model = model, 
                                      compare_ = compare_, 
                                      plot_split = plot_split, 
                                      verbose = verbose)
-        except:
-            self.get_experiment_old(json_obj=experiment_object,
+        else:
+            
+            experiment_ = self.get_experiment_old(pickle_obj=experiment_object,
                                     model=model, 
                                     compare_ = compare_, 
                                     plot_split = plot_split, 
                                     librosa = librosa, 
                                     verbose = verbose)
 
-        return(experiment_)
-        """
-        self.get_experiment_new( exper_result = experiment_object, 
-                                     model = model, 
-                                     compare_ = compare_, 
-                                     plot_split = plot_split, 
-                                     verbose = verbose)
+            return(experiment_)
 
     def get_experiment_new(self, exper_result, model, compare_ = False, plot_split = False, verbose = False, interpolation = False):
         """ 
@@ -186,7 +195,7 @@ class EchoStateAnalysis:
         return(experiment_)
 
 
-    def get_experiment_old(self, json_obj, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
+    def get_experiment_old(self, pickle_obj, model, compare_ = False, plot_split = False, librosa = False, verbose = False):
         """ 
 
         This function retrieves, from a json dictionary file, an EchoStateExperiment object.
@@ -204,42 +213,47 @@ class EchoStateAnalysis:
 
         """
         #https://towardsdatascience.com/design-optimization-with-ax-in-python-957b1fec776f
-        pickle_obj = json_obj
 
-        #printc("Data" + str(json_obj["Data"]), 'fail')
-
-        try:
-            obs_idx, resp_idx = json_obj["obs_idx"], json_obj["resp_idx"]
-        except:
-            obs_idx, resp_idx = Data.obs_idx, Data.resp_idx
+        print("get_experiment_old model: ", model)
+        if self.over_ride_idx:
+            pickle_obj["experiment_inputs"]["obs_idx"], pickle_obj["experiment_inputs"]["resp_idx"] = self.over_ride_idx
 
 
-        extra_inputs = { "obs_idx" : pickle_obj["obs_idx"],
-                         "resp_idx" : pickle_obj["resp_idx"],
+        if model in ["exponential", "uniform"]:
+            obs_inputs = pickle_obj["get_observer_inputs"]
+            vals = pickle_obj["best arguments"][model]
+
+            if self.over_ride_best_args:
+                if model in self.over_ride_best_args.keys():
+                    vals = self.over_ride_best_args[model]
+            print("best_args", vals)
+            extra_inputs = { 
                          "prediction_type" : "exact",
                          "model" : "random",
-                         "input_weight_type" : "uniform"
+                         "input_weight_type" : model
                     }
-
-        obs_inputs = json_obj["get_observer_inputs"]
+            
 
         if obs_inputs["method"] != "column":
             obs_inputs["method"] = "exact"
-        print("CYCLIC DISABLED")
 
-        vals = json_obj["best arguments"][model]
+
+       
 
         #printc("experiment inputs" +str(json_obj["experiment_inputs"]), 'fail')
 
-        printc("experiment inputs" +str(json_obj["get_observer_inputs"]), 'fail')
+        printc("experiment inputs" +str(pickle_obj["get_observer_inputs"]), 'fail')
 
-        experiment_ = EchoStateExperiment(**json_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
         
 
-        experiment_.obs_idx, experiment_.resp_idx = obs_idx, resp_idx
+        experiment_ = EchoStateExperiment(**pickle_obj["experiment_inputs"], **extra_inputs,  librosa = librosa)
         
         experiment_.get_observers(**obs_inputs, plot_split = plot_split)
-        experiment_.already_trained(vals, model = "random")#self.model)
+        experiment_.already_trained(vals, model = model)
+
+
+
+        #def already_trained(self, best_args, model):
 
         xx = range(experiment_.xTe.shape[0])
 
@@ -281,6 +295,7 @@ class EchoStateAnalysis:
             print("get_obs_inputs: " + str(obs_inputs))
             print("Train.shape: " + str(experiment_.Train.shape))
             print("Saved_prediction.shape: " + str(np.array(json_obj["prediction"]["uniform"]).shape))
+
         return(experiment_)
     
 
@@ -288,7 +303,10 @@ class EchoStateAnalysis:
         """
         #TODO impliment robust version. or impliment a function that can recover the old data.
         """
-        self.change_interpolation_pickle_new()
+        if not self.recover_old_data:
+            self.change_interpolation_pickle_new()
+        else:
+            self.change_interpolation_pickle_old()
 
     def change_interpolation_pickle_new(self, verbose = False):
         """
@@ -308,11 +326,15 @@ class EchoStateAnalysis:
 
         self.experiment_results = []
 
+
         for i, _ in enumerate(trange(len(path_lst), desc='experiment list, loading data...')): 
             
             experiment_result = self.load_data(path_lst[i], bp = self.bp, verbose = False)
 
             self.experiment_results.append(experiment_result["exper_result"])
+
+        printc('experiment_results ' + str(self.experiment_results), 'fail')
+
             
         for i, _ in enumerate(trange( len(self.experiment_results), desc='experiment list, fixing interpolation...')): 
 
@@ -402,7 +424,7 @@ class EchoStateAnalysis:
         #What is the point of this loop? If model is random -->  make sure uniform and exponential are successfully run.
         #also a vestigal part of this loop is to check if it is even possible to load this.
         
-        #print()
+        
 
         for i, _ in enumerate(trange(len(path_lst), desc='experiment list, loading data...')): 
             
@@ -432,12 +454,15 @@ class EchoStateAnalysis:
                     if verbose:
                         print("NOT YET RUN")
                     NOT_YET_RUN += [i]
+
         for i, _ in enumerate(trange( len(experiment_list_temp), desc='experiment list, fixing interpolation...')): 
 
             if not i:
                 results_tmp, results_rel, experiment_list = [], [], []
 
             experiment_dict = experiment_list_temp[i]
+
+            printc("experiment_dict " + str(experiment_dict), 'green')
 
             experiment_dict, experiment_obj = self.fix_Rcs(experiment_dict)
             if self.ip_method == "all":
@@ -652,13 +677,39 @@ class EchoStateAnalysis:
         return(b)
 
     def fix_Rcs(self, exper_):
-        """
-        this properly fixes the RC predictions after the output from experiment.py. FIX THIS UPSTREAM DAMNIT
+       """
+       this properly fixes the RC predictions after the output from experiment.py. FIX THIS UPSTREAM DAMNIT
 
-        Args:
-            exper_: the experiment dict being fed in.
-        """
-        try:
+       Args:
+           exper_: the experiment dict being fed in.
+       """
+       for model in list(exper_['best arguments'].keys()):
+           
+           exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
+
+           if "prediction" not in exper_.keys():
+               exper_['prediction'] = {}
+           exper_["prediction"][model] = exper_spec.prediction
+           exper_["nrmse"][model] = nrmse(exper_spec.prediction, exper_spec.xTe)
+
+       if self.over_ride_idx:
+           exper_["obs_idx"], exper_["resp_idx"] = self.over_ride_idx
+       #get important pieces of information for later, to avoid running get_experiment over and over and over.
+       exper_["xTe"] = exper_spec.xTe
+       exper_["xTr"] = exper_spec.xTr
+       exper_["f"]   = exper_spec.f
+       exper_["T"]   = exper_spec.T
+       exper_["A"]   = exper_spec.A
+
+       exper_dict = exper_
+       exper_obj = exper_spec
+
+       return(exper_dict, exper_spec)
+
+    """
+    def fix_Rcs(self, exper_):
+        
+        if not self.recover_old_data:
             exper_ = exper_["exper_result"]
             live_nns = []
             for model, _ in exper_.model_results.items():
@@ -667,10 +718,14 @@ class EchoStateAnalysis:
             return(live_nns)
 
         #old way: 12/2/2020
-        except:
+        else:
             for model in list(exper_['best arguments'].keys()):
                 exper_spec = self.get_experiment(exper_, model, verbose = False, plot_split = False, compare_ = False)
-                
+
+                if not exper_["prediction"]:
+                    exper_["prediction"] = {}
+                if not exper_["nrmse"]:
+                    exper_["nrmse"] = {}
                 exper_["prediction"][model] = exper_spec.prediction
                 exper_["nrmse"][model] = nrmse(exper_spec.prediction, exper_spec.xTe)
 
@@ -685,6 +740,7 @@ class EchoStateAnalysis:
             exper_obj = exper_spec
 
             return(exper_dict, exper_spec)
+    """
 
 
     def fix_interpolation(self, exper_, exper_spec, method):
@@ -768,20 +824,7 @@ class EchoStateAnalysis:
 
         return(loss_arr)
 
-    def build_loss_df(self, group_by = "time", columnwise = True, relative = True,
-                  rolling = None, models = ["uniform", "exponential", "interpolation"],
-                  silent = True, hybrid = False):
-        """try:
-            build_loss_df_new(group_by = group_by, columnwise = columnwise , relative = relative,
-                  rolling = rolling ,
-                  silent = silent, hybrid = hybrid)
-        except:
-            build_loss_df_old(group_by = group_by, columnwise = columnwise , relative = relative,
-                  rolling = rolling , models = ["uniform", "exponential", "interpolation"],
-                  silent = silent, hybrid = hybrid)"""
-        build_loss_df_new(group_by = group_by, columnwise = columnwise , relative = relative,
-                  rolling = rolling ,
-                  silent = silent, hybrid = hybrid)
+    
 
     def build_loss_df_new(self, group_by = "time", columnwise = True, relative = True,
                   rolling = None, models = ["uniform", "exponential", "interpolation"],
@@ -817,45 +860,56 @@ class EchoStateAnalysis:
             return(pd_)
 
         experiment_list = self.experiment_results
+        
         count = 0
         for i in trange(len(experiment_list), desc='processing path list...'):
 
             experiment_ = experiment_list[i]
 
-            get_observers_input = experiment_.get_observers_input
+            if i == 0:
+
+
+                get_observers_input = experiment_.get_observers_input
+                train_, test_ = experiment_.data.Target_Tr_, experiment_.data.Target_Te_
+                resp_idx = experiment_.data.sets["Target_Te"].y_indices_
+                time_idx = experiment_.data.sets["Target_Te"].time_indices_
+                T, f = experiment_.data.T_, np.array(experiment_.data.f_)
+                A = experiment_.data.A_
+                existing_models = experiment_.get_models()
+
 
             if "split" in get_observers_input:
                 split_ = get_observers_input["split"]
             
             #construct the required data frame and caculate the nrmse from the predictions:
-            train_, test_ = experiment_.data.Target_Tr_, experiment_.data.Target_Te_
-
-            if i == 0:
-                A = experiment_.data.A_
                 
             test_len = test_.shape[0]
             train_len = A.shape[0] - test_len
             
             ###################################################
-            time_lst, freq_lst = [], []
-            resp_idx = experiment_.data.sets["Target_Tr"].y_indices_
+            time_lst, freq_lst = [], [] 
 
-            T, f = experiment_.data.T_, np.array(experiment_.data.f_)
-
-            time_lst_one_run = list(T[train_len:].reshape(-1,))
+            time_lst_one_run = list(T[time_idx].reshape(-1,))
             freq_lst_one_run = list(f[resp_idx].reshape(-1,))
+            
             ###################################################
 
-            existing_models = experiment_.get_models()
+            
             
 
-            for j, model in enumerate(models):
+            for j, model in enumerate(existing_models):#enumerate(models):
                 printc(model, 'green')
-                model_result_ = experiment_.get_model_result(model)
-                
-                shared_args = {
-                    "pred_" : model_result_.prediction,
-                    "truth": test_}
+                try:
+                    model_result_ = experiment_.get_model_result(model)
+                    
+                    shared_args = {
+                        "pred_" : model_result_.prediction,
+                        "truth": test_}
+                except:
+
+                    shared_args = {
+                        "pred_" : experiment_["prediction"][model],
+                        "truth": test_}
 
                 self.L1_entire_df = self.loss(**shared_args, typee = "L1")
                 self.L2_entire_df = self.loss(**shared_args, typee = "L2")
@@ -984,7 +1038,27 @@ class EchoStateAnalysis:
                 count += 1 
         if silent != True:
             display(rDF)
-        
+    
+    def build_loss_df(self, group_by = "time", columnwise = True, relative = True,
+                  rolling = None, models = ["uniform", "exponential", "interpolation"],
+                  silent = True, hybrid = False):
+        """try:
+            build_loss_df_new(group_by = group_by, columnwise = columnwise , relative = relative,
+                  rolling = rolling ,
+                  silent = silent, hybrid = hybrid)
+        except:
+            build_loss_df_old(group_by = group_by, columnwise = columnwise , relative = relative,
+                  rolling = rolling , models = ["uniform", "exponential", "interpolation"],
+                  silent = silent, hybrid = hybrid)"""
+        if not self.recover_old_data:
+
+            self.build_loss_df_new(group_by = group_by, columnwise = columnwise , relative = relative,
+                      rolling = rolling, silent = silent, hybrid = hybrid, models = models)
+        else:
+            #models.append("ip: linear")
+            #models.remove("interpolation")
+            self.build_loss_df_old(group_by = group_by, columnwise = columnwise , relative = relative,
+                      rolling = rolling, silent = silent, hybrid = hybrid, models = models)
 
     def loss_plot(self, rolling, split, loss = "R",
                  relative = False, include_ip = True, hybrid = False, group_by = "freq"):
